@@ -156,19 +156,14 @@ void testForce(){
 }
 
 void test_SDL(){
-    SDL_Texture* pCellTexture = load_texture(
-        pRenderer, "res/cell.png");
-    SDL_Texture* pBkgndTexture = load_texture(
-        pRenderer, "res/bkgnd.png");
+    SDL_Texture* pCellTexture = load_texture(pRenderer, "res/cell.png");
+    SDL_Texture* pBkgndTexture = load_texture(pRenderer, "res/bkgnd.png");
     for(int frameNum = 0; frameNum < 100; frameNum++){
-        draw_texture(pRenderer, pBkgndTexture,
-            0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
-        draw_texture(pRenderer, pCellTexture,
-            0, frameNum, 100, 100);
-        draw_texture(pRenderer, pCellTexture,
-            100-frameNum, 100+frameNum, 100, 100);
-        draw_texture(pRenderer, pCellTexture,
-            300, 100+2*frameNum, 150-frameNum/2, 150-frameNum/2);
+        draw_texture(pRenderer, pBkgndTexture, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
+        draw_texture(pRenderer, pCellTexture, 0, frameNum, 100, 100);
+        draw_texture(pRenderer, pCellTexture, 100-frameNum, 100+frameNum, 100, 100);
+        draw_texture(pRenderer, pCellTexture, 300, 100+2*frameNum,
+            150-frameNum/2, 150-frameNum/2);
         SDL_RenderPresent(pRenderer);
         //  Displays the current frame (of textures) to the user
         
