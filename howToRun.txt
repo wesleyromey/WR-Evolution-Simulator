@@ -1,0 +1,31 @@
+How to run this software (incl. SDL2) using make:
+
+0. If any of the following steps don't work for you,
+    then either
+    (a) You're doing it wrong, or
+    (b) You're using different software, computer, etc. than me.
+        If this is the case, you may have to do these steps differently.
+
+1. Install make.
+    If using Windows, try:
+    (a) Run command terminal in admin mode
+    (b) Type the following commands into the command terminal:
+        @"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+        choco install make
+    
+    If the above does NOT work OR you are NOT using Windows,
+    try following the instructions contained in the following link:
+    https://stackoverflow.com/questions/32127524/how-to-install-and-use-make-in-windows
+
+2. If running this on a separate program, then copy and paste everything in this folder
+    (except for main.exe, which will automatically be replaced)
+
+3. Create main.exe.
+    (a) If using Visual Studio Code,
+        type "make" into the command terminal.
+        This may be worth a try if using other software
+
+4. Run main.exe
+    One way to do this is to type "./main.exe"
+    into the command terminal.
+

@@ -1,0 +1,8 @@
+Basically, all you have to do is install the latest versions of SDL2 and SDL2 Image.
+	I used SDL 2.26.5 and SDL Image 2.6.3.
+
+I installed the SDL2-devel-2.26.5-mingw.tar.gz from https://github.com/libsdl-org/SDL/releases/tag/release-2.26.5
+	After extracting the files, I copied + pasted the "x86_64-w64-mingw32/include" and "x86_64-w64-mingw32/lib" folders to the src folder. I also copied + pasted the "x86_64-w64-mingw32/bin/SDL2.dll" file into the same directory as "main.cpp"
+
+I installed the SDL2_image-devel-2.6.3-mingw.tar.gz file from https://github.com/libsdl-org/SDL_image/releases
+	After extracting the files, I copied + pasted the "x86_64-w64-mingw32/include" and "x86_64-w64-mingw32/lib" folders to the src folder. I also copied + pasted the "x86_64-w64-mingw32/bin/SDL2_image.dll" file into the same directory as "main.cpp"
