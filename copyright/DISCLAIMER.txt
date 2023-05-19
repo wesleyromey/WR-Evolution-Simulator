@@ -1,0 +1,15 @@
+There are multiple implementations of some of the libraries I use
+including but not limited to the C++ Standard Libraries.
+I do NOT know which implementation was used for my code.
+
+THE LICENSES OF THE IMPLEMENTED SOFTWARE MAY ALTER THE LICENSE
+OF THIS SOFTWARE DEPENDING ON WHICH FILES WERE USED, THE LAWS IN YOUR REGION,
+ETC. I AM NOT A LAWYER. USE THIS SOFTWARE AT YOUR OWN RISK!
+
+The C++ libraries are distributed under various licenses, including but not limited to:
+	Microsoft C++ Standard Library:
+		Apache License v2.0 with LLVM Exception (see the text file)
+	GNU ISO C++ Library: GNU GPL v3
+		https://www.gnu.org/licenses/gpl-3.0.html
+	
+	
