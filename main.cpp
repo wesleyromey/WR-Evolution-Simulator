@@ -173,10 +173,9 @@ void test_event_handler(){
     randomly_place_new_cells(100);
     int frameNum = 0;
     while(simIsRunning){
-        //SDL_draw_frame();
-        //SDL_event_handler();
-        do_frame(frameNum);
-        std::cout << "frameNum: " << ++frameNum << std::endl;
+        // TODO: Figure out what causes frames to take forever!!!
+        do_frame(frameNum++);
+        //std::cout << "frameNum: " << ++frameNum << std::endl;
     }
 }
 

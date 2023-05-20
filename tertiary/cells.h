@@ -77,12 +77,21 @@ struct Cell {
     void teleport_self(int target_x, int target_y){
         posX = target_x;
         posY = target_y;
+        enforce_valid_xyPos();
     }
     void enforce_wrap_around_x(){
+        while(posX < 0) posX += UB_X;
         posX %= UB_X;
     }
     void enforce_wrap_around_y(){
+        while(posY < 0) posY += UB_Y;
         posY %= UB_Y;
+    }
+    void enforce_valid_xyPos(){
+        if(WRAP_AROUND_X) enforce_wrap_around_x();
+        else posX = saturate_int(posX, 0, UB_X);
+        if(WRAP_AROUND_Y) enforce_wrap_around_y();
+        else posY = saturate_int(posY, 0, UB_Y);
     }
     void update_size(){
         size = PI*dia*dia/4 + 0.5; // size is an int
@@ -186,6 +195,7 @@ struct Cell {
         doSelfDestruct = _doSelfDestruct; _numAiOutputs++;
         doCloning = _doCloning; _numAiOutputs++;
         assert(_numAiOutputs == nodesPerLayer[nodesPerLayer.size() - 1]);
+        enforce_valid_ai();
     }
     std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> get_ai_outputs(){
         std::vector<int> intVec;
@@ -251,8 +261,12 @@ struct Cell {
         if(speedMode == RUN_MODE)  energy -= energyCostPerUse["speedRun"] / TICKS_PER_SEC;
     }
     void enforce_valid_ai(){
-        assert(nodesPerLayer.size() == aiNetwork.size());
-        for(int i = 0; i < aiNetwork.size(); i++) aiNetwork[i].size() == nodesPerLayer[i];
+        assert(aiNetwork.size() == nodesPerLayer.size() - 1);
+        for(auto num : nodesPerLayer) assert(0 < num);
+        for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
+            assert(aiNetwork[layerNum-1].size() == nodesPerLayer[layerNum]);
+            //  aiNetwork[layerNum-1].size() is the number of nodes in layerNum, where layer 0 is the input layer
+        }
     }
     void enforce_valid_cell(){
         assert(uniqueCellNum >= 0);
@@ -265,8 +279,7 @@ struct Cell {
         while(cloningDirection < 0) cloningDirection += 360*100;
         cloningDirection %= 360;
         assert(speedMode == IDLE_MODE || speedMode == WALK_MODE || speedMode == RUN_MODE);
-        enforce_wrap_around_x();
-        enforce_wrap_around_y();
+        enforce_valid_xyPos();
         enforce_EAM_constraints();
         enforce_valid_ai();
         update_size();
@@ -346,7 +359,7 @@ struct Cell {
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
-        assert(aiNetwork.size() == nodesPerLayer.size() - 1);
+        enforce_valid_ai();
         std::vector<float> layerInputs = get_ai_inputs();
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
@@ -431,6 +444,7 @@ struct Cell {
         // Energy from the ground -> Energy may be shared between cells,
         //  so it is better to add a pointer to the cell to each applicable ground cell's
         //  list of cells to which it will distribute energy
+        enforce_valid_xyPos();
         if(simGndEnergy[posX][posY] < EAM[EAM_GND]){
             energy += simGndEnergy[posX][posY];
             simGndEnergy[posX][posY] = 0;
@@ -530,10 +544,12 @@ struct Cell {
     void update_pos(int targetX, int targetY){
         posX = targetX;
         posY = targetY;
+        enforce_valid_xyPos();
     }
     void increment_pos(int dX, int dY){
         posX += dX;
         posY += dY;
+        enforce_valid_xyPos();
     }
     void correct_speedDir(){
         // Make speedDir granular because otherwise,
@@ -546,9 +562,7 @@ struct Cell {
         int tmp = get_speed();
         if(tmp == 0) return;
         increment_pos(tmp * cos_deg(speedDir), tmp * sin_deg(speedDir));
-        assert(WRAP_AROUND_X && WRAP_AROUND_Y);
-        if(WRAP_AROUND_X) enforce_wrap_around_x();
-        if(WRAP_AROUND_Y) enforce_wrap_around_y();
+        enforce_valid_xyPos();
     }
     void update_forces(std::vector<Cell*>& pAlives){
         // Check each nearby cell for any forces
@@ -612,6 +626,7 @@ struct Cell {
         //  NOTE: Due to how the program is structured, I have to actually kill each dead cell outside of this struct
         return (health <= 0 || energy <= 0 || doSelfDestruct);
     }
+    // Does NOT account for wrap around
     float calc_distance_from_point(int xCoord, int yCoord){
         int xDist = xCoord - posX;
         int yDist = yCoord - posY;
@@ -669,16 +684,23 @@ struct DeadCell {
 
     // Struct-specific methods
     void enforce_wrap_around_x(){
+        while(posX < 0) posX += UB_X;
         posX %= UB_X;
     }
     void enforce_wrap_around_y(){
+        while(posY < 0) posY += UB_Y;
         posY %= UB_Y;
+    }
+    void enforce_valid_xyPos(){
+        if(WRAP_AROUND_X) enforce_wrap_around_x();
+        else posX = saturate_int(posX, 0, UB_X);
+        if(WRAP_AROUND_Y) enforce_wrap_around_y();
+        else saturate_int(posY, 0, UB_Y);
     }
     void enforce_valid_cell(){
         saturate_int(decayRate, 0, 100);
         if(decayPeriod <= 0) decayPeriod = 1;
-        enforce_wrap_around_x();
-        enforce_wrap_around_y();
+        enforce_valid_xyPos();
     }
     void set_int_stats(std::map<std::string, int>& varVals){
         // Only contains functionality for the more important stats
@@ -762,6 +784,7 @@ struct DeadCell {
         // X means x-coordinate, Y means y-coordinate
         posX = gen_uniform_int_dist(rng, lbX, ubX);
         posY = gen_uniform_int_dist(rng, lbY, ubY);
+        enforce_valid_xyPos();
     }
     void print_pos(std::string startStr = "", bool newLine = true){
         if(newLine) std::cout << startStr << "pos: {" << posX << ", " << posY << "}\n";

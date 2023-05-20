@@ -14,6 +14,7 @@ std::vector<Cell*> pAlives; // All cells that are currently alive
 std::vector<DeadCell*> pDeads; // All cells that are currently dead
 
 
+// Render the background, cell positions, etc using SDL
 void SDL_draw_frame(){
     draw_texture(P_BKGND_TEX, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
     for(auto pCell : pAlives) pCell->draw_cell();
@@ -170,12 +171,17 @@ void do_frame_static(int frameNum){
     // Cells move to their target positions based on their speed
     for(auto pCell : pAlives) pCell->update_target_pos();
 
+    // Rendering and User Interactions
+    SDL_draw_frame();
+    cout << "frameNum: " << frameNum << "a" << endl;
+    SDL_event_handler();
+
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
     for(auto pCell : pAlives){
         pCell->apply_non_movement_decisions(pAlives);
     }
-    
+
     // Cells move to new positions if enough force is applied
     for(auto pCell : pAlives) pCell->update_forces(pAlives);
     //print_cell_forces(pAlives);
@@ -199,20 +205,16 @@ void do_frame_static(int frameNum){
     for(int i = pDeads.size() - 1; i >= 0; i--){
         pDeads[i]->remove_this_dead_cell_if_depleted(pDeads, i);
     }
-    
+
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
     if(frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){
         increase_sim_gnd_energy(GND_ENERGY_PER_INCREASE);
     }
 
-    // Render the background, cell positions, etc.
+    // Rendering and User Interactions
     SDL_draw_frame();
-
-    // Deal with SDL events
-    //  e.g. Allow the user to decide when to advance to the next frame
-    std::cout << "Events will be handled this frame!\n";
+    cout << "frameNum: " << frameNum << "b" << endl;
     SDL_event_handler();
-    std::cout << "Events have been handled this frame!\n";
     
     return;
 }
@@ -221,7 +223,7 @@ void do_frame(int frameNum){
     if(!simIsRunning) return;
 
     // The cells each decide what to do (e.g. speed, direction, doAttack, etc.)
-    //  and then do it (e.g. update their internal state).
+    //  (e.g. update their internal state).
     for(auto pCell : pAlives) pCell->decide_next_frame();
 
     // Static portion of the frame

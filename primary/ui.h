@@ -92,9 +92,9 @@ void exit_SDL(){
 }
 
 
-// TODO: DEBUG
-//  Handle events between frames
-bool KEYS[322] = {0}; // 322 is the number of SDLK_DOWN events
+// Handle events between frames using SDL
+//  e.g. Allow the user to decide when to advance to the next frame
+//bool KEYS[322] = {0}; // 322 is the number of SDLK_DOWN events
 //SDL_EnableKeyRepeat(0,0); // ???
 void SDL_event_handler(){
     bool pauseSim = true;

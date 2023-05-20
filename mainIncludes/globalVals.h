@@ -1,5 +1,8 @@
 // Contains global variables and constants
 
+using namespace std;
+
+
 // Universal Constants
 static const double PI = 3.141592653589793238462643;
 static const std::set<char> DIGITS = {'0','1','2','3','4','5','6','7','8','9'};
@@ -12,9 +15,11 @@ static const std::set<char> OPERATORS = {'+','-','*','/'};
 // Global Simulation Parameters
 static const int UB_X = 50, UB_Y = 50;
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
+//  NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
+//  NOTE: The program might not work properly if this is disabled
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-static const int MAX_SUN_ENERGY_PER_SEC = 100;     // This is the maximum amount of energy which can be accumulated from the sun 
+static const int MAX_SUN_ENERGY_PER_SEC = 100;  // This is the maximum amount of energy which can be accumulated from the sun 
 static const int DAY_LEN_SEC = 100;   // Number of seconds per "day"
 int energyFromSunPerSec = 100; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
