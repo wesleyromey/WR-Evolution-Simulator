@@ -312,9 +312,12 @@ struct Cell {
         std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> aiOutputs = get_ai_outputs();
 
         // Start with the (first) hidden layer, doing more of them if needed
-        for(int i = 1; i < nodesPerLayer.size(); i++) assert(nodesPerLayer[i] < 1000);
-        for(int layerNum = 1; layerNum <= nodesPerLayer.size(); layerNum++){
+        for(int i = 1; i < nodesPerLayer.size(); i++){
+            assert(0 < nodesPerLayer[i] && nodesPerLayer[i] < 1000);
+        }
+        for(int layerNum = 1; layerNum < nodesPerLayer.size(); layerNum++){
             std::vector<aiNode> layerNodes;
+            //std::cout << layerNum << "," << nodesPerLayer[layerNum] << "|";
             for(int nodeNum = 0; nodeNum < nodesPerLayer[layerNum]; nodeNum++){
                 aiNode nextNode;
                 nextNode.init_node(1000 * layerNum + nodeNum, false, nodesPerLayer[layerNum - 1]);
@@ -322,6 +325,8 @@ struct Cell {
             }
             aiNetwork.push_back(layerNodes);
         }
+        //for(auto num : nodesPerLayer) std::cout << num << ","; std::cout << std::endl;
+        //for(auto ele : aiNetwork) std::cout << ele.size() << ","; std::cout << std::endl;
     }
     std::vector<float> do_forward_prop_1_layer(std::vector<float> layerInputs, int layerNum){
         // layerNum == 0 means the input layer
@@ -340,7 +345,8 @@ struct Cell {
     void decide_next_frame(){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
-        assert(aiNetwork.size() == nodesPerLayer.size());
+        //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
+        assert(aiNetwork.size() == nodesPerLayer.size() - 1);
         std::vector<float> layerInputs = get_ai_inputs();
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
@@ -632,7 +638,13 @@ struct Cell {
             clone_self(cloningDirection);
         }
     }
+    // TODO: DEBUG
+    void draw_cell(){
+        draw_texture(P_CELL_TEX, 10*posX-5*dia, 10*posY-5*dia, 10*dia, 10*dia);
+    }
 };
+
+
 
 
 
@@ -774,6 +786,11 @@ struct DeadCell {
         if(energy > 0) return;
         pDeads.erase(pDeads.begin() + iDead);
         delete pSelf;
+    }
+
+    // TODO: DEBUG
+    void draw_cell(){
+        draw_texture(P_DEAD_CELL_TEX, 10*posX-5*dia, 10*posY-5*dia, 10*dia, 10*dia);
     }
 };
 

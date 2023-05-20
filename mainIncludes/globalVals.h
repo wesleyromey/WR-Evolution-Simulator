@@ -10,7 +10,7 @@ static const std::set<char> LETTERS = {
 static const std::set<char> OPERATORS = {'+','-','*','/'};
 
 // Global Simulation Parameters
-static const int UB_X = 100, UB_Y = 100;
+static const int UB_X = 50, UB_Y = 50;
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 

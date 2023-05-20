@@ -47,6 +47,7 @@
         "typeinfo": "cpp",
         "set": "cpp",
         "chrono": "cpp",
-        "cassert": "cpp"
+        "cassert": "cpp",
+        "map": "cpp"
     }
 }

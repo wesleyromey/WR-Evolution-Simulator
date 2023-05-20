@@ -14,6 +14,13 @@ std::vector<Cell*> pAlives; // All cells that are currently alive
 std::vector<DeadCell*> pDeads; // All cells that are currently dead
 
 
+void SDL_draw_frame(){
+    draw_texture(P_BKGND_TEX, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
+    for(auto pCell : pAlives) pCell->draw_cell();
+    for(auto pCell : pDeads) pCell->draw_cell();
+    SDL_RenderPresent(P_RENDERER);
+}
+
 // NOTE: the input MUST be a pointer to memory which has been allocated
 //  for type Cell (using 'new').
 //  Recommended to just directly write 'delete ptr' in-line
@@ -92,14 +99,6 @@ void init_sim_global_vals(){
 }
 
 void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
-    // Create a pointer to a cell. Doing it using the rookie method results in bugs:
-    //  Cell cell1; // Need to allocate memory to the cell.
-    //              // This rookie code fails to do that, so bugs may occur if you intend to use pointers
-    //              // to Cell variables.
-    //              // Hence, it's better to control the pointers directly by allocating memory for them
-    //  return &cell;
-
-    // Here is the code done the proper way
     if(pParent == NULL){
         Cell *pCell = new Cell;
         pCell->gen_stats_random(pCellsHist.size(), pCell);
@@ -149,6 +148,7 @@ void randomly_place_new_cells(int numCells){
         gen_cell(); // This function allocates memory for pCell
         //  and appends a pointer to it for both pCellsHist and pAlives
     }
+    std::cout << "Placed " << numCells << " new cells\n";
 }
 
 void print_cell_coords(std::vector<Cell*> pCells){
@@ -165,6 +165,8 @@ void print_cell_forces(std::vector<Cell*> pCells){
 // This function does the frame while preserving the cells' previous decisions
 //  i.e. cells are forced to keep their inputs constant (e.g. speed, direction, etc.)
 void do_frame_static(int frameNum){
+    if(!simIsRunning) return;
+
     // Cells move to their target positions based on their speed
     for(auto pCell : pAlives) pCell->update_target_pos();
 
@@ -203,10 +205,21 @@ void do_frame_static(int frameNum){
         increase_sim_gnd_energy(GND_ENERGY_PER_INCREASE);
     }
 
+    // Render the background, cell positions, etc.
+    SDL_draw_frame();
+
+    // Deal with SDL events
+    //  e.g. Allow the user to decide when to advance to the next frame
+    std::cout << "Events will be handled this frame!\n";
+    SDL_event_handler();
+    std::cout << "Events have been handled this frame!\n";
+    
     return;
 }
 
 void do_frame(int frameNum){
+    if(!simIsRunning) return;
+
     // The cells each decide what to do (e.g. speed, direction, doAttack, etc.)
     //  and then do it (e.g. update their internal state).
     for(auto pCell : pAlives) pCell->decide_next_frame();

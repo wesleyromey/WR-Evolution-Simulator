@@ -10,8 +10,9 @@ int exit_simulation(){
     for(auto pCell : pCellsHist) delete pCell;
     for(auto pCell : pDeads) delete pCell;
     pCellsHist.clear(); pDeads.clear(); pAlives.clear();
+    std::cout << "simIsRunning: " << simIsRunning << std::endl;
     wait_for_user_to_exit_SDL();
-    exit_SDL(pWindow);
+    exit_SDL();
     return 0;
 }
 
@@ -71,6 +72,7 @@ void testFrames(){
         {"visionDist", 0}
     };
     pAlives[0]->set_int_stats(hardcodedVals);
+    do_frame(0);
     exit_simulation();
 }
 
@@ -156,30 +158,38 @@ void testForce(){
 }
 
 void test_SDL(){
-    SDL_Texture* pCellTexture = load_texture(pRenderer, "res/cell.png");
-    SDL_Texture* pBkgndTexture = load_texture(pRenderer, "res/bkgnd.png");
     for(int frameNum = 0; frameNum < 100; frameNum++){
-        draw_texture(pRenderer, pBkgndTexture, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
-        draw_texture(pRenderer, pCellTexture, 0, frameNum, 100, 100);
-        draw_texture(pRenderer, pCellTexture, 100-frameNum, 100+frameNum, 100, 100);
-        draw_texture(pRenderer, pCellTexture, 300, 100+2*frameNum,
+        draw_texture(P_BKGND_TEX, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
+        draw_texture(P_CELL_TEX, 0, frameNum, 100, 100);
+        draw_texture(P_CELL_TEX, 100-frameNum, 100+frameNum, 100, 100);
+        draw_texture(P_CELL_TEX, 300, 100+2*frameNum,
             150-frameNum/2, 150-frameNum/2);
-        SDL_RenderPresent(pRenderer);
+        SDL_RenderPresent(P_RENDERER);
         //  Displays the current frame (of textures) to the user
-        
+    }
+}
+
+void test_event_handler(){
+    randomly_place_new_cells(100);
+    int frameNum = 0;
+    while(simIsRunning){
+        //SDL_draw_frame();
+        //SDL_event_handler();
+        do_frame(frameNum);
+        std::cout << "frameNum: " << ++frameNum << std::endl;
     }
 }
 
 int main(int argc, char* argv[]){
-    //pWindow = init_SDL_window();
-    //pRenderer = init_SDL_renderer(pWindow);
+    SDL_draw_frame();
 #ifdef DEBUG
     //testForce();
     //testAi();
     //testStats();
     //testFrames();
     //testGlobalEnergy();
-    test_SDL();
+    //test_SDL();
+    test_event_handler();
 #else
     int numCells = 10;
     int numFrames = 20;
@@ -193,6 +203,7 @@ int main(int argc, char* argv[]){
     }
 #endif
     exit_simulation();
+    std::cout << "sim is done and finished!\n";
     return 0;
 }
 
