@@ -179,8 +179,21 @@ void test_event_handler(){
     }
 }
 
+// Edit this as needed!
+void dispIntroMsg(){
+    cout << "\nWelcome to the WR Evolution Simulator! Controls are:\n";
+    cout << "  Esc: Exit, n: Next frame, SPACE: Next frame, a: Play 10k frames really fast\n";
+    cout << "\nFeel free to use this software, but:\n";
+    cout << "  DISCLAIMER: THIS SOFTWARE MAY BE SUBJECT TO COPYLEFT RESTRICTIONS!\n";
+    cout << "  YOU MIGHT BE LEGALLY OBLIGATED TO PUBLISH YOUR SOURCE CODE IF YOU EDIT THIS SOFTWARE\n";
+    cout << "  AND THEN PUBLISH IT! THIS WARNING IS NOT TO BE USED AS LEGAL ADVICE!\n";
+    cout << "  See https://github.com/wesleyromey/WR-Evolution-Simulator for both the source code\n";
+    cout << "  and the license info.\n";
+}
+
 int main(int argc, char* argv[]){
     SDL_draw_frame();
+    dispIntroMsg();
 #ifdef DEBUG
     //testForce();
     //testAi();
