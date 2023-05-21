@@ -60,7 +60,7 @@ void update_dayNightCycleTime(int target = -1){
 const static int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 const static int DAY_NIGHT_BINARY_MODE = 1;
 const static int DAY_NIGHT_DEFAULT_MODE = 2;
-const static int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
+const static int DAY_NIGHT_MODE = DAY_NIGHT_ALWAYS_DAY_MODE;
 const static float DAY_NIGHT_EXPONENT = 2.0; // 0 <= EXPONENT < infinity
 const static float DAY_NIGHT_LB = 0.0, DAY_NIGHT_UB = 0.5;
 void do_day_night_cycle(){
@@ -173,13 +173,13 @@ void do_frame_static(int frameNum){
 
     // Rendering and User Interactions
     SDL_draw_frame();
-    cout << "frameNum: " << frameNum << "a" << endl;
+    //cout << "frameNum: " << frameNum << "a" << endl;
     SDL_event_handler();
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
     for(auto pCell : pAlives){
-        pCell->apply_non_movement_decisions(pAlives);
+        pCell->apply_non_movement_decisions(pAlives, pCellsHist);
     }
 
     // Cells move to new positions if enough force is applied
@@ -213,7 +213,7 @@ void do_frame_static(int frameNum){
 
     // Rendering and User Interactions
     SDL_draw_frame();
-    cout << "frameNum: " << frameNum << "b" << endl;
+    //if(frameNum % 100 == 0) cout << "frameNum: " << frameNum << "b" << endl;
     SDL_event_handler();
     
     return;

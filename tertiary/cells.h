@@ -423,7 +423,7 @@ struct Cell {
         maxHealth = gen_uniform_int_dist(rng, 1, 3);
         health = maxHealth;
         attack = 1;
-        dia = 1;
+        dia = gen_uniform_int_dist(rng, 1, 3);
         update_size();
         for(int i = 0; i < NUM_EAM_ELE; i++){
             EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
@@ -467,7 +467,7 @@ struct Cell {
         posX = gen_uniform_int_dist(rng, lbX, ubX);
         posY = gen_uniform_int_dist(rng, lbY, ubY);
     }
-    Cell* clone_self(int cellNum, int targetCloningDir = -1, bool randomizeCloningDir = false){
+    Cell* clone_self(int cellNum, int targetCloningDir = -1, bool randomizeCloningDir = false, bool doMutation = true){
         // The clone's position will be roughly the cell's diameter plus 1 away from the cell
         Cell* pClone = new Cell;
         *pClone = *pSelf; // Almost all quantities should be copied over perfectly
@@ -492,6 +492,8 @@ struct Cell {
         // Reset all internal timers
         pClone->age = 0;
         pClone->attackCooldown = 0;
+        //cout << "A cell cloned itself! id = "; for(auto digit : pClone->id) cout << digit; cout << endl;
+        if(doMutation) pClone->mutate_stats();
         return pClone;
     }
     void print_id(){
@@ -626,10 +628,16 @@ struct Cell {
         //  NOTE: Due to how the program is structured, I have to actually kill each dead cell outside of this struct
         return (health <= 0 || energy <= 0 || doSelfDestruct);
     }
-    // Does NOT account for wrap around
     float calc_distance_from_point(int xCoord, int yCoord){
+        // Assume -UB_X < posX and -UB_Y < posY
         int xDist = xCoord - posX;
+        if(WRAP_AROUND_X && abs(xDist) > abs(xCoord + UB_X - posX)){
+            xDist = xCoord + UB_X - posX;
+        }
         int yDist = yCoord - posY;
+        if(WRAP_AROUND_Y && abs(yDist) > abs(yCoord + UB_Y - posY)){
+            yDist = yCoord + UB_Y - posY;
+        }
         float ans = std::sqrt(xDist * xDist + yDist * yDist);
         return ans;
     }
@@ -638,7 +646,7 @@ struct Cell {
         attackCooldown = maxAttackCooldown;
         energy -= energyCostPerUse["attack"];
     }
-    void apply_non_movement_decisions(std::vector<Cell*>& pAlives){
+    void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist){
         if(doAttack && attackCooldown == 0 && energy > energyCostPerUse["attack"]){
             // Damage all cells that this cell touches excluding the cell itself
             // If health < 0, the cell will die when the death conditions are checked
@@ -649,13 +657,96 @@ struct Cell {
                 }
             }
         }
-        if(doCloning && energy > energyCostToClone){
-            clone_self(cloningDirection);
+        if(doCloning && energy > energyCostToClone && pAlives.size() < CELL_LIMIT){
+            Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
+            pCell->mutate_stats();
+            pCellsHist.push_back(pCell);
+            pAlives.push_back(pCell);
         }
+    }
+    // sdlMap contains various thresholds which, when exceeded,
+    //  Returns the corresponding SDL_Texture*
+    SDL_Texture* findSDLTex(int num,
+            const std::vector<std::pair<int, SDL_Texture*>>& sdlMap){
+        // Use the binary search algorithm
+        int iLb = 0, iUb = sdlMap.size()-1;
+        while(iLb < iUb){
+            int iMid = (iLb+iUb+1)/2;
+            if(num < sdlMap[iMid].first) iUb = --iMid;
+            else iLb = iMid;
+        }
+        assert(iLb == iUb);
+        return sdlMap[iLb].second;
+    }
+    std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
+        int sum = 0;
+        for(int i = 0; i < arrSize; i++) sum += arr[i];
+        std::vector<int> weights(arrSize);
+        std::vector<int> remainders(arrSize);
+        for(int i = 0; i < arrSize; i++){
+            weights[i] = numSlots * arr[i] / sum;
+            remainders[i] = numSlots * arr[i] % sum;
+        }
+        // Calculate the amount which needs to be added to the weights
+        int remaining = 0;
+        for(auto num : weights) remaining -= num;
+        // Add 1 to the indices with the largest remainder until sum(weights) == numSlots
+        //  (or remaining == 0)
+        while(remaining > 0){
+            int mostErroneousIndex = 0;
+            for(int i = 0; i < arrSize; i++){
+                if(remainders[i] > remainders[mostErroneousIndex]){
+                    mostErroneousIndex = i;
+                }
+                weights[mostErroneousIndex]++;
+                remainders[mostErroneousIndex] -= sum;
+            }
+        }
+        return weights;
+    }
+    // TODO: DEBUG
+    std::vector<SDL_Texture*> findEAMTex(std::vector<int> EAM_weights){
+        std::vector<SDL_Texture*> ans;
+        // First, check if everything is balanced
+        int minEAM = EAM[EAM_SUN], maxEAM = EAM[EAM_SUN];
+        for(int i = 0; i < NUM_EAM_ELE; i++){
+            if(EAM[i] < minEAM) minEAM = EAM[i];
+            if(EAM[i] > maxEAM) maxEAM = EAM[i];
+        }
+        if(maxEAM <= 1.7*minEAM){
+            ans.push_back(P_EAM_TEX["balanced"]);
+            return ans;
+        }
+        // Now that we know it is not perfectly "balanced"
+        //  NOTE: there are 4 pixels to color in
+        if(EAM_weights[EAM_GND]) ans.push_back(P_EAM_TEX["g4"]);
+        if(EAM_weights[EAM_SUN]){
+            std::string nextFile = "s" + std::to_string(EAM_weights[EAM_SUN]);
+            ans.push_back(P_EAM_TEX[nextFile]);
+        }
+        if(EAM_weights[EAM_CELLS]){
+            std::string nextFile = "c" + std::to_string(EAM_weights[EAM_SUN]);
+            ans.push_back(P_EAM_TEX[nextFile]);
+        }
+        return ans;
     }
     // TODO: DEBUG
     void draw_cell(){
-        draw_texture(P_CELL_TEX, 10*posX-5*dia, 10*posY-5*dia, 10*dia, 10*dia);
+        int drawX = DRAW_SCALE_FACTOR*posX - DRAW_SCALE_FACTOR*dia/2;
+        int drawY = DRAW_SCALE_FACTOR*posY - DRAW_SCALE_FACTOR*dia/2;
+        int drawSize = DRAW_SCALE_FACTOR*dia;
+        draw_texture(P_CELL_TEX, drawX, drawY, drawSize, drawSize);
+        // Draw the health and energy on top of this
+        SDL_Texture* energyTex = findSDLTex(energy, P_CELL_ENERGY_TEX);
+        draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
+        SDL_Texture* healthTex = findSDLTex(100*health/maxHealth, P_CELL_HEALTH_TEX);
+        draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
+        if(doAttack) draw_texture(P_DO_ATTACK_TEX, drawX, drawY, drawSize, drawSize);
+        if(doCloning)  draw_texture(P_DO_CLONING_TEX, drawX, drawY, drawSize, drawSize);
+        // EAM
+        vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
+        vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
+        for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
     }
 };
 
@@ -813,7 +904,10 @@ struct DeadCell {
 
     // TODO: DEBUG
     void draw_cell(){
-        draw_texture(P_DEAD_CELL_TEX, 10*posX-5*dia, 10*posY-5*dia, 10*dia, 10*dia);
+        int drawX = DRAW_SCALE_FACTOR*posX - DRAW_SCALE_FACTOR*dia/2;
+        int drawY = DRAW_SCALE_FACTOR*posY - DRAW_SCALE_FACTOR*dia/2;
+        int drawSize = DRAW_SCALE_FACTOR*dia;
+        draw_texture(P_DEAD_CELL_TEX, drawX, drawY, drawSize, drawSize);
     }
 };
 
