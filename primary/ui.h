@@ -24,13 +24,18 @@ bool mouseButtonDownPrevFrame = false;
 bool simIsRunning = true; // If false, exit the program
 
 
-
+// SDL Frame Rendering, Textures, etc.
+static const int RGB_MIN = 0, RGB_MAX = 255;
 SDL_Window* init_SDL_window();
 SDL_Window* P_WINDOW = init_SDL_window();
 SDL_Renderer* init_SDL_renderer();
 SDL_Renderer* P_RENDERER = init_SDL_renderer();
 SDL_Texture* load_texture(const char* filePath);
-SDL_Texture* P_CELL_TEX = load_texture("res/cell.png");
+void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int height, int width);
+SDL_Texture* findSDLTex(int num,
+    const std::vector<std::pair<int, SDL_Texture*>>& sdlMap
+);
+SDL_Texture* P_CELL_TEX = load_texture("res/cell_skeleton.png");
 static const std::vector<std::pair<int, SDL_Texture*>> P_CELL_ENERGY_TEX = {
     {0,     load_texture("res/energy/0.png")},
     {100,   load_texture("res/energy/100.png")},
@@ -84,19 +89,97 @@ std::map<std::string, SDL_Texture*> P_EAM_TEX = {
     {"balanced", load_texture("res/EAM/balanced.png")},
 };
 SDL_Texture* P_DEAD_CELL_TEX = load_texture("res/deadCell.png");
-SDL_Texture* P_BKGND_TEX = load_texture("res/bkgnd.png");
+SDL_Texture* P_BKGND_TEX = load_texture("res/bkgnd_default.png");
+// The background is drawn using 1 color.
+//  This function was made to ensure color transitions are smooth
+// efs = energyFromSunlight
+// TODO
+void draw_bkgnd(int energyFromSunPerSec){
+    int efs = energyFromSunPerSec;
+    // (Approximately)
+    // efs  | Red   | Green | Blue
+    // 0    | 0     | 0     | 0
+    // 1    | 40    | 0     | 0
+    // 10   | 100   | 0     | 0
+    // 50   | 160   | 160   | 0
+    // 250  | 200   | 200   | 200
+    // 1000 | 0     | 255   | 255  // Remains here forever
+    
+    // Every color logarithmically increases from a starting point.
+    //  and may in some cases linearly go back down to a different end point.
+    //  If the starting point is the value at the start of the function:
+    //      color = C0 + C1*ln(efs), or alternatively:
+    //  If the starting point is at an initial efs:
+    //      color = C1 * (ln(efs) - ln(startEfs))
+    static const int LN_RED_C0 = 40, LN_RED_C1 = 30;
+    #define fRedLn(efs) saturate_int(LN_RED_C0 + LN_RED_C1*ln(efs), RGB_MIN, RGB_MAX)
+    static const int MID_EFS_RED = 250, END_EFS_RED = 1000;
+    static const int RED_START = 40, RED_MID = fRedLn(MID_EFS_RED), RED_END = 0;
+    static const int RED_SLOPE = (RED_END - RED_MID) / (END_EFS_RED - MID_EFS_RED);
+    #define fRedLinear(efs) saturate_int(RED_MID + RED_SLOPE * (efs - MID_EFS_RED), RGB_MIN, RGB_MAX)
+
+    static const int START_EFS_GRN = 10;
+    static const int LN_GRN_C1 = 55; // Increase to make the increase for Green last shorter
+    #define fGrnLn(efs) saturate_int(LN_GRN_C1*(ln(efs) - ln(START_EFS_GRN)), RGB_MIN, RGB_MAX)
+
+    static const int START_EFS_BLUE = 50;
+    static const int LN_BLUE_C1 = 85;
+    #define fBlueLn(efs) saturate_int(LN_BLUE_C1*(ln(efs) - ln(START_EFS_BLUE)), RGB_MIN, RGB_MAX)
+
+    // First, set the RGB values for the background based on sunlight
+    int red = 0, grn = 0, blue = 0; // Set for efs == 0
+    if(efs != 0){
+        red = (efs <= 250) ? fRedLn(efs) : fRedLinear(efs);
+        grn = fGrnLn(efs);
+        blue = fBlueLn(efs);
+    }
+
+    // Second, create the texture using the calculated RGB values
+    //cout << "efs: " << efs << "; RGB: " << red << ", " << grn << ", " << blue << endl;
+    SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
+    SDL_RenderPresent(P_RENDERER);
+}
+std::vector<std::pair<int, SDL_Texture*>> P_GND_TEX = {
+    // The amount of energy per second from sunlight as a percent of
+    //  the max ground energy should be described by these file names
+    {0,   load_texture("res/gndEnergy/0pct.png")},
+    {10,  load_texture("res/gndEnergy/10pct.png")},
+    {20,  load_texture("res/gndEnergy/20pct.png")},
+    {30,  load_texture("res/gndEnergy/30pct.png")},
+    {40,  load_texture("res/gndEnergy/40pct.png")},
+    {50,  load_texture("res/gndEnergy/50pct.png")},
+    {60,  load_texture("res/gndEnergy/60pct.png")},
+    {70,  load_texture("res/gndEnergy/70pct.png")},
+    {80,  load_texture("res/gndEnergy/80pct.png")},
+    {90,  load_texture("res/gndEnergy/90pct.png")},
+    {100, load_texture("res/gndEnergy/100pct.png")},
+};
+void draw_gnd(){
+    int numRows = UB_X, numCols = UB_Y;
+    for(int row = 0; row < numRows; row++){
+        for(int col = 0; col < numCols; col++){
+            int drawX = DRAW_SCALE_FACTOR*row;
+            int drawY = DRAW_SCALE_FACTOR*col;
+            int drawSize = DRAW_SCALE_FACTOR;
+            assert(drawX >= 0 && drawY >= 0 && simGndEnergy[row][col] >= 0);
+            draw_texture(
+                findSDLTex(100 * simGndEnergy[row][col] / MAX_GND_ENERGY, P_GND_TEX),
+                drawX, drawY, drawSize, drawSize
+            );
+        }
+    }
+}
 
 
 
 SDL_Texture* load_texture(const char* filePath){
     SDL_Texture* ans = IMG_LoadTexture(P_RENDERER, filePath);
+    if(ans == NULL) cout << filePath << endl;
     assert(ans != NULL);
     return ans;
 }
 
-// TODO: Eventually, I will want a draw_frame function
-//  which includes this function for every object, except
-//  the SDL_RenderPresent portion is ran only once
+// Draw a texture at a particular x and y position
 void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int height, int width){
     // xPos = 0, yPos = 0 refers to the top left corner of the window
     // Not sure what pSrc refers to.
@@ -112,6 +195,22 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int height, int wid
     SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
     //  This renders the opject according to pDst
     //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+}
+
+// TODO: Move this function to ui.h
+// sdlMap contains various thresholds which, when exceeded,
+//  Returns the corresponding SDL_Texture*
+SDL_Texture* findSDLTex(int num,
+        const std::vector<std::pair<int, SDL_Texture*>>& sdlMap){
+    // Use the binary search algorithm
+    int iLb = 0, iUb = sdlMap.size()-1;
+    while(iLb < iUb){
+        int iMid = (iLb+iUb+1)/2;
+        if(num < sdlMap[iMid].first) iUb = --iMid;
+        else iLb = iMid;
+    }
+    assert(iLb == iUb);
+    return sdlMap[iLb].second;
 }
 
 SDL_Window* init_SDL_window(){
@@ -147,7 +246,7 @@ void wait_for_user_to_exit_SDL(){
 void exit_SDL(){
     SDL_DestroyWindow(P_WINDOW);
     SDL_Quit();
-    std::cout << "SDL is quit!\n";
+    std::cout << "SDL is quitting!\n";
 }
 
 
@@ -175,7 +274,7 @@ void SDL_event_handler(){
                     break;
                     case SDLK_a:
                     autoAdvanceSim = AUTO_ADVANCE_DEFAULT;
-                    cout << "a is pressed! Simulation is speeding up " << autoAdvanceSim << " frames" << endl;
+                    cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
                     break;
                 }
                 break;

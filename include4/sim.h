@@ -16,7 +16,9 @@ std::vector<DeadCell*> pDeads; // All cells that are currently dead
 
 // Render the background, cell positions, etc using SDL
 void SDL_draw_frame(){
-    draw_texture(P_BKGND_TEX, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
+    SDL_RenderClear(P_RENDERER);
+    draw_bkgnd(energyFromSunPerSec);
+    draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();
     for(auto pCell : pDeads) pCell->draw_cell();
     SDL_RenderPresent(P_RENDERER);
@@ -60,8 +62,11 @@ void update_dayNightCycleTime(int target = -1){
 const static int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 const static int DAY_NIGHT_BINARY_MODE = 1;
 const static int DAY_NIGHT_DEFAULT_MODE = 2;
-const static int DAY_NIGHT_MODE = DAY_NIGHT_ALWAYS_DAY_MODE;
+const static int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
 const static float DAY_NIGHT_EXPONENT = 2.0; // 0 <= EXPONENT < infinity
+//  Smaller values (closer to 0) mean the sun remains lower in the sky.
+//  Larger values (to +inf) mean the sun is near its max height for longer
+//  A value of 1.75 approximates a sine wave
 const static float DAY_NIGHT_LB = 0.0, DAY_NIGHT_UB = 0.5;
 void do_day_night_cycle(){
     // Stick with a simple polynomial equation to approximate a sine wave during the day phase
@@ -190,7 +195,7 @@ void do_frame_static(int frameNum){
     // Increase cell energy based on EAM
     do_day_night_cycle();
     update_dayNightCycleTime();
-    for(auto pCell : pAlives) pCell->do_energy_accumulation();
+    for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives);
     for(auto pCell : pDeads) pCell->do_energy_decay(pAlives);
 
     // Consume energy each 'tick'

@@ -173,20 +173,20 @@ void test_event_handler(){
     randomly_place_new_cells(100);
     int frameNum = 0;
     while(simIsRunning){
-        // TODO: Figure out what causes frames to take forever!!!
         do_frame(frameNum++);
-        //std::cout << "frameNum: " << ++frameNum << std::endl;
     }
 }
 
-// Edit this as needed!
+// NOTE: Edit this as needed!
 void dispIntroMsg(){
     cout << "\nWelcome to the WR Evolution Simulator! Controls are:\n";
     cout << "  Esc: Exit, n: Next frame, SPACE: Next frame, a: Play 10k frames really fast\n";
-    cout << "\nFeel free to use this software, but:\n";
-    cout << "  DISCLAIMER: THIS SOFTWARE MAY BE SUBJECT TO COPYLEFT RESTRICTIONS!\n";
-    cout << "  YOU MIGHT BE LEGALLY OBLIGATED TO PUBLISH YOUR SOURCE CODE IF YOU EDIT THIS SOFTWARE\n";
-    cout << "  AND THEN PUBLISH IT! THIS WARNING IS NOT TO BE USED AS LEGAL ADVICE!\n";
+    cout << endl;
+    cout << "Feel free to use this software in your own projects, but:\n";
+    cout << "  THE GNU GPL v3 LICENSE MAY APPLY TO THIS SOFTWARE AS A WHOLE IN ADDITION TO THE\n";
+    cout << "  REMAINING LICENSES. SEE https://www.gnu.org/licenses/gpl-3.0.html AND THE\n";
+    cout << "  COPYRIGHT FOLDER FOR MORE INFORMATION.\n";
+    cout << endl;
     cout << "  See https://github.com/wesleyromey/WR-Evolution-Simulator for both the source code\n";
     cout << "  and the license info.\n";
 }
@@ -194,6 +194,7 @@ void dispIntroMsg(){
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();
+    init_sim_global_vals();
 #ifdef DEBUG
     //testForce();
     //testAi();

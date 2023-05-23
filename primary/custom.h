@@ -4,6 +4,9 @@
 #define MAIN_INCLUDES_H
 #endif
 
+// Macros
+#define ln(x) std::log(x)
+
 // Modified <cmath> functions
 float sin_deg(int input){
     return sin(input * PI / 180);

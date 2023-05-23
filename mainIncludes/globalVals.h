@@ -13,15 +13,17 @@ static const std::set<char> LETTERS = {
 static const std::set<char> OPERATORS = {'+','-','*','/'};
 
 // Global Simulation Parameters
-static const int UB_X = 30, UB_Y = 20;
+static const int UB_X = 60, UB_Y = 40;
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 //  NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 //  NOTE: The program might not work properly if this is disabled
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-static const int MAX_SUN_ENERGY_PER_SEC = 200;  // This is the maximum amount of energy which can be accumulated from the sun 
+static const int MAX_SUN_ENERGY_PER_SEC = 40;  // This is the maximum amount of energy which can be accumulated from the sun 
 static const int DAY_LEN_SEC = 100;   // Number of seconds per "day"
-static const int CELL_LIMIT = 100;
+static const int CELL_LIMIT = 400;
+static const float OVERCROWDING_ENERGY_COEF = 10.;
+//  Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
 
@@ -65,6 +67,7 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "size"}, {"speed", "(x*x+20)*x*size"}, {"visionDist", "x*x"},
     {"stickiness", "2*x*size"}, {"mutationRate", "x*size/100"},
     {"age", "x*x*size/10000"}, {"maxHealth", "10*x/size"}, {"attack", "20*x/size"},
+    {"overcrowding", "OVERCROWDING_ENERGY_COEF*x"}
 };
 
 

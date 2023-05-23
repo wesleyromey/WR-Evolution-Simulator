@@ -74,6 +74,15 @@ struct Cell {
     int maxAttackCooldown = 10;
 
     // Struct-specific methods
+    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives){
+        std::vector<Cell*> ans;
+        for(auto pAlive : pAlives){
+            if(pAlive->calc_distance_from_point(posX, posY) <= (float)(dia + pAlive->dia + 0.1) / 2){
+                ans.push_back(pAlive);
+            }
+        }
+        return ans;
+    }
     void teleport_self(int target_x, int target_y){
         posX = target_x;
         posY = target_y;
@@ -436,10 +445,18 @@ struct Cell {
         update_energy_costs();
     }
     // NOTE: The full energy accumulation can only be done after this function is applied to every cell
-    //  in the local area
-    void do_energy_accumulation(){
+    //  in the local area.
+    // This function causes cells to accumulate energy from the sun, ground, and dead cells.
+    //  Also, energy loss due to overcrowding leads is applied by this function
+    void do_energy_transfer(std::vector<Cell*>& pAlives){
         // Energy from the sun
-        energy += energyFromSunPerSec * EAM[EAM_SUN] / 100;
+        //  First, calculate which cells are touching the current cell
+        std::vector<Cell*> touchingCells = find_touching_cells(pAlives);
+        //  TODO: Give each cell a dexterity (dex) stat, which will help them NOT be blocked by other cells.
+        //  Bigger cells get more of the energy and will receive most of the energy if competing with smaller cells.
+        int sumOfCellSizes = size;
+        for(auto cell : touchingCells) sumOfCellSizes += cell->size;
+        energy += (float)energyFromSunPerSec * EAM[EAM_SUN] * size / 100 / sumOfCellSizes;
         
         // Energy from the ground -> Energy may be shared between cells,
         //  so it is better to add a pointer to the cell to each applicable ground cell's
@@ -456,6 +473,10 @@ struct Cell {
         // Energy from cells which just died -> Add a pointer to the cell to the list
         //  associated with the cell that just died last frame AND is within range
         //  NOTE: This is dealt with in the DeadCell struct
+
+        // Energy loss from overcrowding directly
+        // TODO: Create a dex stat to resist this overcrowding
+        energy -= OVERCROWDING_ENERGY_COEF*sumOfCellSizes/size;
 
 
         // Enforce energy constraints
@@ -664,6 +685,7 @@ struct Cell {
             pAlives.push_back(pCell);
         }
     }
+    // TODO: Move this function to ui.h
     // sdlMap contains various thresholds which, when exceeded,
     //  Returns the corresponding SDL_Texture*
     SDL_Texture* findSDLTex(int num,
@@ -688,7 +710,7 @@ struct Cell {
             remainders[i] = numSlots * arr[i] % sum;
         }
         // Calculate the amount which needs to be added to the weights
-        int remaining = 0;
+        int remaining = numSlots;
         for(auto num : weights) remaining -= num;
         // Add 1 to the indices with the largest remainder until sum(weights) == numSlots
         //  (or remaining == 0)
@@ -698,13 +720,15 @@ struct Cell {
                 if(remainders[i] > remainders[mostErroneousIndex]){
                     mostErroneousIndex = i;
                 }
-                weights[mostErroneousIndex]++;
-                remainders[mostErroneousIndex] -= sum;
             }
+            weights[mostErroneousIndex]++;
+            remaining--;
+            remainders[mostErroneousIndex] -= sum;
         }
+        //cout << "weights: "; for(auto num: weights) cout << num << ", "; cout << endl;
+        //cout << "EAM:     " << EAM[0] << ", " << EAM[1] << ", " << EAM[2] << endl;
         return weights;
     }
-    // TODO: DEBUG
     std::vector<SDL_Texture*> findEAMTex(std::vector<int> EAM_weights){
         std::vector<SDL_Texture*> ans;
         // First, check if everything is balanced
@@ -730,10 +754,9 @@ struct Cell {
         }
         return ans;
     }
-    // TODO: DEBUG
     void draw_cell(){
-        int drawX = DRAW_SCALE_FACTOR*posX - DRAW_SCALE_FACTOR*dia/2;
-        int drawY = DRAW_SCALE_FACTOR*posY - DRAW_SCALE_FACTOR*dia/2;
+        int drawX = DRAW_SCALE_FACTOR*posX;
+        int drawY = DRAW_SCALE_FACTOR*posY;
         int drawSize = DRAW_SCALE_FACTOR*dia;
         draw_texture(P_CELL_TEX, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
@@ -741,8 +764,8 @@ struct Cell {
         draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
         SDL_Texture* healthTex = findSDLTex(100*health/maxHealth, P_CELL_HEALTH_TEX);
         draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
-        if(doAttack) draw_texture(P_DO_ATTACK_TEX, drawX, drawY, drawSize, drawSize);
-        if(doCloning)  draw_texture(P_DO_CLONING_TEX, drawX, drawY, drawSize, drawSize);
+        if(doAttack)  draw_texture(P_DO_ATTACK_TEX,  drawX, drawY, drawSize, drawSize);
+        if(doCloning) draw_texture(P_DO_CLONING_TEX, drawX, drawY, drawSize, drawSize);
         // EAM
         vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
         vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
@@ -840,7 +863,7 @@ struct DeadCell {
         }
         return ans;
     }
-    // TODO: DEBUG
+    // The dead cells and ground transfer energy to the living cells and / or the environment
     void do_energy_decay(std::vector<Cell*>& pAlives){
         // Energy to cells which are touching the dead cell
         std::vector<Cell*> touchingCells = find_touching_cells(pAlives);
@@ -893,19 +916,15 @@ struct DeadCell {
         posX += dX;
         posY += dY;
     }
-
-    // TODO: DEBUG
     void remove_this_dead_cell_if_depleted(std::vector<DeadCell*>& pDeads, int iDead){
         assert(pDeads[iDead] == pSelf);
         if(energy > 0) return;
         pDeads.erase(pDeads.begin() + iDead);
         delete pSelf;
     }
-
-    // TODO: DEBUG
     void draw_cell(){
-        int drawX = DRAW_SCALE_FACTOR*posX - DRAW_SCALE_FACTOR*dia/2;
-        int drawY = DRAW_SCALE_FACTOR*posY - DRAW_SCALE_FACTOR*dia/2;
+        int drawX = DRAW_SCALE_FACTOR*posX;
+        int drawY = DRAW_SCALE_FACTOR*posY;
         int drawSize = DRAW_SCALE_FACTOR*dia;
         draw_texture(P_DEAD_CELL_TEX, drawX, drawY, drawSize, drawSize);
     }

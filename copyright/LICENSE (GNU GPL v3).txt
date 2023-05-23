@@ -1,14 +1,5 @@
-DISCLAIMER: I AM NOT CERTAIN IF THE GNU GPL v3 LICENSE APPLIES, BUT IT MIGHT
-APPLY IN ADDITION TO THE MIT AND zLib LICENSES.
-
-NOTE: The GNU GPL v3 license (https://www.gnu.org/licenses/gpl-3.0.html)
-may apply to this software despite me applying a different licence to it.
-This is because I may have used GNU GPL v3 licensed software at some point
-(I'm NOT 100% certain about this). The GNU GPL v3 contains RESTRICTIONS
-including but NOT limited to:
-1. If you make edits to the software and publish it (or an executable of it),
-	then you MUST also publish the source code you added to it
-
+The GNU GPL v3 license is a copyleft license which may apply to this simulator.
+See https://www.gnu.org/licenses/gpl-3.0.html for the license.
 
 If you're fine with using copyleft software, feel free to add to it
 and make your own version. But if you want to keep it confidential and private,

@@ -1,27 +1,10 @@
 NOTE: While I have applied the MIT license to my software,
-I also use software which has different licenses associated with them.
+I also use(d) software which has different licenses associated with them.
 These include:
-	MIT License (every file that I completed)
+	MIT License (every file for which I, Wesley Romey, am the author of)
 	zLib License (SDL 2 and SDL Image 2)
-	Either GNU GPL v3 or Apache License v2.0 with LLVM Exception
-		(it could be one, the other, or both)
-	
+These may also include:
+	GNU GPL v3
 
-There are multiple implementations of some of the libraries I use
-including but not limited to the C++ Standard Libraries.
-I do NOT know which implementation was used for my code.
-
-THE LICENSES OF THE IMPLEMENTED SOFTWARE MAY ALTER THE LICENSE
-OF THIS SOFTWARE DEPENDING ON WHICH FILES WERE USED, THE LAWS IN YOUR REGION,
-ETC. I AM NOT A LAWYER. USE THIS SOFTWARE AT YOUR OWN RISK!
-SPECIFICALLY, THE GNU GPL v3 LICENSE MAY APPLY TO THIS SOFTWARE AS A WHOLE,
-WHOSE RESTRICTIONS INCLUDE BUT ARE NOT LIMITED TO:
-1. If you make edits to the software and publish it (or an executable of it),
-	then you MUST also publish the source code you added to it
-2. See https://www.gnu.org/licenses/gpl-3.0.html for the complete GNU GPL v3 License
-
-The C++ libraries are distributed under various licenses, including but not limited to:
-	Microsoft C++ Standard Library:
-		Apache License v2.0 with LLVM Exception (see the text file)
-	GNU ISO C++ Library: GNU GPL v3
-		https://www.gnu.org/licenses/gpl-3.0.html
+THE GNU GPL v3 LICENSE MAY APPLY TO THIS SOFTWARE IN ADDITION TO THE REMAINING
+LICENSES. See https://www.gnu.org/licenses/gpl-3.0.html for more information.
