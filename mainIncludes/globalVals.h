@@ -61,10 +61,10 @@ static const int FORCE_DAMPING_FACTOR = 100;
     //  number of tiny cells can propel larger cells to "teleport" them wherever
 std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
     {"base", "200"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
-    {"attack", "400"}, {"size", "10*size"},
+    {"attack", "400"}, {"size", "100*size"},
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
-    {"base", "size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
+    {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
     {"stickiness", "2*x"}, {"mutationRate", "x/100"},
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
     {"overcrowding", "OVERCROWDING_ENERGY_COEF*x"}
