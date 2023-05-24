@@ -66,7 +66,7 @@ std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "size"}, {"speed", "(x*x+20)*x*size"}, {"visionDist", "x*x"},
     {"stickiness", "2*x*size"}, {"mutationRate", "x*size/100"},
-    {"age", "x*x*size/10000"}, {"maxHealth", "10*x/size"}, {"attack", "20*x/size"},
+    {"age", "x*x/10000"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
     {"overcrowding", "OVERCROWDING_ENERGY_COEF*x"}
 };
 
