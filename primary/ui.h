@@ -137,6 +137,9 @@ void draw_bkgnd(int energyFromSunPerSec){
     // Second, create the texture using the calculated RGB values
     //cout << "efs: " << efs << "; RGB: " << red << ", " << grn << ", " << blue << endl;
     SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
+    SDL_Rect bkgnd = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+    SDL_RenderDrawRect(P_RENDERER, &bkgnd);
+    SDL_RenderFillRect(P_RENDERER, &bkgnd);
     SDL_RenderPresent(P_RENDERER);
 }
 std::vector<std::pair<int, SDL_Texture*>> P_GND_TEX = {

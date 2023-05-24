@@ -68,9 +68,11 @@ struct Cell {
 
     // Bounds
     int maxEnergy = 10000;
+    //  TODO: Multiply this by size
     int maxAggression = 100;
+    //  TODO: Delete aggression, as it does NOT have any bearing on the simulation
     int maxMutationRate = 10000;
-    int maxDia = 10;
+    int maxDia = 30;
     int maxAttackCooldown = 10;
 
     // Struct-specific methods

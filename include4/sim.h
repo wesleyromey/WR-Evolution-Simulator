@@ -16,7 +16,7 @@ std::vector<DeadCell*> pDeads; // All cells that are currently dead
 
 // Render the background, cell positions, etc using SDL
 void SDL_draw_frame(){
-    SDL_RenderClear(P_RENDERER);
+    //SDL_RenderClear(P_RENDERER);
     draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();

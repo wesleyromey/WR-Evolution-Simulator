@@ -60,13 +60,13 @@ static const int FORCE_DAMPING_FACTOR = 100;
     // Another program feature is that both cells get launched the same distance away, so a large
     //  number of tiny cells can propel larger cells to "teleport" them wherever
 std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
-    {"base", "200"}, {"visionDist", "100*x"}, {"stickiness", "x*x*size"},
-    {"attack", "400"}, {"size", "100*size"},
+    {"base", "200"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
+    {"attack", "400"}, {"size", "10*size"},
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
-    {"base", "size"}, {"speed", "(x*x+20)*x*size"}, {"visionDist", "x*x"},
-    {"stickiness", "2*x*size"}, {"mutationRate", "x*size/100"},
-    {"age", "x*x/10000"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
+    {"base", "size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
+    {"stickiness", "2*x"}, {"mutationRate", "x/100"},
+    {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
     {"overcrowding", "OVERCROWDING_ENERGY_COEF*x"}
 };
 
