@@ -49,5 +49,6 @@
         "chrono": "cpp",
         "cassert": "cpp",
         "map": "cpp"
-    }
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }

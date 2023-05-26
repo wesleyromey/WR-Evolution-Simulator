@@ -34,6 +34,22 @@ int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 static const int GND_ENERGY_PER_INCREASE = 10;
 
+// Initialize SDL
+static const char* WINDOW_TITLE = "Evolution Simulator";
+// Calculate DRAW_SCALE_FACTOR (rounded down to nearest int)
+static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
+static const int TARGET_SCREEN_HEIGHT = 800; // Try 800, or 400 for a quarter screen
+int tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
+int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
+int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
+static const int DRAW_SCALE_FACTOR = tmpDrawScale;
+static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
+static const int WINDOW_HEIGHT = DRAW_SCALE_FACTOR*UB_Y;
+static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
+
+bool mouseButtonDownPrevFrame = false;
+bool simIsRunning = true; // If false, exit the program
+
 
 // Values used for all Cell type variables
 std::random_device rd{};

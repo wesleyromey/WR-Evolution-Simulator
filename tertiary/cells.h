@@ -687,6 +687,7 @@ struct Cell {
             pAlives.push_back(pCell);
         }
     }
+    /*
     // TODO: Move this function to ui.h
     // sdlMap contains various thresholds which, when exceeded,
     //  Returns the corresponding SDL_Texture*
@@ -702,6 +703,7 @@ struct Cell {
         assert(iLb == iUb);
         return sdlMap[iLb].second;
     }
+    */
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;
         for(int i = 0; i < arrSize; i++) sum += arr[i];
@@ -760,14 +762,14 @@ struct Cell {
         int drawX = DRAW_SCALE_FACTOR*posX;
         int drawY = DRAW_SCALE_FACTOR*posY;
         int drawSize = DRAW_SCALE_FACTOR*dia;
-        draw_texture(P_CELL_TEX, drawX, drawY, drawSize, drawSize);
+        draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
         SDL_Texture* energyTex = findSDLTex(energy, P_CELL_ENERGY_TEX);
         draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
         SDL_Texture* healthTex = findSDLTex(100*health/maxHealth, P_CELL_HEALTH_TEX);
         draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
-        if(doAttack)  draw_texture(P_DO_ATTACK_TEX,  drawX, drawY, drawSize, drawSize);
-        if(doCloning) draw_texture(P_DO_CLONING_TEX, drawX, drawY, drawSize, drawSize);
+        if(doAttack)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
+        if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
         // EAM
         vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
         vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
@@ -928,7 +930,7 @@ struct DeadCell {
         int drawX = DRAW_SCALE_FACTOR*posX;
         int drawY = DRAW_SCALE_FACTOR*posY;
         int drawSize = DRAW_SCALE_FACTOR*dia;
-        draw_texture(P_DEAD_CELL_TEX, drawX, drawY, drawSize, drawSize);
+        draw_texture(pDeadCellTex, drawX, drawY, drawSize, drawSize);
     }
 };
 

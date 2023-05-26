@@ -159,10 +159,10 @@ void testForce(){
 
 void test_SDL(){
     for(int frameNum = 0; frameNum < 100; frameNum++){
-        draw_texture(P_BKGND_TEX, 0, 0, WINDOW_HEIGHT, WINDOW_WIDTH);
-        draw_texture(P_CELL_TEX, 0, frameNum, 100, 100);
-        draw_texture(P_CELL_TEX, 100-frameNum, 100+frameNum, 100, 100);
-        draw_texture(P_CELL_TEX, 300, 100+2*frameNum,
+        draw_bkgnd(500);
+        draw_texture(pCellSkeleton, 0, frameNum, 100, 100);
+        draw_texture(pEnergyGnd0pctTex, 100-frameNum, 100+frameNum, 100, 100);
+        draw_texture(pHealth70pctTex, 300, 100+2*frameNum,
             150-frameNum/2, 150-frameNum/2);
         SDL_RenderPresent(P_RENDERER);
         //  Displays the current frame (of textures) to the user
@@ -170,10 +170,117 @@ void test_SDL(){
 }
 
 void test_event_handler(){
-    randomly_place_new_cells(100);
+    randomly_place_new_cells(10);
     int frameNum = 0;
     while(simIsRunning){
         do_frame(frameNum++);
+    }
+}
+
+// TODO: Ensure that byte maps can be converted to SDL_Surface* and then
+//  from SDL_Surface* to SDL_Texture* 
+void test_new_tex(){
+    int imgWidth = 10;
+    int imgHeight = 10;
+    int numChannels = 3;
+    unsigned char RGB[3] = {0xc3, 0xc3, 0xc3};
+    unsigned char filled[] = {
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+        RGB[0], RGB[1], RGB[2], RGB[0], RGB[1], RGB[2],
+    };
+
+    imgWidth = 3;
+    imgHeight = 3;
+    numChannels = 3;
+    #define RGB "abcd"
+    #undef RGB
+    #define RGB 0x00, 0x00, 0x00
+    //  NOTE: It is possible to use #define to redefine a constant
+    //  (best to use #undef first)
+    unsigned char black3channels[] = {
+        RGB, RGB, RGB,
+        RGB, RGB, RGB, 
+        RGB, RGB, RGB,
+    };
+    SDL_Surface* pBlackSurface3 = SDL_CreateRGBSurfaceFrom((void*)black3channels,
+        imgWidth, imgHeight, numChannels*8, imgWidth*numChannels,
+        0x0000ff, 0x00ff00, 0xff0000, 0
+    );
+    cout << pBlackSurface3 << endl;
+    SDL_Texture* pBlackTex3 = SDL_CreateTextureFromSurface(P_RENDERER, pBlackSurface3);
+
+
+    numChannels = 4;
+    #define RGBA 0xFF, 0xFF, 0xFF, 0xFF
+    #define ___0 0x00, 0x00, 0x00, 0x00
+    unsigned char white4channels[] = {
+        RGBA, ___0, ___0,
+        ___0, RGBA, ___0,
+        ___0, ___0, RGBA,
+    };
+    SDL_Texture* pWhiteTex4 = convArrToSDLTex(white4channels, 3, 3);
+    /*
+    SDL_Surface* pWhiteSurface4 = SDL_CreateRGBSurfaceFrom((void*)white4channels,
+        imgWidth, imgHeight, numChannels*8, imgWidth*numChannels,
+        0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff
+    );
+    cout << pWhiteSurface4 << endl;
+    SDL_Texture* pWhiteTex4 = SDL_CreateTextureFromSurface(P_RENDERER, pWhiteSurface4);
+    */
+    #undef RGBA
+    #undef ___0
+
+    int row = 0, col = 0;
+    simIsRunning = true;
+    while(simIsRunning){
+        ++row; ++col;
+        row %= UB_X; col %= UB_Y;
+        int drawX = DRAW_SCALE_FACTOR*row;
+        int drawY = DRAW_SCALE_FACTOR*col;
+        int drawSize = DRAW_SCALE_FACTOR*10;
+        SDL_RenderClear(P_RENDERER);
+        draw_bkgnd(1000);
+        draw_texture(pBlackTex3, drawX, drawY, drawSize, drawSize);
+        draw_texture(pWhiteTex4, drawX, drawY, drawSize, drawSize);
+        SDL_RenderPresent(P_RENDERER);
+        SDL_event_handler();
     }
 }
 
@@ -191,6 +298,35 @@ void dispIntroMsg(){
     cout << "  and the license info.\n";
 }
 
+void test_cur_tex(){
+    
+    int imgWidth = 3, imgHeight = 3, numChannels = 4;
+
+    #define _BLK 0x00, 0x00, 0xff, 0xff
+    unsigned char _tmpImg[] = {
+        _BLK, _BLK, _BLK,
+        _BLK, _BLK, _BLK,
+        _BLK, _BLK, _BLK,
+    };
+    SDL_Texture* pTex = convArrToSDLTex(_tmpImg, imgWidth, imgHeight);
+    #undef _BLK
+    
+    int row = 0, col = 0;
+    simIsRunning = true;
+    randomly_place_new_cells(10);
+    while(simIsRunning){
+        ++row; ++col;
+        row %= UB_X; col %= UB_Y;
+        int drawX = DRAW_SCALE_FACTOR*row;
+        int drawY = DRAW_SCALE_FACTOR*col;
+        int drawSize = DRAW_SCALE_FACTOR*2;
+        energyFromSunPerSec = 1000;
+        SDL_draw_frame();
+        SDL_event_handler();
+    }
+}
+
+
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();
@@ -202,17 +338,14 @@ int main(int argc, char* argv[]){
     //testFrames();
     //testGlobalEnergy();
     //test_SDL();
-    test_event_handler();
+    //test_event_handler();
+    //test_new_tex();
+    test_cur_tex();
 #else
-    int numCells = 10;
-    int numFrames = 20;
-    randomly_place_new_cells(numCells);
-    std::cout << "Simulation begins with the following coordinates:\n";
-    print_cell_coords(pAlives);
-    std::cout << std::endl;
-    for(int i = 0; i < numFrames; i++){
-        do_frame(i);
-        print_cell_coords(pAlives);
+    randomly_place_new_cells(100);
+    int frameNum = 0;
+    while(simIsRunning){
+        do_frame(frameNum++);
     }
 #endif
     exit_simulation();
