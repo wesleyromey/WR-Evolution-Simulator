@@ -3,8 +3,6 @@
 #define INCLUDE_4_H
 #endif
 
-
-
 // Deallocate memory when an exception occurs (ideally) or when the program terminates
 int exit_simulation(){
     for(auto pCell : pCellsHist) delete pCell;
@@ -177,8 +175,6 @@ void test_event_handler(){
     }
 }
 
-// TODO: Ensure that byte maps can be converted to SDL_Surface* and then
-//  from SDL_Surface* to SDL_Texture* 
 void test_new_tex(){
     int imgWidth = 10;
     int imgHeight = 10;
@@ -284,7 +280,7 @@ void test_new_tex(){
     }
 }
 
-// NOTE: Edit this as needed!
+// TODO: Edit this as needed!
 void dispIntroMsg(){
     cout << "\nWelcome to the WR Evolution Simulator! Controls are:\n";
     cout << "  Esc: Exit, n: Next frame, SPACE: Next frame, a: Play 10k frames really fast\n";
@@ -299,7 +295,6 @@ void dispIntroMsg(){
 }
 
 void test_cur_tex(){
-    
     int imgWidth = 3, imgHeight = 3, numChannels = 4;
 
     #define _BLK 0x00, 0x00, 0xff, 0xff
@@ -326,7 +321,7 @@ void test_cur_tex(){
     }
 }
 
-
+// TODO: Create a GUI so I can click the proper option and click the "Next Frame" button, etc.
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();

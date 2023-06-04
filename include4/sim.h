@@ -178,7 +178,6 @@ void do_frame_static(int frameNum){
 
     // Rendering and User Interactions
     SDL_draw_frame();
-    //cout << "frameNum: " << frameNum << "a" << endl;
     SDL_event_handler();
 
     // Cells apply all their non-movement decisions this frame
@@ -189,7 +188,6 @@ void do_frame_static(int frameNum){
 
     // Cells move to new positions if enough force is applied
     for(auto pCell : pAlives) pCell->update_forces(pAlives);
-    //print_cell_forces(pAlives);
     for(auto pCell : pAlives) pCell->apply_forces();
 
     // Increase cell energy based on EAM
@@ -218,7 +216,6 @@ void do_frame_static(int frameNum){
 
     // Rendering and User Interactions
     SDL_draw_frame();
-    //if(frameNum % 100 == 0) cout << "frameNum: " << frameNum << "b" << endl;
     SDL_event_handler();
     
     return;

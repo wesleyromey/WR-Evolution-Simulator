@@ -593,9 +593,6 @@ SDL_Texture* pEnergy10000Tex = convArrToSDLTex(_energy10000Img, 10, 10);
 /////////////////////////////////////////////////////////////////////////
 
 // Ground Energy
-//  TODO: Use this the 0pct ground energy texture as a base for
-//  a more efficient algorithm, where I draw a green rectangle with
-//  a height based on the amount of energy is remaining in the ground
 unsigned char _energyGnd0pctImg[] = {
   _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK, _BLK,
   _BLK, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, _BLK,

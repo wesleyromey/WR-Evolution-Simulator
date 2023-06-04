@@ -50,6 +50,17 @@ static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 bool mouseButtonDownPrevFrame = false;
 bool simIsRunning = true; // If false, exit the program
 
+// Simulation States: These control the GUI, simulation mode, etc.
+//  TODO: Actually implement these into the game
+static const int SIM_STATE_MAIN_MENU = 0;
+static const int SIM_STATE_SKIP_FRAMES = 1;
+static const int SIM_STATE_STEP_FRAMES = 2;
+static const int SIM_STATE_QUIT = 3;
+static const unsigned int AUTO_ADVANCE_DEFAULT = 5000;
+int simState = SIM_STATE_MAIN_MENU;
+
+
+
 
 // Values used for all Cell type variables
 std::random_device rd{};

@@ -19,7 +19,6 @@ struct Cell {
 
     // Variables the creature can control directly or indirectly
     int speedDir = 0; // Direction of travel in degrees
-    int aggression = 0; // Tendency to attack instead of avoid conflict
     char speedMode = IDLE_MODE; // 0 for idle, 1 for walking, 2 for running
     int cloningDirection = 0; // Any number between 0 and 359 (degrees).
     //  This output selects the direction in which the cell generates its clone
@@ -69,8 +68,6 @@ struct Cell {
     // Bounds
     int maxEnergy = 10000;
     //  TODO: Multiply this by size
-    int maxAggression = 100;
-    //  TODO: Delete aggression, as it does NOT have any bearing on the simulation
     int maxMutationRate = 10000;
     int maxDia = 30;
     int maxAttackCooldown = 10;
@@ -168,7 +165,6 @@ struct Cell {
         ans.push_back((float)attackCooldown);
         // controlable stats
         ans.push_back((float)speedDir);
-        ans.push_back((float)aggression);
         ans.push_back((float)get_speed());
         ans.push_back((float)cloningDirection);
         // genome
@@ -191,13 +187,11 @@ struct Cell {
         else assert(ans.size() == nodesPerLayer[0]);
         return ans;
     }
-    void set_ai_outputs(int _speedDir, int _aggression, int _cloningDirection, char _speedMode,
+    void set_ai_outputs(int _speedDir, int _cloningDirection, char _speedMode,
             bool _doAttack, bool _doSelfDestruct, bool _doCloning){
         int _numAiOutputs = 0;
         assert(0 <= _speedDir && _speedDir < 360);
         speedDir = _speedDir; _numAiOutputs++;
-        assert(0 <= _aggression && _aggression <= maxAggression);
-        aggression = _aggression; _numAiOutputs++;
         assert(0 <= _cloningDirection && _cloningDirection < 360);
         cloningDirection = _cloningDirection; _numAiOutputs++;
         assert(_speedMode == IDLE_MODE || _speedMode == WALK_MODE || _speedMode == RUN_MODE);
@@ -212,7 +206,6 @@ struct Cell {
         std::vector<int> intVec;
         int _numAiOutputs = 0;
         intVec.push_back(speedDir); _numAiOutputs++;
-        intVec.push_back(aggression); _numAiOutputs++;
         intVec.push_back(cloningDirection); _numAiOutputs++;
         std::vector<char> charVec;
         charVec.push_back(speedMode); _numAiOutputs++;
@@ -283,7 +276,6 @@ struct Cell {
         assert(uniqueCellNum >= 0);
         while(speedDir < 0) speedDir += 360*100;
         speedDir %= 360;
-        saturate_int(aggression, 0, maxAggression);
         saturate_int(dia, 0, maxDia);
         saturate_int(energy, 0, maxEnergy);
         saturate_int(mutationRate, 0, maxMutationRate);
@@ -301,7 +293,6 @@ struct Cell {
         // Only contains functionality for the more important stats
         int lenVarVals = 0;
         if(varVals.count("age"))            {lenVarVals++; age = varVals["age"];}
-        if(varVals.count("aggression"))     {lenVarVals++; aggression = varVals["aggression"];}
         if(varVals.count("attack"))         {lenVarVals++; attack = varVals["attack"];}
         if(varVals.count("attackCooldown")) {lenVarVals++; attackCooldown = varVals["attackCooldown"];}
         if(varVals.count("cloningDirection")) {lenVarVals++; cloningDirection = varVals["cloningDirection"];}
@@ -378,13 +369,12 @@ struct Cell {
         update_timers();
         // Format and set the outputs
         int _speedDir = saturate_int((int)layerInputs[0], 0, 359);
-        int _aggression = saturate_int((int)layerInputs[1], 0, maxAggression);
         int _cloningDirection = saturate_int((int)layerInputs[2], 0, 359);
         char _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
         bool _doAttack = (layerInputs[4] >= 0);
         bool _doSelfDestruct = (layerInputs[5] >= 1); // If this condition is too easy to trigger, then cells die too easily
         bool _doCloning = (layerInputs[6] >= 0);
-        set_ai_outputs(_speedDir, _aggression, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+        set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
     }
     void mutate_ai(){
         float prob = (float)mutationRate / maxMutationRate;
@@ -687,23 +677,6 @@ struct Cell {
             pAlives.push_back(pCell);
         }
     }
-    /*
-    // TODO: Move this function to ui.h
-    // sdlMap contains various thresholds which, when exceeded,
-    //  Returns the corresponding SDL_Texture*
-    SDL_Texture* findSDLTex(int num,
-            const std::vector<std::pair<int, SDL_Texture*>>& sdlMap){
-        // Use the binary search algorithm
-        int iLb = 0, iUb = sdlMap.size()-1;
-        while(iLb < iUb){
-            int iMid = (iLb+iUb+1)/2;
-            if(num < sdlMap[iMid].first) iUb = --iMid;
-            else iLb = iMid;
-        }
-        assert(iLb == iUb);
-        return sdlMap[iLb].second;
-    }
-    */
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;
         for(int i = 0; i < arrSize; i++) sum += arr[i];
