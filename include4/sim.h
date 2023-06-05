@@ -16,11 +16,60 @@ std::vector<DeadCell*> pDeads; // All cells that are currently dead
 
 // Render the background, cell positions, etc using SDL
 void SDL_draw_frame(){
+    #ifdef DEBUG_FRAMES
+    draw_bkgnd(100);
+    int ds = DRAW_SCALE_FACTOR;
+    float symbolWidth = ds*15/16;
+    int symbolHeight = ds*32/16;
+    int dsSymVert = symbolHeight+2;
+    draw_texture(p_0_Symbol, 1*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_1_Symbol, 2*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_2_Symbol, 3*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_3_Symbol, 4*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_4_Symbol, 5*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_5_Symbol, 6*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_6_Symbol, 7*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_7_Symbol, 8*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_8_Symbol, 9*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_9_Symbol, 10*ds, ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_A_Symbol, 1*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_B_Symbol, 2*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_C_Symbol, 3*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_D_Symbol, 4*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_E_Symbol, 5*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_F_Symbol, 6*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_G_Symbol, 7*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_H_Symbol, 8*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_I_Symbol, 9*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_J_Symbol, 10*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_K_Symbol, 11*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_L_Symbol, 12*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_M_Symbol, 13*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_N_Symbol, 14*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_O_Symbol, 15*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_P_Symbol, 16*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_Q_Symbol, 17*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_R_Symbol, 18*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_S_Symbol, 19*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_T_Symbol, 20*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_U_Symbol, 21*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_V_Symbol, 22*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_W_Symbol, 23*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_X_Symbol, 24*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_Y_Symbol, 25*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(p_Z_Symbol, 26*ds, dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(pMinusSymbol, 1*ds, 2*dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(pSpaceSymbol, 2*ds, 2*dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+    draw_texture(pDashSymbol,  3*ds, 2*dsSymVert + ds, (int)symbolHeight, (int)symbolWidth);
+
+    draw_texture(p_D_Symbol, ds, 4*dsSymVert + ds, (int)symbolHeight*5, (int)symbolWidth*5);
+    #else
     //SDL_RenderClear(P_RENDERER);
     draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();
     for(auto pCell : pDeads) pCell->draw_cell();
+    #endif
     SDL_RenderPresent(P_RENDERER);
 }
 

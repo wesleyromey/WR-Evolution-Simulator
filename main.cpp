@@ -305,7 +305,7 @@ void test_cur_tex(){
     };
     SDL_Texture* pTex = convArrToSDLTex(_tmpImg, imgWidth, imgHeight);
     #undef _BLK
-    
+
     int row = 0, col = 0;
     simIsRunning = true;
     randomly_place_new_cells(10);

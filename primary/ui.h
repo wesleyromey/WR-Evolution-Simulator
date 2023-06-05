@@ -62,9 +62,7 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, bool& sim
 //SDL_EnableKeyRepeat(0,0); // ???
 unsigned int autoAdvanceSim = 0;
 void SDL_event_handler(){
-    //bool pauseSim = simIsRunning && !autoAdvanceSim; // default: true
     bool pauseSim = true;
-    //if(autoAdvanceSim) autoAdvanceSim--;
     SDL_Event windowEvent;
     while(pauseSim){
         switch(simState){
