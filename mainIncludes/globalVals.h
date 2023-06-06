@@ -44,7 +44,7 @@ int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
 int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
 static const int DRAW_SCALE_FACTOR = tmpDrawScale;
 static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
-static const int WINDOW_HEIGHT = DRAW_SCALE_FACTOR*UB_Y;
+static const int WINDOW_HEIGHT = DRAW_SCALE_FACTOR*(UB_Y+4);
 static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 
 bool mouseButtonDownPrevFrame = false;

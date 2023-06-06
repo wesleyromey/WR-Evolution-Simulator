@@ -2,6 +2,6 @@
 //  Comment this code out if you want to run the actual program
 
 //#define DEBUG
-#define DEBUG_FRAMES
+//#define DEBUG_FRAMES
 //  Like #define DEBUG, except specifically for frames (MUST draw the textures in the function(s)
 //  devoted to drawing frames)

@@ -53,6 +53,13 @@ SDL_Texture* convArrToSDLTex(void* arr, int imgWidth, int imgHeight){
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
+// Backgrounds
+unsigned char _blackBkgnd[] = { 0x00, 0x00, 0x00, 0xff };
+SDL_Texture* pBlackBkgnd = convArrToSDLTex(_blackBkgnd, 1, 1);
+unsigned char _whiteBkgnd[] = { 0xff, 0xff, 0xff, 0xff };
+SDL_Texture* pWhiteBkgnd = convArrToSDLTex(_whiteBkgnd, 1, 1);
+
+
 // Generic Textures I made
 
 unsigned char _blackBkgndImg[] = {
@@ -1002,6 +1009,7 @@ SDL_Texture* pHealth100pctTex = convArrToSDLTex(_health100pctImg, 10, 10);
 /////////////////////////////////////////////////////////////////////////
 
 // Symbols (These are all 32 x 15 characters)
+#define W 0xff, 0xff, 0xff, 0xff
 #define X _BLK
 #define _ ___0
 
@@ -1356,6 +1364,16 @@ unsigned char _9_Symbol[] = {
   _,_,X,X,X,X,X,X,X,X,X,X,X,_,_,
 };
 SDL_Texture* p_9_Symbol = convArrToSDLTex(_9_Symbol, 15, 32);
+
+
+
+
+
+
+
+
+
+
 
 // Letters
 unsigned char _A_Symbol[] = {
@@ -2270,6 +2288,14 @@ unsigned char _Z_Symbol[] = {
 SDL_Texture* p_Z_Symbol = convArrToSDLTex(_Z_Symbol, 15, 32);
 
 
+
+
+
+
+
+
+
+
 // Punctuation and other Misc.
 unsigned char _spaceSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
@@ -2376,10 +2402,80 @@ unsigned char _dashSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
 };
 SDL_Texture* pDashSymbol = convArrToSDLTex(_dashSymbol, 15, 32);
-
+unsigned char _leftSquareBracket[] = {
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
+};
+SDL_Texture* pLeftSquareBracketSymbol = convArrToSDLTex(_leftSquareBracket, 15, 32);
+unsigned char _rightSquareBracket[] = {
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,X,X,X,
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
+};
+SDL_Texture* pRightSquareBracketSymbol = convArrToSDLTex(_rightSquareBracket, 15, 32);
 
 #undef _
 #undef X
+#undef W
 
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -2465,7 +2561,7 @@ SDL_Texture* findSDLTex(int num,
 }
 
 // Draw a texture at a particular x and y position
-void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int height, int width){
+void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int height){
     // xPos = 0, yPos = 0 refers to the top left corner of the window
     // Not sure what pSrc refers to.
     //  pSrc may represent the original object, but I'm not sure
@@ -2544,9 +2640,181 @@ void draw_bkgnd(int energyFromSunPerSec){
   // Second, create the texture using the calculated RGB values
   //cout << "efs: " << efs << "; RGB: " << red << ", " << grn << ", " << blue << endl;
   SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
-  SDL_Rect bkgnd = {0, 0, WINDOW_WIDTH, WINDOW_HEIGHT};
+  SDL_Rect bkgnd = {0, 0, UB_X*DRAW_SCALE_FACTOR, UB_Y*DRAW_SCALE_FACTOR};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);
   SDL_RenderFillRect(P_RENDERER, &bkgnd);
   SDL_RenderPresent(P_RENDERER);
 }
 
+SDL_Texture* retrieve_symbol_texture(char symbol){
+  switch(symbol){
+    // Digits
+    case '0':
+    return p_0_Symbol;
+    case '1':
+    return p_1_Symbol;
+    case '2':
+    return p_2_Symbol;
+    case '3':
+    return p_3_Symbol;
+    case '4':
+    return p_4_Symbol;
+    case '5':
+    return p_5_Symbol;
+    case '6':
+    return p_6_Symbol;
+    case '7':
+    return p_7_Symbol;
+    case '8':
+    return p_8_Symbol;
+    case '9':
+    return p_9_Symbol;
+
+    // Letters
+    case 'a':
+    case 'A':
+    return p_A_Symbol;
+    case 'b':
+    case 'B':
+    return p_B_Symbol;
+    case 'c':
+    case 'C':
+    return p_C_Symbol;
+    case 'd':
+    case 'D':
+    return p_D_Symbol;
+    case 'e':
+    case 'E':
+    return p_E_Symbol;
+    case 'f':
+    case 'F':
+    return p_F_Symbol;
+    case 'g':
+    case 'G':
+    return p_G_Symbol;
+    case 'h':
+    case 'H':
+    return p_H_Symbol;
+    case 'i':
+    case 'I':
+    return p_I_Symbol;
+    case 'j':
+    case 'J':
+    return p_J_Symbol;
+    case 'k':
+    case 'K':
+    return p_K_Symbol;
+    case 'l':
+    case 'L':
+    return p_L_Symbol;
+    case 'm':
+    case 'M':
+    return p_M_Symbol;
+    case 'n':
+    case 'N':
+    return p_N_Symbol;
+    case 'o':
+    case 'O':
+    return p_O_Symbol;
+    case 'p':
+    case 'P':
+    return p_P_Symbol;
+    case 'q':
+    case 'Q':
+    return p_Q_Symbol;
+    case 'r':
+    case 'R':
+    return p_R_Symbol;
+    case 's':
+    case 'S':
+    return p_S_Symbol;
+    case 't':
+    case 'T':
+    return p_T_Symbol;
+    case 'u':
+    case 'U':
+    return p_U_Symbol;
+    case 'v':
+    case 'V':
+    return p_V_Symbol;
+    case 'w':
+    case 'W':
+    return p_W_Symbol;
+    case 'x':
+    case 'X':
+    return p_X_Symbol;
+    case 'y':
+    case 'Y':
+    return p_Y_Symbol;
+    case 'z':
+    case 'Z':
+    return p_Z_Symbol;
+
+    // Other
+    case '[':
+    return pLeftSquareBracketSymbol;
+    case ']':
+    return pRightSquareBracketSymbol;
+    case '\n':
+    case ' ':
+    return pSpaceSymbol;
+  }
+  // If nothing is returned, just return an empty symbol (space)
+  cout << "DISCLAIMER: THE '" << symbol << "' SYMBOL IS NOT AVAILABLE FOR DRAWING AT THE MOMENT!\n";
+  return NULL;
+}
+
+void draw_empty_textbox(int x0, int y0, int width, int height, int borderThicknessPx,
+    void* pRGBA_Bkgnd, void* pRGBA_Border){
+  if(borderThicknessPx){
+    SDL_Texture* pBorder = convArrToSDLTex(pRGBA_Border, 1, 1);
+    draw_texture(pBorder, x0, y0, width, height);
+  }
+  SDL_Texture* pBkgnd = convArrToSDLTex(pRGBA_Bkgnd, 1, 1);
+  draw_texture(pBkgnd, x0+borderThicknessPx, y0+borderThicknessPx,
+    width-2*borderThicknessPx, height-2*borderThicknessPx
+  );
+}
+
+// x0, y0: The (top right?) of the text box
+// dx, dy: The width and height of the text box, respectively
+// borderThicknessPx: The thickness of the black border (if applicable)
+// text: The text (if none, just set text == "")
+void draw_text_box(int x0, int y0, int dx, int dy, int borderThicknessPx = 10, string text = ""){
+  // Draw the desired textbox and its border
+  unsigned char _RGBA_Bkgnd[] = {0xff, 0xff, 0xff, 0xff};
+  //SDL_Texture* pBkgnd = convArrToSDLTex(_RGBA_Bkgnd, 1, 1);
+  unsigned char _RGBA_Border[] = {0x00, 0x00, 0x00, 0xff};
+  //SDL_Texture* pBorder = convArrToSDLTex(_RGBA_Border, 1, 1);
+
+  draw_empty_textbox(x0, y0, dx, dy, borderThicknessPx, _RGBA_Bkgnd, _RGBA_Border);
+
+  // Draw each character of text individually (\n means new line)
+  int symbolWidth = DRAW_SCALE_FACTOR*15/16;
+  int symbolHeight = DRAW_SCALE_FACTOR*32/16;
+  int dsSymVert = symbolHeight+2;
+  int xPos = x0+DRAW_SCALE_FACTOR, yPos = y0+DRAW_SCALE_FACTOR; // The x and y positions relative to the text box
+  for(auto c : text){
+    switch(c){
+      case '\n':
+      xPos = x0;
+      yPos += 2*DRAW_SCALE_FACTOR + 2;
+      break;
+      default:
+      draw_texture(retrieve_symbol_texture(c), xPos, yPos, symbolWidth, symbolHeight);
+      xPos += DRAW_SCALE_FACTOR;
+      break;
+    }
+  }
+}
+// TODO: Complete the interface (and reserve a portion of the window for the interface
+//  at the bottom of the window)
+void draw_user_interface(){
+  // Include a button for next frame, skip frames, and options
+  static const int UI_X0 = 0, UI_Y0 = WINDOW_HEIGHT-4*DRAW_SCALE_FACTOR;
+  static const int UI_X1 = WINDOW_WIDTH, UI_Y1 = WINDOW_HEIGHT;
+  int dsf = DRAW_SCALE_FACTOR;
+  draw_text_box( 0*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "   Next Frame [N]  ");
+  draw_text_box(20*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "  Skip Frames [A]  ");
+  draw_text_box(40*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "      Options      ");
+}
