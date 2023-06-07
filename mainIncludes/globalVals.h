@@ -13,16 +13,23 @@ static const std::set<char> LETTERS = {
 static const std::set<char> OPERATORS = {'+','-','*','/'};
 
 // Global Simulation Parameters
-static const int UB_X = 60, UB_Y = 40;
+static const int UB_X = 120, UB_Y = 80;
+static const int CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
+//  I split cells into square regions so I only have to compare the positions
+//  of nearby cells to calculate forces, crowding, interactions, vision, etc.
+static const int CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
+static const int CELL_REGION_NUM_Y = UB_Y / CELL_REGION_SIDE_LEN;
+//  If a region near the bottom or the right side is smaller, then it is absorbed
+//  into the neighboring region(s)
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 //  NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 //  NOTE: The program might not work properly if this is disabled
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-static const int MAX_SUN_ENERGY_PER_SEC = 40;  // This is the maximum amount of energy which can be accumulated from the sun 
-static const int DAY_LEN_SEC = 100;   // Number of seconds per "day"
-static const int CELL_LIMIT = 400;
-static const float OVERCROWDING_ENERGY_COEF = 10.;
+static const int MAX_SUN_ENERGY_PER_SEC = 500;  // This is the maximum amount of energy which can be accumulated from the sun 
+static const int DAY_LEN_SEC = 400;   // Number of seconds per "day"
+static const int CELL_LIMIT = 1000;
+static const float OVERCROWDING_ENERGY_COEF = 30.;
 //  Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
@@ -44,10 +51,13 @@ int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
 int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
 static const int DRAW_SCALE_FACTOR = tmpDrawScale;
 static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
-static const int WINDOW_HEIGHT = DRAW_SCALE_FACTOR*(UB_Y+4);
+static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR*UB_Y / 9;
+static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
+static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
 static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 
-bool mouseButtonDownPrevFrame = false;
+//bool mouseButtonDownPrevFrame = false;
+int mousePosX = 0, mousePosY = 0;
 bool simIsRunning = true; // If false, exit the program
 
 // Simulation States: These control the GUI, simulation mode, etc.
@@ -56,7 +66,7 @@ static const int SIM_STATE_MAIN_MENU = 0;
 static const int SIM_STATE_SKIP_FRAMES = 1;
 static const int SIM_STATE_STEP_FRAMES = 2;
 static const int SIM_STATE_QUIT = 3;
-static const unsigned int AUTO_ADVANCE_DEFAULT = 5000;
+static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
 int simState = SIM_STATE_MAIN_MENU;
 
 

@@ -2640,7 +2640,7 @@ void draw_bkgnd(int energyFromSunPerSec){
   // Second, create the texture using the calculated RGB values
   //cout << "efs: " << efs << "; RGB: " << red << ", " << grn << ", " << blue << endl;
   SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
-  SDL_Rect bkgnd = {0, 0, UB_X*DRAW_SCALE_FACTOR, UB_Y*DRAW_SCALE_FACTOR};
+  SDL_Rect bkgnd = {0, 0, UB_X_PX, UB_Y_PX};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);
   SDL_RenderFillRect(P_RENDERER, &bkgnd);
   SDL_RenderPresent(P_RENDERER);
@@ -2778,43 +2778,47 @@ void draw_empty_textbox(int x0, int y0, int width, int height, int borderThickne
 
 // x0, y0: The (top right?) of the text box
 // dx, dy: The width and height of the text box, respectively
-// borderThicknessPx: The thickness of the black border (if applicable)
+// borderPx: The thickness of the black border (if applicable)
 // text: The text (if none, just set text == "")
-void draw_text_box(int x0, int y0, int dx, int dy, int borderThicknessPx = 10, string text = ""){
+void draw_text_box(int x0, int y0, int dx, int dy, int borderPx, 
+    int maxNumLines, string text = ""){
   // Draw the desired textbox and its border
   unsigned char _RGBA_Bkgnd[] = {0xff, 0xff, 0xff, 0xff};
   //SDL_Texture* pBkgnd = convArrToSDLTex(_RGBA_Bkgnd, 1, 1);
   unsigned char _RGBA_Border[] = {0x00, 0x00, 0x00, 0xff};
   //SDL_Texture* pBorder = convArrToSDLTex(_RGBA_Border, 1, 1);
 
-  draw_empty_textbox(x0, y0, dx, dy, borderThicknessPx, _RGBA_Bkgnd, _RGBA_Border);
+  draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
 
   // Draw each character of text individually (\n means new line)
-  int symbolWidth = DRAW_SCALE_FACTOR*15/16;
-  int symbolHeight = DRAW_SCALE_FACTOR*32/16;
-  int dsSymVert = symbolHeight+2;
-  int xPos = x0+DRAW_SCALE_FACTOR, yPos = y0+DRAW_SCALE_FACTOR; // The x and y positions relative to the text box
+  int symbolHeight = dy / (maxNumLines + 1);
+  int symbolWidth = symbolHeight * 15 / 32;
+  //int symbolWidth = DRAW_SCALE_FACTOR*15/16;
+  //int symbolHeight = DRAW_SCALE_FACTOR*32/16;
+  int xPos = x0+2*borderPx, yPos = y0+symbolHeight/2; // The x and y positions relative to the text box
   for(auto c : text){
     switch(c){
       case '\n':
       xPos = x0;
-      yPos += 2*DRAW_SCALE_FACTOR + 2;
+      yPos += symbolHeight + borderPx / 2;
       break;
       default:
       draw_texture(retrieve_symbol_texture(c), xPos, yPos, symbolWidth, symbolHeight);
-      xPos += DRAW_SCALE_FACTOR;
+      xPos += symbolWidth + borderPx / 4;
       break;
     }
   }
 }
-// TODO: Complete the interface (and reserve a portion of the window for the interface
-//  at the bottom of the window)
 void draw_user_interface(){
   // Include a button for next frame, skip frames, and options
-  static const int UI_X0 = 0, UI_Y0 = WINDOW_HEIGHT-4*DRAW_SCALE_FACTOR;
+  static const int UI_X0 = 0, UI_Y0 = WINDOW_HEIGHT*0.90001;
   static const int UI_X1 = WINDOW_WIDTH, UI_Y1 = WINDOW_HEIGHT;
-  int dsf = DRAW_SCALE_FACTOR;
-  draw_text_box( 0*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "   Next Frame [N]  ");
-  draw_text_box(20*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "  Skip Frames [A]  ");
-  draw_text_box(40*dsf, UI_Y0, 20*dsf, 4*dsf, 3, "      Options      ");
+  static const int BOX_DX = (UI_X1 - UI_X0) / 3;
+  static const int BOX_DY = UI_Y1 - UI_Y0;
+  int borderPx = BOX_DY / 20;
+  draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "   Next Frame [N]  ");
+  draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "  Skip Frames [A]  ");
+  draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "      Options      ");
 }
+
+

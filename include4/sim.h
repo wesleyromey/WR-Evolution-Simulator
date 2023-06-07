@@ -11,7 +11,12 @@
 // Create an empty vector of pointers to Cells and DeadCells as global variables
 std::vector<Cell*> pCellsHist; // A history of all cells in the order they were created
 std::vector<Cell*> pAlives; // All cells that are currently alive
+std::map<std::pair<int,int>, std::vector<Cell*>> pAlivesRegions;
+//  pAlives separated by region
 std::vector<DeadCell*> pDeads; // All cells that are currently dead
+std::map<std::pair<int,int>, std::vector<DeadCell*>> pDeadsRegions;
+//  pDeads separated by region
+
 
 
 // Render the background, cell positions, etc using SDL
@@ -221,12 +226,31 @@ void print_cell_forces(std::vector<Cell*> pCells){
     std::cout << std::endl;
 }
 
+void assign_cells_to_correct_regions(){
+    // Clear pAlivesRegions and pDeadsRegions
+    for(int _x = 0; _x < CELL_REGION_NUM_X; _x++){
+        for(int _y = 0; _y < CELL_REGION_NUM_Y; _y++){
+            pAlivesRegions[{_x, _y}] = {};
+            pDeadsRegions[{_x, _y}] = {};
+        }
+    }
+
+    // Assign each dead and alive cell to the correct region
+    for(auto pCell : pAlives){
+        pAlivesRegions[pCell->xyRegion].push_back(pCell);
+    }
+    for(auto pCell : pDeads){
+        pDeadsRegions[pCell->xyRegion].push_back(pCell);
+    }
+}
+
 // This function does the frame while preserving the cells' previous decisions
 //  i.e. cells are forced to keep their inputs constant (e.g. speed, direction, etc.)
 void do_frame_static(int frameNum){
     if(!simIsRunning) return;
 
     // Cells move to their target positions based on their speed
+    assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_target_pos();
 
     // Rendering and User Interactions
@@ -235,19 +259,22 @@ void do_frame_static(int frameNum){
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
+    assign_cells_to_correct_regions();
     for(auto pCell : pAlives){
-        pCell->apply_non_movement_decisions(pAlives, pCellsHist);
+        pCell->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
     }
 
     // Cells move to new positions if enough force is applied
-    for(auto pCell : pAlives) pCell->update_forces(pAlives);
+    assign_cells_to_correct_regions();
+    for(auto pCell : pAlives) pCell->update_forces(pAlives, pAlivesRegions);
     for(auto pCell : pAlives) pCell->apply_forces();
 
     // Increase cell energy based on EAM
     do_day_night_cycle();
     update_dayNightCycleTime();
-    for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives);
-    for(auto pCell : pDeads) pCell->do_energy_decay(pAlives);
+    assign_cells_to_correct_regions();
+    for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives, pAlivesRegions);
+    for(auto pCell : pDeads) pCell->do_energy_decay(pAlives, pAlivesRegions);
 
     // Consume energy each 'tick'
     for(auto pCell : pAlives) pCell->consume_energy_per_frame();
@@ -279,6 +306,7 @@ void do_frame(int frameNum){
 
     // The cells each decide what to do (e.g. speed, direction, doAttack, etc.)
     //  (e.g. update their internal state).
+    assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->decide_next_frame();
 
     // Static portion of the frame

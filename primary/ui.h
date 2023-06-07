@@ -27,8 +27,20 @@ void exit_SDL(){
     std::cout << "SDL is quitting!\n";
 }
 
+
+void run_step_frames_press_n(bool& pauseSim, unsigned int& autoAdvanceSim){
+    pauseSim = false;
+    autoAdvanceSim = 0;
+}
+void run_step_frames_press_a(int& simState, unsigned int& autoAdvanceSim){
+    simState = SIM_STATE_SKIP_FRAMES;
+    autoAdvanceSim = AUTO_ADVANCE_DEFAULT;
+    cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
+}
+
 void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, bool& simIsRunning, unsigned int& autoAdvanceSim, int& simState){
     SDL_WaitEvent(&windowEvent);
+    Uint32 mouseClickType = 0;
     switch(windowEvent.type){
         case SDL_KEYDOWN:
         switch(windowEvent.key.keysym.sym){
@@ -36,14 +48,29 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, bool& sim
             simIsRunning = false;
             case SDLK_n:
             case SDLK_SPACE:
-            pauseSim = false;
-            autoAdvanceSim = 0;
+            run_step_frames_press_n(pauseSim, autoAdvanceSim);
             break;
             case SDLK_a:
-            simState = SIM_STATE_SKIP_FRAMES;
-            autoAdvanceSim = AUTO_ADVANCE_DEFAULT;
-            cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
+            run_step_frames_press_a(simState, autoAdvanceSim);
             break;
+        }
+        break;
+        case SDL_MOUSEBUTTONDOWN:
+        mouseClickType = SDL_GetMouseState(&mousePosX, &mousePosY);
+        //cout << "mouseClickType: " << mouseClickType << ", mousePosX: " << mousePosX << ", mousePosY: " << mousePosY << endl;
+        if(mouseClickType == 1){
+            // Left Click
+            if(mousePosY < UB_Y_PX) break;
+            else{
+                if(mousePosX < WINDOW_WIDTH / 3){
+                    run_step_frames_press_n(pauseSim, autoAdvanceSim);
+                } else if(mousePosX < 2 * WINDOW_WIDTH / 3){
+                    run_step_frames_press_a(simState, autoAdvanceSim);
+                } else {
+                    // Options
+                    cout << "NOTE: Options are NOT available yet!\n";
+                }
+            }
         }
         break;
         case SDL_QUIT:

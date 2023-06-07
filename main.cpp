@@ -321,7 +321,6 @@ void test_cur_tex(){
     }
 }
 
-// TODO: Create a GUI so I can click the proper option and click the "Next Frame" button, etc.
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();
@@ -337,7 +336,7 @@ int main(int argc, char* argv[]){
     //test_new_tex();
     test_cur_tex();
 #else
-    randomly_place_new_cells(100);
+    randomly_place_new_cells(400);
     int frameNum = 0;
     while(simIsRunning){
         do_frame(frameNum++);

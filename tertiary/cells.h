@@ -55,6 +55,7 @@ struct Cell {
     //  if any of their dependent variables are updated)
     int size = -1; // Area (truncated at the decimal); Calculated from dia
     int posX = 0, posY = 0;
+    std::pair<int, int> xyRegion = {0, 0}; // Each cell should be placed in their appropriate 'bin' of nearby cells
     int forceX = 0, forceY = 0; // Force moves the cell in the same direction as the force, if there is enough of it
     //  Negative values move the cell in the opposite direction
     int energy = 200; // Needed to do various abilities or keep oneself alive.
@@ -73,14 +74,54 @@ struct Cell {
     int maxAttackCooldown = 10;
 
     // Struct-specific methods
-    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives){
+    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<Cell*> ans;
+        std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+        for(auto reg : neighboringRegions){
+            for(auto pCell : pAlivesRegions[reg]){
+                if(pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
+                    ans.push_back(pCell);
+                }
+            }
+        }
+        /*
         for(auto pAlive : pAlives){
             if(pAlive->calc_distance_from_point(posX, posY) <= (float)(dia + pAlive->dia + 0.1) / 2){
                 ans.push_back(pAlive);
             }
         }
+        */
         return ans;
+    }
+    int get_id_similarity(Cell* pCellOther){
+        int ans = ID_LEN;
+        for(int i = 0; i < ID_LEN; i++){
+            if(id[i] != pCellOther->id[i]) ans--;
+        }
+        return ans;
+    }
+    std::vector<std::pair<int, int>> get_neighboring_xyRegions(){
+        int xReg = xyRegion.first, yReg = xyRegion.second;
+        std::vector<std::pair<int, int>> neighboringRegions = {
+            xyRegion,
+            {xReg-1, yReg}, {xReg+1, yReg}, {xReg, yReg-1}, {xReg, yReg+1},
+            {xReg-1, yReg-1}, {xReg-1, yReg+1}, {xReg+1, yReg-1}, {xReg+1, yReg+1}
+        };
+        for(int i = 0; i < neighboringRegions.size(); i++){
+            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += CELL_REGION_NUM_X;
+            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += CELL_REGION_NUM_Y;
+            neighboringRegions[i].first %= CELL_REGION_NUM_X;
+            neighboringRegions[i].second %= CELL_REGION_NUM_Y;
+        }
+        return neighboringRegions;
+    }
+    // NOTE: this function does NOT have access to the entire list of cells,
+    //  so a separate function needs to be run to organize the cells into
+    //  region-based lists
+    void assign_self_to_xyRegion(){
+        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_X-1);
+        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_Y-1);
     }
     void teleport_self(int target_x, int target_y){
         posX = target_x;
@@ -90,16 +131,19 @@ struct Cell {
     void enforce_wrap_around_x(){
         while(posX < 0) posX += UB_X;
         posX %= UB_X;
+        assign_self_to_xyRegion();
     }
     void enforce_wrap_around_y(){
         while(posY < 0) posY += UB_Y;
         posY %= UB_Y;
+        assign_self_to_xyRegion();
     }
     void enforce_valid_xyPos(){
         if(WRAP_AROUND_X) enforce_wrap_around_x();
         else posX = saturate_int(posX, 0, UB_X);
         if(WRAP_AROUND_Y) enforce_wrap_around_y();
         else posY = saturate_int(posY, 0, UB_Y);
+        assign_self_to_xyRegion();
     }
     void update_size(){
         size = PI*dia*dia/4 + 0.5; // size is an int
@@ -157,34 +201,40 @@ struct Cell {
         if(val > ub) val = ub;
         return val;
     }
+    // TODO: Add the position, speed, health, energy, age, and id similarity of the
+    //  nearest 10 cells
+    //  (TODO: ensure that each cell id similarity value only gets up to 3 cells each)
     std::vector<float> get_ai_inputs(){
         std::vector<float> ans;
         int _numAiInputs = 0;
         // Internal Timers
-        ans.push_back((float)age);
-        ans.push_back((float)attackCooldown);
+        ans.push_back((float)age); _numAiInputs++;
+        ans.push_back((float)attackCooldown); _numAiInputs++;
         // controlable stats
-        ans.push_back((float)speedDir);
-        ans.push_back((float)get_speed());
-        ans.push_back((float)cloningDirection);
+        ans.push_back((float)speedDir); _numAiInputs++;
+        ans.push_back((float)get_speed()); _numAiInputs++;
+        ans.push_back((float)cloningDirection); _numAiInputs++;
         // genome
-        ans.push_back((float)visionDist);
-        ans.push_back((float)stickiness);
-        ans.push_back((float)mutationRate);
-        ans.push_back((float)maxHealth);
-        ans.push_back((float)attack);
-        ans.push_back((float)dia);
-        for(int i = 0; i < NUM_EAM_ELE; i++) ans.push_back((float)EAM[i]);
+        ans.push_back((float)visionDist); _numAiInputs++;
+        ans.push_back((float)stickiness); _numAiInputs++;
+        ans.push_back((float)mutationRate); _numAiInputs++;
+        ans.push_back((float)maxHealth); _numAiInputs++;
+        ans.push_back((float)attack); _numAiInputs++;
+        ans.push_back((float)dia); _numAiInputs++;
+        for(int i = 0; i < NUM_EAM_ELE; i++) {
+            ans.push_back((float)EAM[i]); _numAiInputs++;
+        }
         // status or state
-        ans.push_back((float)health);
-        ans.push_back((float)forceX);
-        ans.push_back((float)forceY);
-        ans.push_back((float)energy);
+        ans.push_back((float)health); _numAiInputs++;
+        ans.push_back((float)forceX); _numAiInputs++;
+        ans.push_back((float)forceY); _numAiInputs++;
+        ans.push_back((float)energy); _numAiInputs++;
         // id
-        for(int i = 0; i < ID_LEN; i++) ans.push_back((float)id[i]);
+        //for(int i = 0; i < ID_LEN; i++) ans.push_back((float)id[i]);
         // return
         if(nodesPerLayer[0] < 0) nodesPerLayer[0] = ans.size();
         else assert(ans.size() == nodesPerLayer[0]);
+        assert(_numAiInputs == nodesPerLayer[0]);
         return ans;
     }
     void set_ai_outputs(int _speedDir, int _cloningDirection, char _speedMode,
@@ -269,7 +319,8 @@ struct Cell {
         for(auto num : nodesPerLayer) assert(0 < num);
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             assert(aiNetwork[layerNum-1].size() == nodesPerLayer[layerNum]);
-            //  aiNetwork[layerNum-1].size() is the number of nodes in layerNum, where layer 0 is the input layer
+            //  aiNetwork[layerNum-1].size() is the number of nodes in layerNum,
+            //  where layer 0 is the input layer
         }
     }
     void enforce_valid_cell(){
@@ -440,10 +491,11 @@ struct Cell {
     //  in the local area.
     // This function causes cells to accumulate energy from the sun, ground, and dead cells.
     //  Also, energy loss due to overcrowding leads is applied by this function
-    void do_energy_transfer(std::vector<Cell*>& pAlives){
+    void do_energy_transfer(std::vector<Cell*>& pAlives,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Energy from the sun
         //  First, calculate which cells are touching the current cell
-        std::vector<Cell*> touchingCells = find_touching_cells(pAlives);
+        std::vector<Cell*> touchingCells = find_touching_cells(pAlives, pAlivesRegions);
         //  TODO: Give each cell a dexterity (dex) stat, which will help them NOT be blocked by other cells.
         //  Bigger cells get more of the energy and will receive most of the energy if competing with smaller cells.
         int sumOfCellSizes = size;
@@ -479,6 +531,7 @@ struct Cell {
         // X means x-coordinate, Y means y-coordinate
         posX = gen_uniform_int_dist(rng, lbX, ubX);
         posY = gen_uniform_int_dist(rng, lbY, ubY);
+        enforce_valid_xyPos();
     }
     Cell* clone_self(int cellNum, int targetCloningDir = -1, bool randomizeCloningDir = false, bool doMutation = true){
         // The clone's position will be roughly the cell's diameter plus 1 away from the cell
@@ -579,52 +632,59 @@ struct Cell {
         increment_pos(tmp * cos_deg(speedDir), tmp * sin_deg(speedDir));
         enforce_valid_xyPos();
     }
-    void update_forces(std::vector<Cell*>& pAlives){
+    void update_forces(std::vector<Cell*>& pAlives,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+        // First, calculate which cells are nearby
+        std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+
         // Check each nearby cell for any forces
         // TODO: apply an inward force for stickiness such that the force applied
         //  exactly matches the amount needed to snap the cells to the right distance from each other.
         // TODO: apply a force due to nonliving objects and walls, if applicable
-        for(auto pCell : pAlives){
-            if(pCell == pSelf) continue;
-            // Calculate the other cell's distance from pSelf (account for screen wrapping)
-            int dX = pCell->posX - posX, dY = pCell->posY - posY;
-            assert(WRAP_AROUND_X && WRAP_AROUND_Y);
-            if (WRAP_AROUND_X) {
-                int dX2 = (UB_X - abs(dX)) * -sign(dX); // Result has opposite sign vs dX
-                dX = (abs(dX) < abs(dX2) ? dX : dX2);
-            }
-            if (WRAP_AROUND_Y) {
-                int dY2 = (UB_Y - abs(dY)) * -sign(dY); // Result has opposite sign vs dX
-                dY = (abs(dY) < abs(dY2) ? dY : dY2);
-            }
-            int dist = sqrt(dX*dX + dY*dY) + 0.5;
-            int targetDist = (pCell->dia + dia + 1) / 2; 
-            if (dist < targetDist) {
-                // apply repulsive force based on the square of the differential distance
-                int forceMagnitude = 10*(targetDist - dist)*(targetDist - dist);
-                // Get the x and y components forceX and forceY
-                if (dist == 0) {
-                    // Set the force direction randomly
-                    int forceDirection = gen_uniform_int_dist(rng, 0, 359);
-                    forceX += forceMagnitude * cos_deg(forceDirection);
-                    forceY += forceMagnitude * sin_deg(forceDirection);
-                } else if (dX == 0 || dY == 0) {
-                    int force_dX = forceMagnitude * -sign(dX); //(dX < 0 ? 1 : -1);
-                    int force_dY = forceMagnitude * -sign(dY);
-                    forceX += force_dX;
-                    forceY += force_dY;
-                } else {
-                    // dX != 0, dY != 0
-                    float dY_div_dX = (dY / dX);
-                    int force_dX = forceMagnitude / sqrt( 1 + dY_div_dX * dY_div_dX ) * -sign(dY); //(dX < 0 ? 1 : -1);
-                    int force_dY = force_dX * dY_div_dX;
-                    /*
-                    float dX_div_dY = (dX / dY);
-                    int force_dX = forceMagnitude / sqrt( 1 + dX_div_dY * dX_div_dY ) * -sign(dX); //(dX < 0 ? 1 : -1);
-                    int force_dY = force_dX * dX_div_dY;
-                    */
-                    forceX += force_dX;
-                    forceY += force_dY;
+        //for(auto pCell : pAlives){
+        for(auto reg : neighboringRegions){
+            for(auto pCell : pAlivesRegions[reg]){
+                if(pCell == pSelf) continue;
+                // Calculate the other cell's distance from pSelf (account for screen wrapping)
+                int dX = pCell->posX - posX, dY = pCell->posY - posY;
+                assert(WRAP_AROUND_X && WRAP_AROUND_Y);
+                if (WRAP_AROUND_X) {
+                    int dX2 = (UB_X - abs(dX)) * -sign(dX); // Result has opposite sign vs dX
+                    dX = (abs(dX) < abs(dX2) ? dX : dX2);
+                }
+                if (WRAP_AROUND_Y) {
+                    int dY2 = (UB_Y - abs(dY)) * -sign(dY); // Result has opposite sign vs dX
+                    dY = (abs(dY) < abs(dY2) ? dY : dY2);
+                }
+                int dist = sqrt(dX*dX + dY*dY) + 0.5;
+                int targetDist = (pCell->dia + dia + 1) / 2; 
+                if (dist < targetDist) {
+                    // apply repulsive force based on the square of the differential distance
+                    int forceMagnitude = 10*(targetDist - dist)*(targetDist - dist);
+                    // Get the x and y components forceX and forceY
+                    if (dist == 0) {
+                        // Set the force direction randomly
+                        int forceDirection = gen_uniform_int_dist(rng, 0, 359);
+                        forceX += forceMagnitude * cos_deg(forceDirection);
+                        forceY += forceMagnitude * sin_deg(forceDirection);
+                    } else if (dX == 0 || dY == 0) {
+                        int force_dX = forceMagnitude * -sign(dX); //(dX < 0 ? 1 : -1);
+                        int force_dY = forceMagnitude * -sign(dY);
+                        forceX += force_dX;
+                        forceY += force_dY;
+                    } else {
+                        // dX != 0, dY != 0
+                        float dY_div_dX = (dY / dX);
+                        int force_dX = forceMagnitude / sqrt( 1 + dY_div_dX * dY_div_dX ) * -sign(dY); //(dX < 0 ? 1 : -1);
+                        int force_dY = force_dX * dY_div_dX;
+                        /*
+                        float dX_div_dY = (dX / dY);
+                        int force_dX = forceMagnitude / sqrt( 1 + dX_div_dY * dX_div_dY ) * -sign(dX); //(dX < 0 ? 1 : -1);
+                        int force_dY = force_dX * dX_div_dY;
+                        */
+                        forceX += force_dX;
+                        forceY += force_dY;
+                    }
                 }
             }
         }
@@ -659,16 +719,30 @@ struct Cell {
         attackCooldown = maxAttackCooldown;
         energy -= energyCostPerUse["attack"];
     }
-    void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist){
+    void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         if(doAttack && attackCooldown == 0 && energy > energyCostPerUse["attack"]){
+            // Find out which regions neighbor the cell's region
+            std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+            
             // Damage all cells that this cell touches excluding the cell itself
             // If health < 0, the cell will die when the death conditions are checked
+            for(auto reg : neighboringRegions){
+                for(auto pCell : pAlivesRegions[reg]){
+                    if(uniqueCellNum == pCell->uniqueCellNum) continue;
+                    if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(dia + pCell->dia + 0.1) / 2){
+                        attack_cell(pCell);
+                    }
+                }
+            }
+            /*
             for(auto pCell : pAlives){
                 if(uniqueCellNum == pCell->uniqueCellNum) continue;
                 if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(dia + pCell->dia + 0.1) / 2){
                     attack_cell(pCell);
                 }
             }
+            */
         }
         if(doCloning && energy > energyCostToClone && pAlives.size() < CELL_LIMIT){
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
@@ -767,6 +841,7 @@ struct DeadCell {
     // Dependent (calculated) variables (must be updated
     //  if any of their dependent variables are updated)
     int posX = -1, posY = -1;
+    std::pair<int, int> xyRegion = {0, 0};
     int energy = -1; // Energy which can be distributed to the cells that consume it
     //  (or to the ground if time ticks long enough)
     int dia = -1; // Diameter
@@ -774,19 +849,47 @@ struct DeadCell {
     int decayPeriod = -1;   // This many frames pass between the dead cell giving some energy to the ground.
 
     // Struct-specific methods
+    void doNothing(){
+        return;
+    }
+    // NOTE: this function does NOT have access to the entire list of cells,
+    //  so a separate function needs to be run to organize the cells into
+    //  region-based lists
+    void assign_self_to_xyRegion(){
+        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_X-1);
+        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_Y-1);
+    }
+    std::vector<std::pair<int, int>> get_neighboring_xyRegions(){
+        int xReg = xyRegion.first, yReg = xyRegion.second;
+        std::vector<std::pair<int, int>> neighboringRegions = {
+            xyRegion,
+            {xReg-1, yReg}, {xReg+1, yReg}, {xReg, yReg-1}, {xReg, yReg+1},
+            {xReg-1, yReg-1}, {xReg-1, yReg+1}, {xReg+1, yReg-1}, {xReg+1, yReg+1}
+        };
+        for(int i = 0; i < neighboringRegions.size(); i++){
+            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += CELL_REGION_NUM_X;
+            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += CELL_REGION_NUM_Y;
+            neighboringRegions[i].first %= CELL_REGION_NUM_X;
+            neighboringRegions[i].second %= CELL_REGION_NUM_Y;
+        }
+        return neighboringRegions;
+    }
     void enforce_wrap_around_x(){
         while(posX < 0) posX += UB_X;
         posX %= UB_X;
+        assign_self_to_xyRegion();
     }
     void enforce_wrap_around_y(){
         while(posY < 0) posY += UB_Y;
         posY %= UB_Y;
+        assign_self_to_xyRegion();
     }
     void enforce_valid_xyPos(){
         if(WRAP_AROUND_X) enforce_wrap_around_x();
         else posX = saturate_int(posX, 0, UB_X);
         if(WRAP_AROUND_Y) enforce_wrap_around_y();
         else saturate_int(posY, 0, UB_Y);
+        assign_self_to_xyRegion();
     }
     void enforce_valid_cell(){
         saturate_int(decayRate, 0, 100);
@@ -831,19 +934,31 @@ struct DeadCell {
         pDead->timeSinceDead = 1;
         pDead->randomize_pos(0, UB_X, 0, UB_Y);
     }
-    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives){
+    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<Cell*> ans;
+        std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+        for(auto reg : neighboringRegions){
+            for(auto pCell : pAlivesRegions[reg]){
+                if(pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
+                    ans.push_back(pCell);
+                }
+            }
+        }
+        /*
         for(auto pAlive : pAlives){
             if(pAlive->calc_distance_from_point(posX, posY) <= (float)(dia + pAlive->dia + 0.1) / 2){
                 ans.push_back(pAlive);
             }
         }
+        */
         return ans;
     }
     // The dead cells and ground transfer energy to the living cells and / or the environment
-    void do_energy_decay(std::vector<Cell*>& pAlives){
+    void do_energy_decay(std::vector<Cell*>& pAlives,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Energy to cells which are touching the dead cell
-        std::vector<Cell*> touchingCells = find_touching_cells(pAlives);
+        std::vector<Cell*> touchingCells = find_touching_cells(pAlives, pAlivesRegions);
         int rmEnergy = 0; // Energy to give to other cells
         std::vector<int> energyWeight(touchingCells.size());
         for(int i = 0; i < energyWeight.size(); i++){
@@ -888,10 +1003,12 @@ struct DeadCell {
     void update_pos(int targetX, int targetY){
         posX = targetX;
         posY = targetY;
+        enforce_valid_xyPos();
     }
     void increment_pos(int dX, int dY){
         posX += dX;
         posY += dY;
+        enforce_valid_xyPos();
     }
     void remove_this_dead_cell_if_depleted(std::vector<DeadCell*>& pDeads, int iDead){
         assert(pDeads[iDead] == pSelf);
