@@ -6,6 +6,8 @@
 #endif
 
 
+std::vector<SDL_Texture*> SDLTextureList;
+
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
@@ -18,6 +20,8 @@ SDL_Texture* convArrToSDLTex(void* arr, int imgWidth, int imgHeight){
     0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
   );
   SDL_Texture* pTex = SDL_CreateTextureFromSurface(P_RENDERER, pSurface);
+  SDL_FreeSurface(pSurface);
+  SDLTextureList.push_back(pTex);
   return pTex;
 }
 
@@ -2542,6 +2546,7 @@ SDL_Texture* load_texture(const char* filePath){
     SDL_Texture* ans = IMG_LoadTexture(P_RENDERER, filePath);
     if(ans == NULL) cout << filePath << endl;
     assert(ans != NULL);
+    SDLTextureList.push_back(ans);
     return ans;
 }
 
@@ -2576,6 +2581,9 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int heig
     SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
     //  This renders the opject according to pDst
     //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+    
+    // TODO: If this line ends up ruining the program, delete it
+    delete pDst;
 }
 
 void draw_gnd(){
@@ -2643,7 +2651,6 @@ void draw_bkgnd(int energyFromSunPerSec){
   SDL_Rect bkgnd = {0, 0, UB_X_PX, UB_Y_PX};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);
   SDL_RenderFillRect(P_RENDERER, &bkgnd);
-  SDL_RenderPresent(P_RENDERER);
 }
 
 SDL_Texture* retrieve_symbol_texture(char symbol){
@@ -2784,17 +2791,13 @@ void draw_text_box(int x0, int y0, int dx, int dy, int borderPx,
     int maxNumLines, string text = ""){
   // Draw the desired textbox and its border
   unsigned char _RGBA_Bkgnd[] = {0xff, 0xff, 0xff, 0xff};
-  //SDL_Texture* pBkgnd = convArrToSDLTex(_RGBA_Bkgnd, 1, 1);
   unsigned char _RGBA_Border[] = {0x00, 0x00, 0x00, 0xff};
-  //SDL_Texture* pBorder = convArrToSDLTex(_RGBA_Border, 1, 1);
 
   draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
 
   // Draw each character of text individually (\n means new line)
   int symbolHeight = dy / (maxNumLines + 1);
   int symbolWidth = symbolHeight * 15 / 32;
-  //int symbolWidth = DRAW_SCALE_FACTOR*15/16;
-  //int symbolHeight = DRAW_SCALE_FACTOR*32/16;
   int xPos = x0+2*borderPx, yPos = y0+symbolHeight/2; // The x and y positions relative to the text box
   for(auto c : text){
     switch(c){
@@ -2820,5 +2823,4 @@ void draw_user_interface(){
   draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "  Skip Frames [A]  ");
   draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "      Options      ");
 }
-
 

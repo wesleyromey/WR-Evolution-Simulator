@@ -239,6 +239,7 @@ void test_new_tex(){
         imgWidth, imgHeight, numChannels*8, imgWidth*numChannels,
         0x0000ff, 0x00ff00, 0xff0000, 0
     );
+    SDL_FreeSurface(pBlackSurface3);
     cout << pBlackSurface3 << endl;
     SDL_Texture* pBlackTex3 = SDL_CreateTextureFromSurface(P_RENDERER, pBlackSurface3);
 
@@ -282,8 +283,7 @@ void test_new_tex(){
 
 // TODO: Edit this as needed!
 void dispIntroMsg(){
-    cout << "\nWelcome to the WR Evolution Simulator! Controls are:\n";
-    cout << "  Esc: Exit, n: Next frame, SPACE: Next frame, a: Play 10k frames really fast\n";
+    cout << "\nWelcome to the WR Evolution Simulator!\n\n";
     cout << endl;
     cout << "Feel free to use this software in your own projects, but:\n";
     cout << "  THE GNU GPL v3 LICENSE MAY APPLY TO THIS SOFTWARE AS A WHOLE IN ADDITION TO THE\n";
@@ -321,6 +321,57 @@ void test_cur_tex(){
     }
 }
 
+// Change an existing texture and draw it at its (possibly) new x and y position
+void redraw_existing_tex(){
+    // xPos = 0, yPos = 0 refers to the top left corner of the window
+    // Not sure what pSrc refers to.
+    //  pSrc may represent the original object, but I'm not sure
+    //  If pSrc == NULL, then a new texture is rendered
+    // pDst represents the new object
+    //  If dst == NULL, then the texture fills the entire window
+
+    // Inputs
+    SDL_Texture* pTexture = p_V_Symbol;
+    int xPos = 12*DRAW_SCALE_FACTOR, yPos = 10*DRAW_SCALE_FACTOR;
+    int width = 5*DRAW_SCALE_FACTOR, height = 10*DRAW_SCALE_FACTOR;
+
+    // Original Function
+    SDL_Rect* pDst = new SDL_Rect;
+    pDst->x = xPos; pDst->y = yPos;
+    pDst->h = height; pDst->w = width;
+    //SDL_RenderCopy(pRenderer, pTexture, pSrc, pDst);
+    SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
+    //  This renders the opject according to pDst
+    //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+
+    // Post-function necessities
+    SDL_RenderPresent(P_RENDERER);
+    SDL_Event windowEvent;
+    int count = 0;
+    bool exitSim = false;
+    Uint32 mouseClickType = 0;
+    while(count < 100 && !exitSim){
+        Uint32 frameStart = SDL_GetTicks();
+        SDL_WaitEvent(&windowEvent);
+        switch(windowEvent.type){
+            case SDL_MOUSEMOTION:
+            mouseClickType = SDL_GetMouseState(&mousePosX, &mousePosY);
+            pDst->x = mousePosX; pDst->y = mousePosY;
+            SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
+            SDL_RenderPresent(P_RENDERER);
+            enforce_frame_rate(frameStart, FRAME_DELAY);
+            count++;
+            cout << ".";
+            break;
+            case SDL_QUIT:
+            exitSim = true;
+            break;
+        }
+    }
+    cout << "sim will end now." << endl;
+    delete pDst;
+}
+
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();
@@ -334,7 +385,8 @@ int main(int argc, char* argv[]){
     //test_SDL();
     //test_event_handler();
     //test_new_tex();
-    test_cur_tex();
+    //test_cur_tex();
+    redraw_existing_tex();
 #else
     randomly_place_new_cells(400);
     int frameNum = 0;

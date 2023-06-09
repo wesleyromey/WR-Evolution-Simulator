@@ -7,7 +7,6 @@
 #define MAIN_INCLUDES_H
 #endif
 
-
 void wait_for_user_to_exit_SDL(){
     SDL_Event windowEvent;
     if(!simIsRunning) return;
@@ -21,17 +20,11 @@ void wait_for_user_to_exit_SDL(){
     }
 }
 
-void exit_SDL(){
-    SDL_DestroyWindow(P_WINDOW);
-    SDL_Quit();
-    std::cout << "SDL is quitting!\n";
-}
-
-
 void run_step_frames_press_n(bool& pauseSim, unsigned int& autoAdvanceSim){
     pauseSim = false;
     autoAdvanceSim = 0;
 }
+
 void run_step_frames_press_a(int& simState, unsigned int& autoAdvanceSim){
     simState = SIM_STATE_SKIP_FRAMES;
     autoAdvanceSim = AUTO_ADVANCE_DEFAULT;
@@ -94,6 +87,7 @@ void SDL_event_handler(){
     while(pauseSim){
         switch(simState){
             case SIM_STATE_MAIN_MENU:
+            frameStart = SDL_GetTicks();
             SDL_WaitEvent(&windowEvent);
             simState = SIM_STATE_STEP_FRAMES;
             break;

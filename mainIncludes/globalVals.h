@@ -59,6 +59,9 @@ static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
 bool simIsRunning = true; // If false, exit the program
+static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
+Uint32 frameStart = 0; // The time in ms since the start of the simulation
+Uint32 frameTime = 0; // The amount of time the frame lasted for
 
 // Simulation States: These control the GUI, simulation mode, etc.
 //  TODO: Actually implement these into the game

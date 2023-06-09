@@ -18,9 +18,9 @@ std::map<std::pair<int,int>, std::vector<DeadCell*>> pDeadsRegions;
 //  pDeads separated by region
 
 
-
 // Render the background, cell positions, etc using SDL
 void SDL_draw_frame(){
+    SDL_RenderClear(P_RENDERER);
     #ifdef DEBUG_FRAMES
     draw_bkgnd(100);
     int ds = DRAW_SCALE_FACTOR;
@@ -72,13 +72,13 @@ void SDL_draw_frame(){
     draw_user_interface();
     #else
     //SDL_RenderClear(P_RENDERER);
-    if(simState == SIM_STATE_SKIP_FRAMES) draw_bkgnd(0);
-    else draw_bkgnd(energyFromSunPerSec);
+    draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();
     for(auto pCell : pDeads) pCell->draw_cell();
     draw_user_interface();
     #endif
+    if(simState != SIM_STATE_SKIP_FRAMES) enforce_frame_rate(frameStart, FRAME_DELAY);
     SDL_RenderPresent(P_RENDERER);
 }
 
