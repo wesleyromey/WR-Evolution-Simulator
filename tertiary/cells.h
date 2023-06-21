@@ -4,6 +4,9 @@
 #endif
 
 
+
+struct DeadCell;
+
 // The main (possibly only) living organisms in the simulator. Their shape will be a circle
 struct Cell {
     // Identity
@@ -85,13 +88,6 @@ struct Cell {
                 }
             }
         }
-        /*
-        for(auto pAlive : pAlives){
-            if(pAlive->calc_distance_from_point(posX, posY) <= (float)(dia + pAlive->dia + 0.1) / 2){
-                ans.push_back(pAlive);
-            }
-        }
-        */
         return ans;
     }
     int get_id_similarity(Cell* pCellOther){
@@ -201,10 +197,79 @@ struct Cell {
         if(val > ub) val = ub;
         return val;
     }
+    // Only consider the nearest cells within the cell's field of view
+    //  Return the bounds of the regions (lbX, ubX, lbY, ubY)
+    std::vector<Cell*> get_nearest_cells(int maxNumCellsToReturn,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+        // visionDist: The distance the cell can see
+        int xReg = xyRegion.first, yReg = xyRegion.second;
+        int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
+        int lbX = posX - visionDist, ubX = posX + visionDist;
+        int lbY = posY - visionDist, ubY = posY + visionDist;
+        
+        // A region counts as too far if it its nearest point is out of range
+        int visionDist_NumRegX = visionDist / reg_dX + 1;
+        int visionDist_NumRegY = visionDist / reg_dY + 1;
+        // A crude estimate so I don't need to rely on precise calculations
+        int visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX
+            + visionDist_NumRegY*visionDist_NumRegY + 1);
+        
+        // Sort every region in a copy of pAlivesRegions based on the distance
+        //  from the current region
+        std::vector<std::pair<int,int>> nearest_xyReg;
+        // Only evaluate the regions nearest to the current cell
+        for(auto pReg : pAlivesRegions){
+            int distX = (pReg.first.first - xReg);
+            int distY = (pReg.first.second - yReg);
+            int distXY = sqrt(distX*distX + distY*distY);
+            if(distXY <= visionDist_NumRegXY) nearest_xyReg.push_back(pReg.first);
+        }
+
+        // Go through all the regions within visionDist from the current cell
+        std::vector<Cell*> nearestCells;
+        for(auto pReg : nearest_xyReg){
+            for(auto pCell : pAlivesRegions[pReg]){
+                int distX = pCell->posX - posX;
+                int distY = pCell->posY - posY;
+                int distXY = sqrt(distX*distX + distY*distY);
+                if(distXY <= visionDist && pCell != pSelf){
+                    nearestCells.push_back(pCell);
+                }
+            }
+        }
+        // Temporarily subtract xReg from the x values and yReg from the y values
+        //  of nearestCells
+        for(int i = 0; i < nearest_xyReg.size(); i++){
+            nearest_xyReg[i].first -= xReg;
+            nearest_xyReg[i].second -= yReg;
+        }
+        // Sort the nearest cells by distance
+        std::sort(nearest_xyReg.begin(), nearest_xyReg.end(),
+            [](auto &left, auto &right){
+                int distX = left.first, distY = left.second;
+                float distXY_left = sqrt(distX*distX + distY*distY);
+                distX = right.first; distY = right.second;
+                float distXY_right = sqrt(distX*distX + distY*distY);
+
+                return distXY_right > distXY_left;
+            }
+        );
+        // Add xReg and yReg back to the regional coordinates of each cell
+        for(int i = 0; i < nearest_xyReg.size(); i++){
+            nearest_xyReg[i].first += xReg;
+            nearest_xyReg[i].second += yReg;
+        }
+
+        // Remove cells which occur too late in the list
+        while(nearestCells.size() > maxNumCellsToReturn) nearestCells.pop_back();
+        return nearestCells;
+    }
     // TODO: Add the position, speed, health, energy, age, and id similarity of the
     //  nearest 10 cells
     //  (TODO: ensure that each cell id similarity value only gets up to 3 cells each)
-    std::vector<float> get_ai_inputs(){
+    // NOTE: This function also determines what the AI inputs are
+    std::vector<float> get_ai_inputs(
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<float> ans;
         int _numAiInputs = 0;
         // Internal Timers
@@ -229,9 +294,41 @@ struct Cell {
         ans.push_back((float)forceX); _numAiInputs++;
         ans.push_back((float)forceY); _numAiInputs++;
         ans.push_back((float)energy); _numAiInputs++;
-        // id
-        //for(int i = 0; i < ID_LEN; i++) ans.push_back((float)id[i]);
-        // return
+        // Stats of nearest cells
+        //  (a) Find out which 10 cells are closest
+        //  (b) For now, we just care about their id similarity
+        int maxNumCellsSeen = 10;
+        std::vector<Cell*> nearestCells = get_nearest_cells(maxNumCellsSeen, pAlivesRegions);
+        for(int i = 0; i < maxNumCellsSeen; i++){
+            int relDist = 0, relDirOther = 0;
+            int relSpeedRadial = 0, relSpeedTangential = 0;
+            int healthOther = 0, energyOther = 0, ageOther = 0;
+            int idSimilarity = 0;
+            if(i < nearestCells.size()){
+                Cell* pCell = nearestCells[i];
+                relDist = calc_distance_from_point(pCell->posX, pCell->posY);
+                // Standard angle of linepointing from other cell to current cell
+                relDirOther = (pCell->speedDir + 180) % 360; // degrees
+                // Positive indicates movement toward the cell
+                relSpeedRadial = pCell->get_speed() * cos_deg(relDirOther);
+                // Positive indicates clockwise movement around the cell
+                relSpeedTangential = pCell->get_speed() * sin_deg(relDirOther);
+                healthOther = pCell->health;
+                energyOther = pCell->energy;
+                ageOther = pCell->age;
+                idSimilarity = get_id_similarity(pCell);
+            }
+            // Distance, tangential and radial speed, direction, health,
+            //  energy, age, id similarity
+            ans.push_back(relDist); _numAiInputs++;
+            ans.push_back(relSpeedRadial); _numAiInputs++;
+            ans.push_back(relSpeedTangential); _numAiInputs++;
+            ans.push_back(healthOther); _numAiInputs++;
+            ans.push_back(energyOther); _numAiInputs++;
+            ans.push_back(ageOther); _numAiInputs++;
+            ans.push_back(idSimilarity); _numAiInputs++;
+        }
+        // Ensure the neural network input layer is valid
         if(nodesPerLayer[0] < 0) nodesPerLayer[0] = ans.size();
         else assert(ans.size() == nodesPerLayer[0]);
         assert(_numAiInputs == nodesPerLayer[0]);
@@ -372,9 +469,9 @@ struct Cell {
         // Ensure we update all dependent variables
         enforce_valid_cell();
     }
-    void init_ai(){
+    void init_ai(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // NOTE: Do NOT use this function until all the inputs are initialized
-        std::vector<float> aiInputs = get_ai_inputs();
+        std::vector<float> aiInputs = get_ai_inputs(pAlivesRegions);
         std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> aiOutputs = get_ai_outputs();
 
         // Start with the (first) hidden layer, doing more of them if needed
@@ -408,12 +505,12 @@ struct Cell {
         age++;
         if(attackCooldown > 0) attackCooldown--;
     }
-    void decide_next_frame(){
+    void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
         enforce_valid_ai();
-        std::vector<float> layerInputs = get_ai_inputs();
+        std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
         }
@@ -462,7 +559,9 @@ struct Cell {
         // NOTE: If I push a copy of the cell into a new location, I need to update self
         pSelf = pCell;
     }
-    void gen_stats_random(int cellNum, Cell* pCell = NULL){
+    void gen_stats_random(int cellNum,
+            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions, 
+            Cell* pCell = NULL){
         // Random generation from scratch
         pSelf = pCell;
         parent = NULL;
@@ -484,7 +583,7 @@ struct Cell {
         for(int i = 0; i < ID_LEN; i++){
             id[i] = std_uniform_dist(rng) < 0.5;
         }
-        init_ai();
+        init_ai(pAlivesRegions);
         update_energy_costs();
     }
     // NOTE: The full energy accumulation can only be done after this function is applied to every cell
@@ -735,14 +834,6 @@ struct Cell {
                     }
                 }
             }
-            /*
-            for(auto pCell : pAlives){
-                if(uniqueCellNum == pCell->uniqueCellNum) continue;
-                if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(dia + pCell->dia + 0.1) / 2){
-                    attack_cell(pCell);
-                }
-            }
-            */
         }
         if(doCloning && energy > energyCostToClone && pAlives.size() < CELL_LIMIT){
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
@@ -823,6 +914,13 @@ struct Cell {
         for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
     }
 };
+
+
+
+
+
+
+
 
 
 

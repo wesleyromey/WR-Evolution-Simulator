@@ -15,6 +15,9 @@
 #include <tuple>
 #include <vector>
 
+// Other external libraries
+#include <bits/stdc++.h> // GNU GPL v3 license
+
 
 // Needed for SDL2 and SDL2_image to work
 #include <SDL2/SDL.h>

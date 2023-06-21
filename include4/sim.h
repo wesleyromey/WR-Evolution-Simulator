@@ -165,7 +165,7 @@ void init_sim_global_vals(){
 void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
     if(pParent == NULL){
         Cell *pCell = new Cell;
-        pCell->gen_stats_random(pCellsHist.size(), pCell);
+        pCell->gen_stats_random(pCellsHist.size(), pAlivesRegions, pCell);
         pCell->randomize_pos(0, UB_X-1, 0, UB_Y-1);
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
@@ -297,7 +297,6 @@ void do_frame_static(int frameNum){
     // Rendering and User Interactions
     SDL_draw_frame();
     SDL_event_handler();
-    
     return;
 }
 
@@ -307,7 +306,7 @@ void do_frame(int frameNum){
     // The cells each decide what to do (e.g. speed, direction, doAttack, etc.)
     //  (e.g. update their internal state).
     assign_cells_to_correct_regions();
-    for(auto pCell : pAlives) pCell->decide_next_frame();
+    for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
 
     // Static portion of the frame
     do_frame_static(frameNum);

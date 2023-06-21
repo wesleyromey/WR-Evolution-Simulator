@@ -1,0 +1,9 @@
+Authors:
+	WR Evolution Simulator: Wesley Romey
+	SDL 2 and SDL Image 2:  Sam Lantinga
+
+This software falls under multiple licenses:
+	zLib License (SDL 2 and SDL Image 2)
+	GNU GPL v3 (everything else - see https://www.gnu.org/licenses/gpl-3.0.html)
+
+All licenses including those I did not label here are compatible with the GNU GPL v3 license

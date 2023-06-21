@@ -281,17 +281,11 @@ void test_new_tex(){
     }
 }
 
-// TODO: Edit this as needed!
+// TODO: Display this as a text message within the simulator itself
 void dispIntroMsg(){
-    cout << "\nWelcome to the WR Evolution Simulator!\n\n";
-    cout << endl;
-    cout << "Feel free to use this software in your own projects, but:\n";
-    cout << "  THE GNU GPL v3 LICENSE MAY APPLY TO THIS SOFTWARE AS A WHOLE IN ADDITION TO THE\n";
-    cout << "  REMAINING LICENSES. SEE https://www.gnu.org/licenses/gpl-3.0.html AND THE\n";
-    cout << "  COPYRIGHT FOLDER FOR MORE INFORMATION.\n";
-    cout << endl;
-    cout << "  See https://github.com/wesleyromey/WR-Evolution-Simulator for both the source code\n";
-    cout << "  and the license info.\n";
+    cout << "\nWelcome to the WR Evolution Simulator! ";
+    cout << "See https://github.com/wesleyromey/WR-Evolution-Simulator for ";
+    cout << "the source code and license info.\n";
 }
 
 void test_cur_tex(){

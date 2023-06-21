@@ -1,6 +1,6 @@
-The GNU GPL v3 license is a copyleft license which may apply to this simulator.
+The GNU GPL v3 license is a copyleft license that applies to this simulator.
 See https://www.gnu.org/licenses/gpl-3.0.html for the license.
 
 If you're fine with using copyleft software, feel free to add to it
 and make your own version. But if you want to keep it confidential and private,
-then don't publish it to the public.
+then don't publish it or derivative works of it.
