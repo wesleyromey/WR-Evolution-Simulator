@@ -69,6 +69,7 @@ static const int SIM_STATE_MAIN_MENU = 0;
 static const int SIM_STATE_SKIP_FRAMES = 1;
 static const int SIM_STATE_STEP_FRAMES = 2;
 static const int SIM_STATE_QUIT = 3;
+static const int SIM_STATE_OPTIONS = 4;
 static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
 int simState = SIM_STATE_MAIN_MENU;
 

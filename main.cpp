@@ -240,7 +240,7 @@ void test_new_tex(){
         0x0000ff, 0x00ff00, 0xff0000, 0
     );
     SDL_FreeSurface(pBlackSurface3);
-    cout << pBlackSurface3 << endl;
+    std::cout << pBlackSurface3 << endl;
     SDL_Texture* pBlackTex3 = SDL_CreateTextureFromSurface(P_RENDERER, pBlackSurface3);
 
 
@@ -283,9 +283,9 @@ void test_new_tex(){
 
 // TODO: Display this as a text message within the simulator itself
 void dispIntroMsg(){
-    cout << "\nWelcome to the WR Evolution Simulator! ";
-    cout << "See https://github.com/wesleyromey/WR-Evolution-Simulator for ";
-    cout << "the source code and license info.\n";
+    std::cout << "\nWelcome to the WR Evolution Simulator! ";
+    std::cout << "See https://github.com/wesleyromey/WR-Evolution-Simulator for ";
+    std::cout << "the source code and license info.\n";
 }
 
 void test_cur_tex(){
@@ -355,14 +355,14 @@ void redraw_existing_tex(){
             SDL_RenderPresent(P_RENDERER);
             enforce_frame_rate(frameStart, FRAME_DELAY);
             count++;
-            cout << ".";
+            std::cout << ".";
             break;
             case SDL_QUIT:
             exitSim = true;
             break;
         }
     }
-    cout << "sim will end now." << endl;
+    std::cout << "sim will end now." << endl;
     delete pDst;
 }
 

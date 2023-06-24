@@ -2544,7 +2544,7 @@ std::vector<std::pair<int, SDL_Texture*>> P_GND_TEX = {
 // This function is for testing purposes only!
 SDL_Texture* load_texture(const char* filePath){
     SDL_Texture* ans = IMG_LoadTexture(P_RENDERER, filePath);
-    if(ans == NULL) cout << filePath << endl;
+    if(ans == NULL) std::cout << filePath << endl;
     assert(ans != NULL);
     SDLTextureList.push_back(ans);
     return ans;
@@ -2767,7 +2767,7 @@ SDL_Texture* retrieve_symbol_texture(char symbol){
     return pSpaceSymbol;
   }
   // If nothing is returned, just return an empty symbol (space)
-  cout << "DISCLAIMER: THE '" << symbol << "' SYMBOL IS NOT AVAILABLE FOR DRAWING AT THE MOMENT!\n";
+  std::cout << "DISCLAIMER: THE '" << symbol << "' SYMBOL IS NOT AVAILABLE FOR DRAWING AT THE MOMENT!\n";
   return NULL;
 }
 
@@ -2783,18 +2783,14 @@ void draw_empty_textbox(int x0, int y0, int width, int height, int borderThickne
   );
 }
 
+
 // x0, y0: The (top right?) of the text box
 // dx, dy: The width and height of the text box, respectively
 // borderPx: The thickness of the black border (if applicable)
 // text: The text (if none, just set text == "")
-void draw_text_box(int x0, int y0, int dx, int dy, int borderPx, 
-    int maxNumLines, string text = ""){
-  // Draw the desired textbox and its border
-  unsigned char _RGBA_Bkgnd[] = {0xff, 0xff, 0xff, 0xff};
-  unsigned char _RGBA_Border[] = {0x00, 0x00, 0x00, 0xff};
-
-  draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
-
+// maxNumLines: Subtract 1 if the text is standalone and NOT in a text box
+void draw_text(int x0, int y0, int dx, int dy, int borderPx, int maxNumLines,
+    string text = ""){
   // Draw each character of text individually (\n means new line)
   int symbolHeight = dy / (maxNumLines + 1);
   int symbolWidth = symbolHeight * 15 / 32;
@@ -2803,14 +2799,22 @@ void draw_text_box(int x0, int y0, int dx, int dy, int borderPx,
     switch(c){
       case '\n':
       xPos = x0;
-      yPos += symbolHeight + borderPx / 2;
+      yPos += symbolHeight + dy / 20;
       break;
       default:
       draw_texture(retrieve_symbol_texture(c), xPos, yPos, symbolWidth, symbolHeight);
-      xPos += symbolWidth + borderPx / 4;
+      xPos += symbolWidth + dy / 40;
       break;
     }
   }
+}
+void draw_text_box(int x0, int y0, int dx, int dy, int borderPx, 
+    int maxNumLines, string text = ""){
+  // Draw the desired textbox and its border
+  unsigned char _RGBA_Bkgnd[] = {0xff, 0xff, 0xff, 0xff};
+  unsigned char _RGBA_Border[] = {0x00, 0x00, 0x00, 0xff};
+  draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
+  if(text.size() > 0) draw_text(x0, y0, dx, dy, borderPx, maxNumLines, text);
 }
 void draw_user_interface(){
   // Include a button for next frame, skip frames, and options
@@ -2822,5 +2826,20 @@ void draw_user_interface(){
   draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "   Next Frame [N]  ");
   draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "  Skip Frames [A]  ");
   draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "      Options      ");
+}
+
+void draw_options_menu(int x0, int dx, int dy, vector<pair<int, string>> optionText){
+  // Include a button for next frame, skip frames, and options
+  int borderPx = dy / 20;
+  //SDL_RenderClear(P_RENDERER);
+  draw_text_box(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 1, "");
+  draw_text(0.1*WINDOW_WIDTH, dy, dx, dy, 0, 0, "Options");
+  for(auto ele : optionText){
+    // ele == {y0, text}
+    int y0 = ele.first;
+    string text = ele.second;
+    draw_text_box(x0, y0, dx, dy, borderPx, 1, text);
+  }
+  SDL_RenderPresent(P_RENDERER);
 }
 
