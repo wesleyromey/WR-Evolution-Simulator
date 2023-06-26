@@ -13,33 +13,44 @@ static const std::set<char> LETTERS = {
 static const std::set<char> OPERATORS = {'+','-','*','/'};
 
 // Global Simulation Parameters
-static const int UB_X = 120, UB_Y = 80;
+int initNumCells = 400;
+static const int UB_X = 120, UB_Y = 80;  // 120, 80
+// I split cells into square regions so I only have to compare the positions
+// of nearby cells to calculate forces, crowding, interactions, vision, etc.
 static const int CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
-//  I split cells into square regions so I only have to compare the positions
-//  of nearby cells to calculate forces, crowding, interactions, vision, etc.
 static const int CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
+// If a region near the bottom or the right side is smaller, then it is absorbed
+// into the neighboring region(s)
 static const int CELL_REGION_NUM_Y = UB_Y / CELL_REGION_SIDE_LEN;
-//  If a region near the bottom or the right side is smaller, then it is absorbed
-//  into the neighboring region(s)
+// NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
-//  NOTE: The program might not work properly if this is disabled
+// NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
-//  NOTE: The program might not work properly if this is disabled
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
 static const int MAX_SUN_ENERGY_PER_SEC = 500;  // This is the maximum amount of energy which can be accumulated from the sun 
 static const int DAY_LEN_SEC = 400;   // Number of seconds per "day"
 static const int CELL_LIMIT = 1000;
+// Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
 static const float OVERCROWDING_ENERGY_COEF = 30.;
-//  Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
-int energyFromSunPerSec = 0; // This value is automatically updated each frame
-int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
-
 // Energy accumulation for all ground spaces
 static const int MAX_GND_ENERGY = 2000;
 static const int INIT_GND_ENERGY = MAX_GND_ENERGY / 2;
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 static const int GND_ENERGY_PER_INCREASE = 10;
+
+// Day-Night Cycle
+int energyFromSunPerSec = 0; // This value is automatically updated each frame
+int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
+const static int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
+const static int DAY_NIGHT_BINARY_MODE = 1;
+const static int DAY_NIGHT_DEFAULT_MODE = 2;
+const static int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
+// Smaller values (closer to 0) mean the sun remains lower in the sky.
+// Larger values (to +inf) mean the sun is near its max height for longer
+// A value of 1.75 approximates a sine wave
+const static float DAY_NIGHT_EXPONENT = 2.0; // 0 <= EXPONENT < infinity
+const static float DAY_NIGHT_LB = 0.0, DAY_NIGHT_UB = 0.5;
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
@@ -58,22 +69,20 @@ static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
-bool simIsRunning = true; // If false, exit the program
 static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 
 // Simulation States: These control the GUI, simulation mode, etc.
-//  TODO: Actually implement these into the game
 static const int SIM_STATE_MAIN_MENU = 0;
 static const int SIM_STATE_SKIP_FRAMES = 1;
 static const int SIM_STATE_STEP_FRAMES = 2;
 static const int SIM_STATE_QUIT = 3;
 static const int SIM_STATE_OPTIONS = 4;
+static const int SIM_STATE_INIT = 5;
+static const int SIM_STATE_RESTART = 6;
 static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
 int simState = SIM_STATE_MAIN_MENU;
-
-
 
 
 // Values used for all Cell type variables

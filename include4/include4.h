@@ -4,3 +4,4 @@
 #endif
 
 #include "sim.h"
+#include "debugTests.h"

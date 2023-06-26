@@ -7,6 +7,8 @@ If a file or folder isn't explained, it's probably because the file is short
 
 SDL2 and SDL2 image are required for the graphics to work
 
+Last Updated: 2023-06-26
+
 
 .vscode/                Settings required for the simulator to compile
 copyright/              Copyright, license, and other legal info
@@ -15,8 +17,10 @@ copyright/              Copyright, license, and other legal info
 include4/
     include4.h
     sim.h               Contains functions that run the simulation,
-                        deal with object interactions, and
-                        control the global parameters / cycles
+                        deal with object interactions,
+                        control the global parameters / cycles, and
+                        exit the simulation (while preventing memory leaks)
+    debugTests.h        Contains unit tests and debug functions
 mainIncludes/
     debug.h             Controls if the simulation is being run in debug mode
     globalVals.h        Defines the global parameters (mostly constants
@@ -64,10 +68,7 @@ tertiary/
                             
     tertiaryIncludes.h
 main.cpp                The main file
-                        Contains debug mode only functions
-                        Contains a function to exit the simulation
-                        (and prevent memory leaks)
-                        Contain other functions such as intro messages
+                        Initializes the simulation
 main.exe                If this file exists, then it is an executable file
                         which can be used to run the simulator.
                         Note that this might not run on certain computers,

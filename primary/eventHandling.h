@@ -8,12 +8,12 @@
 #endif
 
 void wait_for_user_to_exit_SDL(){
+    if(simState == SIM_STATE_QUIT) return;
     SDL_Event windowEvent;
-    if(!simIsRunning) return;
     while(true){
         if(SDL_PollEvent(&windowEvent)){
             if(windowEvent.type == SDL_QUIT){
-                simIsRunning = false;
+                simState = SIM_STATE_QUIT;
                 return;
             }
         }
@@ -31,14 +31,14 @@ void run_step_frames_press_a(int& simState, unsigned int& autoAdvanceSim){
     std::cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
 }
 
-void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, bool& simIsRunning, unsigned int& autoAdvanceSim, int& simState){
+void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned int& autoAdvanceSim, int& simState){
     SDL_WaitEvent(&windowEvent);
     Uint32 mouseClickType = 0;
     switch(windowEvent.type){
         case SDL_KEYDOWN:
         switch(windowEvent.key.keysym.sym){
             case SDLK_ESCAPE:
-            simIsRunning = false;
+            simState = SIM_STATE_QUIT;
             case SDLK_n:
             case SDLK_SPACE:
             run_step_frames_press_n(pauseSim, autoAdvanceSim);
@@ -61,14 +61,12 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, bool& sim
                     run_step_frames_press_a(simState, autoAdvanceSim);
                 } else {
                     simState = SIM_STATE_OPTIONS;
-                    std::cout << "NOTE: Options are NOT available yet!\n";
                 }
             }
         }
         break;
         case SDL_QUIT:
         simState = SIM_STATE_QUIT;
-        simIsRunning = false;
         pauseSim = false;
         break;
     }
@@ -84,17 +82,17 @@ bool change_simState_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int x0, in
 }
 void draw_options_menu(int x0, int dx, int dy, vector<pair<int, string>> optionText);
 void SDL_draw_frame();
-void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, bool& simIsRunning, int& simState){
+void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
     vector<pair<int, string>> optionText;
     #define wfx(fraction) (0 + (WINDOW_WIDTH-0)*fraction)
     #define wfy(fraction) (0 + (WINDOW_HEIGHT-0)*fraction)
     optionText.push_back({wfy(0.4), "Continue"});
-    optionText.push_back({wfy(0.6), "Continue" });
+    optionText.push_back({wfy(0.6), "Restart" });
     optionText.push_back({wfy(0.8), "Quit"    });
     int x0 = wfx(0.25), y0 = 0;
     int x1 = WINDOW_WIDTH - x0;
     int dx = x1 - x0, dy = 0.1*WINDOW_HEIGHT;
-    std::cout << "x0: " << x0 << ", dx: " << dx << ", dy: " << dy << endl;
+    //std::cout << "x0: " << x0 << ", dx: " << dx << ", dy: " << dy << endl;
     draw_options_menu(x0, dx, dy, optionText);
     #undef wfx
     #undef wfy
@@ -105,9 +103,9 @@ void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, bool& si
         switch(windowEvent.type){
             case SDL_MOUSEBUTTONDOWN:
             mouseClickType = SDL_GetMouseState(&mousePosX, &mousePosY);
-            if(mouseClickType != 1) break; // MUST be a left click
+            if(mouseClickType != 1) break; // MUST be a left click, else break
             if(deal_with_box_click(optionText[0].first, SIM_STATE_STEP_FRAMES)) break;
-            if(deal_with_box_click(optionText[1].first, SIM_STATE_STEP_FRAMES)) break;
+            if(deal_with_box_click(optionText[1].first, SIM_STATE_RESTART)) break;
             if(deal_with_box_click(optionText[2].first, SIM_STATE_QUIT)) break;
         }
     }
@@ -132,7 +130,7 @@ void SDL_event_handler(){
             simState = SIM_STATE_STEP_FRAMES;
             break;
             case SIM_STATE_STEP_FRAMES:
-            run_sim_state_step_frames(windowEvent, pauseSim, simIsRunning, autoAdvanceSim, simState);
+            run_sim_state_step_frames(windowEvent, pauseSim, autoAdvanceSim, simState);
             break;
             case SIM_STATE_SKIP_FRAMES:
             if(autoAdvanceSim){
@@ -141,15 +139,21 @@ void SDL_event_handler(){
             } else simState = SIM_STATE_STEP_FRAMES;
             break;
             case SIM_STATE_OPTIONS:
-            run_sim_state_options_menu(windowEvent, pauseSim, simIsRunning, simState);
+            run_sim_state_options_menu(windowEvent, pauseSim, simState);
             break;
             case SIM_STATE_QUIT:
+            case SIM_STATE_INIT:
+            case SIM_STATE_RESTART:
             pauseSim = false;
-            simIsRunning = false;
+            break;
+            default:
+            // If a state is NOT accounted for, then throw an error
+            cout << "Caution! This simulation state is NOT accounted for: " << simState << endl;
+            assert(false);
             break;
         }
     }
-    if(!simIsRunning) std::cout << "Simulation will exit..." << std::endl;
+    if(simState == SIM_STATE_RESTART) cout << "Restarting Sim" << endl;
 }
 
 

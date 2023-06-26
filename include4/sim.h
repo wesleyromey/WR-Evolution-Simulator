@@ -2,6 +2,7 @@
 #include "../tertiary/tertiaryIncludes.h"
 #define TERTIARY_INCLUDES_H
 #endif
+#define SIM_H
 
 // This file determines what objects and cells are in the simulation initially
 // This file contains global simulation settings
@@ -117,15 +118,6 @@ void update_dayNightCycleTime(int target = -1){
 }
 
 // Update the amount of energy each cell gets from the sun per second
-const static int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
-const static int DAY_NIGHT_BINARY_MODE = 1;
-const static int DAY_NIGHT_DEFAULT_MODE = 2;
-const static int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
-const static float DAY_NIGHT_EXPONENT = 2.0; // 0 <= EXPONENT < infinity
-//  Smaller values (closer to 0) mean the sun remains lower in the sky.
-//  Larger values (to +inf) mean the sun is near its max height for longer
-//  A value of 1.75 approximates a sine wave
-const static float DAY_NIGHT_LB = 0.0, DAY_NIGHT_UB = 0.5;
 void do_day_night_cycle(){
     // Stick with a simple polynomial equation to approximate a sine wave during the day phase
     //  (the day occurs between times LB and UB) and set to 0 during the night phase
@@ -158,6 +150,7 @@ void do_day_night_cycle(){
 
 // MUST run this before completing frames if the simulation is to run properly
 void init_sim_global_vals(){
+    dayNightCycleTime = 0;
     do_day_night_cycle();
     init_sim_gnd_energy();
 }
@@ -226,6 +219,44 @@ void print_cell_forces(std::vector<Cell*> pCells){
     std::cout << std::endl;
 }
 
+// Deallocate all cell pointers and then remove the deallocated pointers from
+//  the vectors, maps, etc. that they are stored in
+void deallocate_all_cells(){
+    for(auto pCell : pCellsHist) delete pCell;
+    for(auto pCell : pDeads) delete pCell;
+    pCellsHist.clear(); pDeads.clear(); pAlives.clear();
+    pAlivesRegions.clear(); pDeadsRegions.clear();
+}
+// Initialize the simulation
+void init_sim(int initNumCells){
+    assert(simState == SIM_STATE_INIT);
+    init_sim_global_vals();
+    randomly_place_new_cells(initNumCells);
+    simState = SIM_STATE_STEP_FRAMES;
+}
+// Restart the simulation
+void restart_sim(int initNumCells){
+    assert(simState == SIM_STATE_RESTART);
+    // Deallocate and remove all cells from the simulation
+    cout << "  Simulation is about to restart" << endl << "  ";
+    deallocate_all_cells();
+    // Re-initialize Simulation
+    init_sim_global_vals();
+    randomly_place_new_cells(initNumCells);
+    cout << "  Simulation is restarted!" << endl;
+    simState = SIM_STATE_STEP_FRAMES;
+}
+// Deallocate memory when an exception occurs (ideally) or when the program terminates
+int exit_sim(){
+    assert(simState == SIM_STATE_QUIT);
+    deallocate_all_cells();
+    wait_for_user_to_exit_SDL();
+    exit_SDL();
+    std::cout << "sim is done and finished!\n";
+    return 0;
+}
+
+
 void assign_cells_to_correct_regions(){
     // Clear pAlivesRegions and pDeadsRegions
     for(int _x = 0; _x < CELL_REGION_NUM_X; _x++){
@@ -244,18 +275,30 @@ void assign_cells_to_correct_regions(){
     }
 }
 
-// This function does the frame while preserving the cells' previous decisions
-//  i.e. cells are forced to keep their inputs constant (e.g. speed, direction, etc.)
-void do_frame_static(int frameNum){
-    if(!simIsRunning) return;
+// Repeat this function each frame
+void do_frame(int frameNum, bool doCellDecisions = true){
 
+    // Initialize, restart, or quit the simulation if needed
+    if(simState == SIM_STATE_QUIT) return;
+    if(simState == SIM_STATE_INIT) init_sim(initNumCells);
+    if(simState == SIM_STATE_RESTART) restart_sim(initNumCells);
+
+    if(doCellDecisions){
+        // The cells each decide what to do (e.g. speed, direction,
+        //  doAttack, etc.) by updating their internal state
+        assign_cells_to_correct_regions();
+        for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
+    }
+    
     // Cells move to their target positions based on their speed
     assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_target_pos();
 
+    /*
     // Rendering and User Interactions
     SDL_draw_frame();
     SDL_event_handler();
+    */
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
@@ -297,17 +340,4 @@ void do_frame_static(int frameNum){
     // Rendering and User Interactions
     SDL_draw_frame();
     SDL_event_handler();
-    return;
-}
-
-void do_frame(int frameNum){
-    if(!simIsRunning) return;
-
-    // The cells each decide what to do (e.g. speed, direction, doAttack, etc.)
-    //  (e.g. update their internal state).
-    assign_cells_to_correct_regions();
-    for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
-
-    // Static portion of the frame
-    do_frame_static(frameNum);
 }
