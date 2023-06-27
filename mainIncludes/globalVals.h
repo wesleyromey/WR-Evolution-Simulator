@@ -27,30 +27,35 @@ static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-static const int MAX_SUN_ENERGY_PER_SEC = 500;  // This is the maximum amount of energy which can be accumulated from the sun 
-static const int DAY_LEN_SEC = 400;   // Number of seconds per "day"
-static const int CELL_LIMIT = 1000;
+int cellLimit = 1000;
 // Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
-static const float OVERCROWDING_ENERGY_COEF = 30.;
+float overcrowdingEnergyCoef = 30.;
 // Energy accumulation for all ground spaces
-static const int MAX_GND_ENERGY = 2000;
-static const int INIT_GND_ENERGY = MAX_GND_ENERGY / 2;
+int maxGndEnergy = 2000;
+int initGndEnergy = maxGndEnergy / 2;
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 static const int GND_ENERGY_PER_INCREASE = 10;
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
-int dayNightCycleTime = 0; // Wraps between 0 and DAY_LEN_SEC - 1
-const static int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
-const static int DAY_NIGHT_BINARY_MODE = 1;
-const static int DAY_NIGHT_DEFAULT_MODE = 2;
-const static int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
+int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
+// Max energy which can be accumulated from the sun 
+int maxSunEnergyPerSec = 500;
+// Number of seconds per day (Not sure if this is actually day length in frames
+//  or day length in seconds)
+static const int dayLenSec = 100;
+static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
+static const int DAY_NIGHT_BINARY_MODE = 1;
+static const int DAY_NIGHT_DEFAULT_MODE = 2;
+static const int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
 // A value of 1.75 approximates a sine wave
-const static float DAY_NIGHT_EXPONENT = 2.0; // 0 <= EXPONENT < infinity
-const static float DAY_NIGHT_LB = 0.0, DAY_NIGHT_UB = 0.5;
+float dayNightExponent = 2.0; // 0 <= EXPONENT < infinity
+// The day lasts between dayNightLb and dayNightUb
+// The night lasts from dayNightUb to 1.0 and 0.0 to dayNightLb
+float dayNightLb = 0.0, dayNightUb = 0.5;
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
@@ -76,13 +81,17 @@ Uint32 frameTime = 0; // The amount of time the frame lasted for
 // Simulation States: These control the GUI, simulation mode, etc.
 static const int SIM_STATE_MAIN_MENU = 0;
 static const int SIM_STATE_SKIP_FRAMES = 1;
+static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
 static const int SIM_STATE_STEP_FRAMES = 2;
 static const int SIM_STATE_QUIT = 3;
 static const int SIM_STATE_OPTIONS = 4;
 static const int SIM_STATE_INIT = 5;
 static const int SIM_STATE_RESTART = 6;
-static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
 int simState = SIM_STATE_MAIN_MENU;
+
+
+// NOTE: We need to be able to customize the following options using '+' and '-' buttons in the simulation settings within a simulation settings mode:
+//  initNumCells, cellLimit, maxGndEnergy, maxSunEnergyPerSec, forceDampingFactor
 
 
 // Values used for all Cell type variables
@@ -97,7 +106,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
-static const int FORCE_DAMPING_FACTOR = 100;
+int forceDampingFactor = 100;
     // Default: 100
     // Applies to the repulsive force that keeps cells apart
     // Smaller values increase the strength of repulsive force
@@ -110,14 +119,14 @@ static const int FORCE_DAMPING_FACTOR = 100;
     // Another program feature is that both cells get launched the same distance away, so a large
     //  number of tiny cells can propel larger cells to "teleport" them wherever
 std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
-    {"base", "200"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
+    {"base", "x"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
     {"attack", "400"}, {"size", "100*size"},
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
     {"stickiness", "2*x"}, {"mutationRate", "x/100"},
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
-    {"overcrowding", "OVERCROWDING_ENERGY_COEF*x"}
+    {"overcrowding", "overcrowdingEnergyCoef*x"}
 };
 
 

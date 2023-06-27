@@ -2595,7 +2595,7 @@ void draw_gnd(){
       int drawSize = DRAW_SCALE_FACTOR;
       assert(drawX >= 0 && drawY >= 0 && simGndEnergy[row][col] >= 0);
       draw_texture(
-        findSDLTex(100 * simGndEnergy[row][col] / MAX_GND_ENERGY, P_GND_TEX),
+        findSDLTex(100 * simGndEnergy[row][col] / maxGndEnergy, P_GND_TEX),
         drawX, drawY, drawSize, drawSize
       );
     }

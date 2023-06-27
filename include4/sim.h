@@ -94,7 +94,7 @@ void init_sim_gnd_energy(){
     // We are dealing with global variables
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
-            simGndEnergy[x][y] = INIT_GND_ENERGY;
+            simGndEnergy[x][y] = initGndEnergy;
         }
     }
 }
@@ -103,8 +103,8 @@ void increase_sim_gnd_energy(int increaseAmt){
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] += increaseAmt;
-            if(simGndEnergy[x][y] > MAX_GND_ENERGY){
-                simGndEnergy[x][y] = MAX_GND_ENERGY;
+            if(simGndEnergy[x][y] > maxGndEnergy){
+                simGndEnergy[x][y] = maxGndEnergy;
             }
         }
     }
@@ -113,19 +113,19 @@ void increase_sim_gnd_energy(int increaseAmt){
 // If the target is set to a positive time, then set the time.
 //  Otherwise, increment the time by 1.
 void update_dayNightCycleTime(int target = -1){
-    if (target < 0) dayNightCycleTime = ++dayNightCycleTime % DAY_LEN_SEC;
-    else dayNightCycleTime = target % DAY_LEN_SEC;
+    if (target < 0) dayNightCycleTime = ++dayNightCycleTime % dayLenSec;
+    else dayNightCycleTime = target % dayLenSec;
 }
 
 // Update the amount of energy each cell gets from the sun per second
 void do_day_night_cycle(){
     // Stick with a simple polynomial equation to approximate a sine wave during the day phase
     //  (the day occurs between times LB and UB) and set to 0 during the night phase
-    float timeNormalized = (float)dayNightCycleTime / DAY_LEN_SEC - (DAY_NIGHT_LB + DAY_NIGHT_UB) / 2;
+    float timeNormalized = (float)dayNightCycleTime / dayLenSec - (dayNightLb + dayNightUb) / 2;
     float energyFrac;
     switch(DAY_NIGHT_MODE){
         case DAY_NIGHT_ALWAYS_DAY_MODE:
-        energyFromSunPerSec = MAX_SUN_ENERGY_PER_SEC;
+        energyFromSunPerSec = maxSunEnergyPerSec;
         return;
 
         case DAY_NIGHT_DEFAULT_MODE:
@@ -135,15 +135,15 @@ void do_day_night_cycle(){
         //  The smallest values mean the sun remains essentially at the horizon during the day
         //      except possibly for the instant it is mid-day
         //  EXPONENT == 1.75 is a good approximation of a sine wave
-        energyFrac = abs_float(2 * timeNormalized / (DAY_NIGHT_UB - DAY_NIGHT_LB));
-        energyFrac = 1.0 - pow(energyFrac, DAY_NIGHT_EXPONENT);
+        energyFrac = abs_float(2 * timeNormalized / (dayNightUb - dayNightLb));
+        energyFrac = 1.0 - pow(energyFrac, dayNightExponent);
         energyFrac = saturate_float(energyFrac, 0, 1);
-        energyFromSunPerSec = energyFrac * MAX_SUN_ENERGY_PER_SEC; // Round down
+        energyFromSunPerSec = energyFrac * maxSunEnergyPerSec; // Round down
         return;
 
         case DAY_NIGHT_BINARY_MODE:
-        int lb = DAY_NIGHT_LB * DAY_LEN_SEC, ub = DAY_NIGHT_UB * DAY_LEN_SEC;
-        energyFromSunPerSec = (lb <= dayNightCycleTime && dayNightCycleTime <= ub) ? MAX_SUN_ENERGY_PER_SEC : 0;
+        int lb = dayNightLb * dayLenSec, ub = dayNightUb * dayLenSec;
+        energyFromSunPerSec = (lb <= dayNightCycleTime && dayNightCycleTime <= ub) ? maxSunEnergyPerSec : 0;
         return;
     }
 }
@@ -238,12 +238,10 @@ void init_sim(int initNumCells){
 void restart_sim(int initNumCells){
     assert(simState == SIM_STATE_RESTART);
     // Deallocate and remove all cells from the simulation
-    cout << "  Simulation is about to restart" << endl << "  ";
     deallocate_all_cells();
     // Re-initialize Simulation
     init_sim_global_vals();
     randomly_place_new_cells(initNumCells);
-    cout << "  Simulation is restarted!" << endl;
     simState = SIM_STATE_STEP_FRAMES;
 }
 // Deallocate memory when an exception occurs (ideally) or when the program terminates
@@ -252,7 +250,6 @@ int exit_sim(){
     deallocate_all_cells();
     wait_for_user_to_exit_SDL();
     exit_SDL();
-    std::cout << "sim is done and finished!\n";
     return 0;
 }
 
@@ -311,6 +308,7 @@ void do_frame(int frameNum, bool doCellDecisions = true){
     assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_forces(pAlives, pAlivesRegions);
     for(auto pCell : pAlives) pCell->apply_forces();
+    //cout << "pAlives[0]->energy: " << pAlives[0]->energy << endl;
 
     // Increase cell energy based on EAM
     do_day_night_cycle();

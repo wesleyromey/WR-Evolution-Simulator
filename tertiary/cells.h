@@ -61,7 +61,8 @@ struct Cell {
     std::pair<int, int> xyRegion = {0, 0}; // Each cell should be placed in their appropriate 'bin' of nearby cells
     int forceX = 0, forceY = 0; // Force moves the cell in the same direction as the force, if there is enough of it
     //  Negative values move the cell in the opposite direction
-    int energy = 200; // Needed to do various abilities or keep oneself alive.
+    int initEnergy = -1;
+    int energy = -1; // Needed to do various abilities or keep oneself alive.
     //  Creature dies if energy <= 0.
     std::map<std::string, int> energyCostToCloneMap;
     int energyCostToClone = 0;
@@ -264,9 +265,7 @@ struct Cell {
         while(nearestCells.size() > maxNumCellsToReturn) nearestCells.pop_back();
         return nearestCells;
     }
-    // TODO: Add the position, speed, health, energy, age, and id similarity of the
-    //  nearest 10 cells
-    //  (TODO: ensure that each cell id similarity value only gets up to 3 cells each)
+    // TODO: ensure that each cell id similarity value only gets up to 3 cells each
     // NOTE: This function also determines what the AI inputs are
     std::vector<float> get_ai_inputs(
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
@@ -368,7 +367,7 @@ struct Cell {
     void update_energy_costs(){
         // Cloning
         energyCostToClone = 0;
-        energyCostToCloneMap["base"] = StrExprInt::solve(ENERGY_COST_TO_CLONE["base"]);
+        energyCostToCloneMap["base"] = StrExprInt::solve(ENERGY_COST_TO_CLONE["base"], {{"x", 2*initEnergy}});
         if(visionDist) energyCostToCloneMap["visionDist"] =
             StrExprInt::solve(ENERGY_COST_TO_CLONE["visionDist"], {{"x", visionDist}, {"size", size}});
         else energyCostToCloneMap["visionDist"] = 0;
@@ -544,6 +543,7 @@ struct Cell {
         health = maxHealth;
         attack = gen_normal_int_dist_special(rng, probDefault, parent->attack, 1 + parent->attack/20, 0, INT_MAX);
         dia = gen_normal_int_dist_special(rng, probDefault, parent->dia, 1 + parent->dia/20, 1, maxDia);
+        set_initEnergy(gen_normal_int_dist_special(rng, probDefault, parent->initEnergy, 10 + parent->initEnergy/20, 100, maxEnergy), false);
         update_size();
         for(int i = 0; i < NUM_EAM_ELE; i++){
             EAM[i] = gen_normal_int_dist_special(rng, probDefault, parent->EAM[i], 2 + mutationRate/100, 0, REQ_EAM_SUM);
@@ -558,6 +558,10 @@ struct Cell {
     void define_self(Cell* pCell){
         // NOTE: If I push a copy of the cell into a new location, I need to update self
         pSelf = pCell;
+    }
+    void set_initEnergy(int val, bool setEnergy = true){
+        initEnergy = val;
+        if(setEnergy) energy = initEnergy;
     }
     void gen_stats_random(int cellNum,
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions, 
@@ -575,6 +579,7 @@ struct Cell {
         health = maxHealth;
         attack = 1;
         dia = gen_uniform_int_dist(rng, 1, 3);
+        set_initEnergy(gen_uniform_int_dist(rng, 500, 2000), true);
         update_size();
         for(int i = 0; i < NUM_EAM_ELE; i++){
             EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
@@ -619,8 +624,7 @@ struct Cell {
 
         // Energy loss from overcrowding directly
         // TODO: Create a dex stat to resist this overcrowding
-        energy -= OVERCROWDING_ENERGY_COEF*sumOfCellSizes/size;
-
+        energy -= overcrowdingEnergyCoef * sumOfCellSizes / size;
 
         // Enforce energy constraints
         if(energy > maxEnergy) energy = maxEnergy;
@@ -643,7 +647,7 @@ struct Cell {
         pClone->pSelf = pClone;
         pClone->parent = pSelf;
         pSelf->energy -= pSelf->energyCostToClone;
-        pClone->energy = 200;
+        pClone->energy = 1000; // TODO: change this into a mutatable value
         // Update the new cell's position
         // Determine the cloning direction
         if(targetCloningDir < 0 || 360 <= targetCloningDir) {
@@ -791,7 +795,7 @@ struct Cell {
     }
     void apply_forces(){
         // Apply the forces which should already calculated
-        increment_pos(forceX / FORCE_DAMPING_FACTOR, forceY / FORCE_DAMPING_FACTOR);
+        increment_pos(forceX / forceDampingFactor, forceY / forceDampingFactor);
         forceX = 0;
         forceY = 0;
     }
@@ -835,7 +839,7 @@ struct Cell {
                 }
             }
         }
-        if(doCloning && energy > energyCostToClone && pAlives.size() < CELL_LIMIT){
+        if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit){
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();
             pCellsHist.push_back(pCell);

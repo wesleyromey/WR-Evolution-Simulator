@@ -153,7 +153,6 @@ void SDL_event_handler(){
             break;
         }
     }
-    if(simState == SIM_STATE_RESTART) cout << "Restarting Sim" << endl;
 }
 
 
