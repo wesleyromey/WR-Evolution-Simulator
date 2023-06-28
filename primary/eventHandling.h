@@ -80,10 +80,10 @@ bool change_simState_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int x0, in
     simState = newSimStateIfClicked;
     return true;
 }
-void draw_options_menu(int x0, int dx, int dy, vector<pair<int, string>> optionText);
+void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>> optionText);
 void SDL_draw_frame();
 void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
-    vector<pair<int, string>> optionText;
+    std::vector<std::pair<int, string>> optionText;
     #define wfx(fraction) (0 + (WINDOW_WIDTH-0)*fraction)
     #define wfy(fraction) (0 + (WINDOW_HEIGHT-0)*fraction)
     optionText.push_back({wfy(0.4), "Continue"});

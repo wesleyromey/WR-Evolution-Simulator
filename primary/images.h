@@ -2828,7 +2828,7 @@ void draw_user_interface(){
   draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "      Options      ");
 }
 
-void draw_options_menu(int x0, int dx, int dy, vector<pair<int, string>> optionText){
+void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>> optionText){
   // Include a button for next frame, skip frames, and options
   int borderPx = dy / 20;
   //SDL_RenderClear(P_RENDERER);

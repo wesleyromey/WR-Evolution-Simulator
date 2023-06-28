@@ -913,8 +913,8 @@ struct Cell {
         if(doAttack)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
         if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
         // EAM
-        vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
-        vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
+        std::vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
+        std::vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
         for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
     }
 };

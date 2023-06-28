@@ -1,6 +1,7 @@
 // Contains global variables and constants
 
-using namespace std;
+//using namespace std;
+using std::cout, std::endl, std::string;
 
 
 // Universal Constants
@@ -90,7 +91,7 @@ static const int SIM_STATE_RESTART = 6;
 int simState = SIM_STATE_MAIN_MENU;
 
 
-// NOTE: We need to be able to customize the following options using '+' and '-' buttons in the simulation settings within a simulation settings mode:
+// TODO: We need to be able to customize the following options using '+' and '-' buttons in the simulation settings within a simulation settings mode:
 //  initNumCells, cellLimit, maxGndEnergy, maxSunEnergyPerSec, forceDampingFactor
 
 
@@ -125,8 +126,9 @@ std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
     {"stickiness", "2*x"}, {"mutationRate", "x/100"},
-    {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size"}, {"attack", "20*x/size"},
-    {"overcrowding", "overcrowdingEnergyCoef*x"}
+    {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
+    {"attack", "20*x/size/size"},
+    {"overcrowding", "overcrowdingEnergyCoef*x/size"}
 };
 
 

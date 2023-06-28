@@ -291,12 +291,6 @@ void do_frame(int frameNum, bool doCellDecisions = true){
     assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_target_pos();
 
-    /*
-    // Rendering and User Interactions
-    SDL_draw_frame();
-    SDL_event_handler();
-    */
-
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
     assign_cells_to_correct_regions();
