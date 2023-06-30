@@ -2371,6 +2371,41 @@ unsigned char _minusSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
 };
 SDL_Texture* pMinusSymbol = convArrToSDLTex(_minusSymbol, 15, 32);
+unsigned char _plusSymbol[] = {
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+};
+SDL_Texture* pPlusSymbol = convArrToSDLTex(_plusSymbol, 15, 32);
 unsigned char _dashSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
@@ -2476,6 +2511,77 @@ unsigned char _rightSquareBracket[] = {
   _,_,_,_,X,X,X,X,X,X,X,X,X,X,X,
 };
 SDL_Texture* pRightSquareBracketSymbol = convArrToSDLTex(_rightSquareBracket, 15, 32);
+unsigned char _colonSymbol[] = {
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+};
+SDL_Texture* pColonSymbol = convArrToSDLTex(_colonSymbol, 15, 32);
+unsigned char _hashtagSymbol[] = {
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,X,X,X,_,_,_,X,X,X,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+};
+SDL_Texture* pHashtagSymbol = convArrToSDLTex(_hashtagSymbol, 15, 32);
+
 
 #undef _
 #undef X
@@ -2759,9 +2865,19 @@ SDL_Texture* retrieve_symbol_texture(char symbol){
 
     // Other
     case '[':
+    case '(':
     return pLeftSquareBracketSymbol;
     case ']':
+    case ')':
     return pRightSquareBracketSymbol;
+    case '-':
+    return pDashSymbol;
+    case '+':
+    return pPlusSymbol;
+    case ':':
+    return pColonSymbol;
+    case '#':
+    return pHashtagSymbol;
     case '\n':
     case ' ':
     return pSpaceSymbol;
@@ -2803,7 +2919,7 @@ void draw_text(int x0, int y0, int dx, int dy, int borderPx, int maxNumLines,
       break;
       default:
       draw_texture(retrieve_symbol_texture(c), xPos, yPos, symbolWidth, symbolHeight);
-      xPos += symbolWidth + dy / 40;
+      xPos += symbolWidth + dy / 20;
       break;
     }
   }
@@ -2823,12 +2939,12 @@ void draw_user_interface(){
   static const int BOX_DX = (UI_X1 - UI_X0) / 3;
   static const int BOX_DY = UI_Y1 - UI_Y0;
   int borderPx = BOX_DY / 20;
-  draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "   Next Frame [N]  ");
-  draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "  Skip Frames [A]  ");
-  draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "      Options      ");
+  draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Next Frame  [N]");
+  draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Skip Frames [A]");
+  draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "    Options     ");
 }
 
-void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>> optionText){
+void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>>& optionText){
   // Include a button for next frame, skip frames, and options
   int borderPx = dy / 20;
   //SDL_RenderClear(P_RENDERER);
@@ -2839,6 +2955,35 @@ void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string
     int y0 = ele.first;
     string text = ele.second;
     draw_text_box(x0, y0, dx, dy, borderPx, 1, text);
+  }
+  SDL_RenderPresent(P_RENDERER);
+}
+
+// dy: The height of the text
+// simParamsText: Contains the set of setting names and their corresponding values
+void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<std::pair<string, int*>>& simParamsText, int xLbStart, int yLbStart, int dyStart){
+  // Format:
+  //  [] represents a text box
+  //  text: value [-][+]
+  assert(xVec.size() == 5);
+  assert(yVec.size() == simParamsText.size() + 1); // The total number of settings should be 1 + yVec.size()
+  int dy = yVec[yVec.size()-1] - yVec[yVec.size()-2];
+  int borderPx = dy / 20;
+  int yIndex = 0;
+  //SDL_RenderClear(P_RENDERER);
+  draw_text_box(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 1, "");
+  draw_text(xVec[0], yVec[yIndex], xVec[2]-xVec[0], (yVec[1]-yVec[0]) / 2, 0, 0, "Simulation Settings");
+  draw_text_box(xLbStart, yLbStart, WINDOW_WIDTH - xLbStart, dyStart, 2*borderPx, 1, "Start");
+  for(auto ele : simParamsText){
+    // ele == {val, text}
+    yIndex++;
+    string settingName = ele.first;
+    //int* tmp = ele.second;
+    string settingVal = std::to_string(*ele.second);
+    draw_text(xVec[0], yVec[yIndex], xVec[1]-xVec[0], dy, borderPx, 1, settingName + ":");
+    draw_text(xVec[1], yVec[yIndex], xVec[2]-xVec[1], dy, borderPx, 1, settingVal);
+    draw_text_box(xVec[2], yVec[yIndex], xVec[3]-xVec[2], dy, borderPx, 1, "-");
+    draw_text_box(xVec[3], yVec[yIndex], xVec[4]-xVec[3], dy, borderPx, 1, "+");
   }
   SDL_RenderPresent(P_RENDERER);
 }

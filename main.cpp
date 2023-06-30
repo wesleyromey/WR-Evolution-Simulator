@@ -14,8 +14,7 @@ void dispIntroMsg(){
 int main(int argc, char* argv[]){
     SDL_draw_frame();
     dispIntroMsg();
-    simState = SIM_STATE_INIT;
-    //init_sim_global_vals();
+    simState = SIM_STATE_MAIN_MENU;
 #ifdef DEBUG
     //testForce();
     //testAi();
@@ -28,10 +27,9 @@ int main(int argc, char* argv[]){
     //test_cur_tex();
     redraw_existing_tex();
 #else
-    //randomly_place_new_cells(400);
     int frameNum = 0;
     while(simState != SIM_STATE_QUIT){
-        do_frame(frameNum++);
+        do_sim_iteration(frameNum);
     }
 #endif
     if(simState == SIM_STATE_QUIT) exit_sim();

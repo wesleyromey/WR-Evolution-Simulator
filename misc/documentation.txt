@@ -1,7 +1,8 @@
+Last Updated: 2023-06-21
+
 The purpose of this file is to summarize the simulator and give
 a brief overview about its main components. This is a simplified
 documentation of the simulator.
-
 
 This evolution simulator simulates many single-celled organisms
 which gain energy from the sun, ground, predation, or being a scavenger.
@@ -98,7 +99,7 @@ the next location each frame. The main rules include:
 
         The repulsive forces can be amplified or lightened by a 
         customizeable force damping factor.
-    b) Stickiness: TODO (not yet implemented as of 2023-05-24!!!)
+    b) Stickiness: TODO (not yet implemented as of 2023-06-21!!!)
     c) Wrapping along the x and y axes: If a cell exits one side of the screen,
         it enters the opposite side of the screen going in the same direction
         as before.
@@ -119,6 +120,9 @@ The inputs include:
     c) Its own genome (ex. vision, size, ...)
     d) Status or state (ex. health, energy, and forces)
     e) Its id
+    f) Nearby cells' relative positions and some of their stats
+        (subject to the cell's vision)
+        (this point was added on 2023-06-28)
 The outputs (decisions) include:
     a) Speed (idle, walking, or running) and Direction
     b) Cloning and Cloning Direction (if successful)
@@ -138,3 +142,31 @@ Cloned cells have a chance to mutate each stat based on the mutation constant
 stored in their parent's genome.
 Noteably, if mutations happen to create a high-cost build compared to the
 parent, the parent does NOT have to spend extra energy while cloning itself.
+
+
+------------------------------------------------------------------------------
+Added 2023-06-29:
+-----------------
+Simulation Controls:
+    Next Frame [N], Skip Frames [A], Options
+
+Options Menu:
+    Continue: Continue the simulation from where you left off
+    Restart: End the simulation and try a new one
+    Quit: Exit the simulation
+
+Main Menu: The initial window you see as of v0.1.0.
+Users can now configure many of the more important simulations settings.
+As of v0.1.0, these are:
+    Initial # of cells
+    Max # of cells
+    Day Length
+    Max Sun Energy
+    Max Ground Energy per cell: Each cell has a max capacity
+    Ground Energy Regeneration: Ground energy replenishes by this amount
+        every few frames
+    Force Damping Factor: If cells get inside of each other, they push each other
+        away. Lower values increase this effect.
+    Overcrowding Energy Coefficient: Cells are claustrophobic and must
+        spend energy just to be in physical contact with each other.
+        Larger values increase this effect.

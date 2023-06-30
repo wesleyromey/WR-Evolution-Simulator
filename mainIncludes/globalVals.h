@@ -12,9 +12,11 @@ static const std::set<char> LETTERS = {
     'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'
 };
 static const std::set<char> OPERATORS = {'+','-','*','/'};
+static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have in C++
 
 // Global Simulation Parameters
 int initNumCells = 400;
+// TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
 static const int UB_X = 120, UB_Y = 80;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
 // of nearby cells to calculate forces, crowding, interactions, vision, etc.
@@ -29,14 +31,15 @@ static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
 int cellLimit = 1000;
-// Each cell in the simulator must spend this amount of energy (rounded down) per cell it touches. 
-float overcrowdingEnergyCoef = 30.;
+// Each cell in the simulator must spend this amount of energy per cell it touches.
+//  Increasing this value increases the amount of energy spent due to overcrowding. 
+int overcrowdingEnergyCoef = 30;
 // Energy accumulation for all ground spaces
 int maxGndEnergy = 2000;
-int initGndEnergy = maxGndEnergy / 2;
+//int initGndEnergy = maxGndEnergy / 2;
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
-static const int GND_ENERGY_PER_INCREASE = 10;
+int gndEnergyPerIncrease = 10;
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
@@ -45,7 +48,7 @@ int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
 int maxSunEnergyPerSec = 500;
 // Number of seconds per day (Not sure if this is actually day length in frames
 //  or day length in seconds)
-static const int dayLenSec = 100;
+int dayLenSec = 100;
 static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 static const int DAY_NIGHT_BINARY_MODE = 1;
 static const int DAY_NIGHT_DEFAULT_MODE = 2;
@@ -80,6 +83,7 @@ Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 
 // Simulation States: These control the GUI, simulation mode, etc.
+static const int SIM_STATE_UNDEF = -1;
 static const int SIM_STATE_MAIN_MENU = 0;
 static const int SIM_STATE_SKIP_FRAMES = 1;
 static const unsigned int AUTO_ADVANCE_DEFAULT = 1000;
@@ -88,11 +92,7 @@ static const int SIM_STATE_QUIT = 3;
 static const int SIM_STATE_OPTIONS = 4;
 static const int SIM_STATE_INIT = 5;
 static const int SIM_STATE_RESTART = 6;
-int simState = SIM_STATE_MAIN_MENU;
-
-
-// TODO: We need to be able to customize the following options using '+' and '-' buttons in the simulation settings within a simulation settings mode:
-//  initNumCells, cellLimit, maxGndEnergy, maxSunEnergyPerSec, forceDampingFactor
+int simState = SIM_STATE_UNDEF;
 
 
 // Values used for all Cell type variables
@@ -121,7 +121,7 @@ int forceDampingFactor = 100;
     //  number of tiny cells can propel larger cells to "teleport" them wherever
 std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
     {"base", "x"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
-    {"attack", "400"}, {"size", "100*size"},
+    {"attack", "400"}, {"size", "10*size"},
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
@@ -130,6 +130,55 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"attack", "20*x/size/size"},
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
 };
+
+// When the global parameters are changed, dependent global parameters also change
+int saturate_int(int num, int lb, int ub);
+int pow_int(int root, int exponent);
+void update_global_params(){
+    // UB_X and UB_Y
+    //CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
+    //CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
+    //CELL_REGION_NUM_Y = UB_Y / CELL_REGION_SIDE_LEN;
+
+    // Draw scale (related to UB_X and UB_Y)
+    //tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
+    //tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
+    //tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
+    //static const int DRAW_SCALE_FACTOR = tmpDrawScale;
+    //static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
+    //static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR*UB_Y / 9;
+    //static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
+    //static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
+    return;
+}
+// Each global parameters has different lower and upper bounds
+void enforce_global_param_bounds(){
+    int defaultMax = pow_int(10,6);
+    initNumCells = saturate_int(initNumCells, 0, defaultMax);
+    //UB_X = saturate_int(UB_X, 1, defaultMax);
+    //UB_Y = saturate_int(UB_X, 1, defaultMax);
+    cellLimit = saturate_int(cellLimit, 0, defaultMax);
+    dayLenSec = saturate_int(dayLenSec, 1, defaultMax);
+    maxSunEnergyPerSec = saturate_int(maxSunEnergyPerSec, 0, defaultMax);
+    maxGndEnergy = saturate_int(maxGndEnergy, 1, defaultMax);
+    gndEnergyPerIncrease = saturate_int(gndEnergyPerIncrease, 0, defaultMax);
+    forceDampingFactor = saturate_int(forceDampingFactor, 1, defaultMax);
+    overcrowdingEnergyCoef = saturate_int(overcrowdingEnergyCoef, 0, defaultMax);
+
+    update_global_params();
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // Parse string expressions

@@ -335,6 +335,7 @@ struct Cell {
     }
     void set_ai_outputs(int _speedDir, int _cloningDirection, char _speedMode,
             bool _doAttack, bool _doSelfDestruct, bool _doCloning){
+        //enforce_valid_cell();
         int _numAiOutputs = 0;
         assert(0 <= _speedDir && _speedDir < 360);
         speedDir = _speedDir; _numAiOutputs++;
@@ -349,6 +350,7 @@ struct Cell {
         enforce_valid_ai();
     }
     std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> get_ai_outputs(){
+        //enforce_valid_cell();
         std::vector<int> intVec;
         int _numAiOutputs = 0;
         intVec.push_back(speedDir); _numAiOutputs++;
@@ -382,6 +384,7 @@ struct Cell {
         for(auto item : energyCostToCloneMap) energyCostToClone += item.second;
 
         // Surviving (per second)
+        energyCostPerFrame = 0;
         energyCostPerSecMap["base"] = StrExprInt::solve(ENERGY_COST_PER_USE["base"],
             {{"x", -1}, {"size", size}});
         energyCostPerSecMap["visionDist"] = StrExprInt::solve(ENERGY_COST_PER_USE["visionDist"],
@@ -406,6 +409,7 @@ struct Cell {
             {{"x", attack}, {"size", size}});
     }
     void consume_energy_per_frame(){
+        update_energy_costs();
         energy -= energyCostPerFrame;
         if(speedMode == WALK_MODE) energy -= energyCostPerUse["speedWalk"] / TICKS_PER_SEC;
         if(speedMode == RUN_MODE)  energy -= energyCostPerUse["speedRun"] / TICKS_PER_SEC;
@@ -419,21 +423,28 @@ struct Cell {
             //  where layer 0 is the input layer
         }
     }
+    // If the cell isn't valid, change the variables so it is valid.
+    // Also, update the dependent variables
     void enforce_valid_cell(){
+        //cout << "valid cell 1, ";
         assert(uniqueCellNum >= 0);
         while(speedDir < 0) speedDir += 360*100;
         speedDir %= 360;
         saturate_int(dia, 0, maxDia);
         saturate_int(energy, 0, maxEnergy);
         saturate_int(mutationRate, 0, maxMutationRate);
+        //cout << "valid cell 2, ";
         while(cloningDirection < 0) cloningDirection += 360*100;
         cloningDirection %= 360;
         assert(speedMode == IDLE_MODE || speedMode == WALK_MODE || speedMode == RUN_MODE);
+        //cout << "valid cell 3, ";
         enforce_valid_xyPos();
         enforce_EAM_constraints();
         enforce_valid_ai();
         update_size();
+        //cout << "valid cell 4, ";
         update_energy_costs();
+        //cout << "valid cell 5\n";
     }
     void set_int_stats(std::map<std::string, int>& varVals){
         // TODO: Include the ability to set the aiNetwork and nodesPerLayer
@@ -522,6 +533,7 @@ struct Cell {
         bool _doSelfDestruct = (layerInputs[5] >= 1); // If this condition is too easy to trigger, then cells die too easily
         bool _doCloning = (layerInputs[6] >= 0);
         set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+        enforce_valid_cell();
     }
     void mutate_ai(){
         float prob = (float)mutationRate / maxMutationRate;
@@ -530,6 +542,7 @@ struct Cell {
                 aiNetwork[i][j].mutate_node(mutationRate, prob);
             }
         }
+        enforce_valid_cell();
     }
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
@@ -554,6 +567,8 @@ struct Cell {
         }
         mutate_ai();
         update_energy_costs();
+
+        enforce_valid_cell();
     }
     void define_self(Cell* pCell){
         // NOTE: If I push a copy of the cell into a new location, I need to update self
@@ -590,6 +605,8 @@ struct Cell {
         }
         init_ai(pAlivesRegions);
         update_energy_costs();
+
+        enforce_valid_cell();
     }
     // NOTE: The full energy accumulation can only be done after this function is applied to every cell
     //  in the local area.
@@ -624,10 +641,14 @@ struct Cell {
 
         // Energy loss from overcrowding directly
         // TODO: Create a dex stat to resist this overcrowding
-        energy -= overcrowdingEnergyCoef * sumOfCellSizes / size;
+        energy -= StrExprInt::solve(ENERGY_COST_PER_USE["overcrowding"],
+            {{"x", sumOfCellSizes}, {"size", size}});
+        //energy -= overcrowdingEnergyCoef * sumOfCellSizes / size;
 
         // Enforce energy constraints
         if(energy > maxEnergy) energy = maxEnergy;
+
+        enforce_valid_cell();
     }
     void randomize_pos(int lbX, int ubX, int lbY, int ubY){
         // lb means lower bound, ub means upper bound,
@@ -663,6 +684,7 @@ struct Cell {
         pClone->attackCooldown = 0;
         //cout << "A cell cloned itself! id = "; for(auto digit : pClone->id) cout << digit; cout << endl;
         if(doMutation) pClone->mutate_stats();
+        enforce_valid_cell();
         return pClone;
     }
     void print_id(){
@@ -791,6 +813,7 @@ struct Cell {
                 }
             }
         }
+        //enforce_valid_cell();
         return;
     }
     void apply_forces(){
@@ -798,6 +821,7 @@ struct Cell {
         increment_pos(forceX / forceDampingFactor, forceY / forceDampingFactor);
         forceX = 0;
         forceY = 0;
+        //enforce_valid_cell();
     }
     bool calc_if_cell_is_dead(){
         // Check if cell should be killed
@@ -821,6 +845,7 @@ struct Cell {
         pAttacked->health -= attack;
         attackCooldown = maxAttackCooldown;
         energy -= energyCostPerUse["attack"];
+        //enforce_valid_cell();
     }
     void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist,
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
@@ -845,6 +870,7 @@ struct Cell {
             pCellsHist.push_back(pCell);
             pAlives.push_back(pCell);
         }
+        enforce_valid_cell();
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;
@@ -954,6 +980,18 @@ struct DeadCell {
     void doNothing(){
         return;
     }
+    void kill_cell(Cell* pAlive, DeadCell* pDead, int i_pAlive) {
+        //DeadCell* pDead = new DeadCell;
+        pSelf = pDead;
+        pOldSelf = pAlive;
+        decayPeriod = 20;
+        decayRate = 5;
+        dia = pAlive->dia;
+        energy = pAlive->energy + pAlive->energyCostToClone;
+        timeSinceDead = 1;
+        posX = pAlive->posX;
+        posY = pAlive->posY;
+    }
     // NOTE: this function does NOT have access to the entire list of cells,
     //  so a separate function needs to be run to organize the cells into
     //  region-based lists
@@ -1029,8 +1067,8 @@ struct DeadCell {
         // Random generation from scratch
         pSelf = pDead;
         pOldSelf = NULL;
-        pDead->decayPeriod = 10;
-        pDead->decayRate = 10;
+        pDead->decayPeriod = 20;
+        pDead->decayRate = 5;
         pDead->dia = 1;
         pDead->energy = 1000;
         pDead->timeSinceDead = 1;
@@ -1086,6 +1124,8 @@ struct DeadCell {
         rmEnergy = 0;
         if(timeSinceDead % decayPeriod) rmEnergy = decayRate * energy / 100 + 10;
         energy -= rmEnergy;
+
+        enforce_valid_cell();
     }
     void randomize_pos(int lbX, int ubX, int lbY, int ubY){
         // lb means lower bound, ub means upper bound,

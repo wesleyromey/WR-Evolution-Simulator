@@ -29,6 +29,21 @@ int saturate_int(int num, int lb, int ub) {
     if (num > ub) return ub;
     return num;
 }
+// The answer should have a non-negative exponent
+int pow_int(int root, int exponent){
+    assert(exponent >= 0);
+    assert(root != 0 || exponent != 0);
+    int ans = 1;
+    // Multiplication
+    for(int i = 0; i < exponent; i++){
+        if(abs(ans) >= MAX_INT_DEFAULT / abs(root)){
+            cout << "Error! The answer has too large of magnitude to fit into an int!\n";
+            return -1;
+        }
+        ans *= root;
+    }
+    return ans;
+}
 float saturate_float(float num, float lb, float ub){
     if(num < lb) return lb;
     if(num > ub) return ub;

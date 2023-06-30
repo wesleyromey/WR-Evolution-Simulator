@@ -92,6 +92,7 @@ void deallocate_cell_memory(Cell* pCell) {
 
 void init_sim_gnd_energy(){
     // We are dealing with global variables
+    int initGndEnergy = maxGndEnergy / 2;
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] = initGndEnergy;
@@ -172,15 +173,18 @@ void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int clonin
 
 void kill_cell(Cell* pAlive, int i_pAlive) {
     DeadCell* pDead = new DeadCell;
+    pDead->kill_cell(pAlive, pDead, i_pAlive);
+    /*
     pDead->pSelf = pDead;
     pDead->pOldSelf = pAlive;
-    pDead->decayPeriod = 10;
-    pDead->decayRate = 10;
+    pDead->decayPeriod = 20;
+    pDead->decayRate = 5;
     pDead->dia = pAlive->dia;
     pDead->energy = pAlive->energy + pAlive->energyCostToClone;
     pDead->timeSinceDead = 1;
     pDead->posX = pAlive->posX;
     pDead->posY = pAlive->posY;
+    */
     // Remove pAlive from the list of alive cells
     pAlives.erase(pAlives.begin() + i_pAlive);
     // Add pDead to the list of dead cells
@@ -205,7 +209,7 @@ void randomly_place_new_cells(int numCells){
         gen_cell(); // This function allocates memory for pCell
         //  and appends a pointer to it for both pCellsHist and pAlives
     }
-    std::cout << "Placed " << numCells << " new cells\n";
+    //std::cout << "Placed " << numCells << " new cells\n";
 }
 
 void print_cell_coords(std::vector<Cell*> pCells){
@@ -240,9 +244,9 @@ void restart_sim(int initNumCells){
     // Deallocate and remove all cells from the simulation
     deallocate_all_cells();
     // Re-initialize Simulation
-    init_sim_global_vals();
-    randomly_place_new_cells(initNumCells);
-    simState = SIM_STATE_STEP_FRAMES;
+    //init_sim_global_vals();
+    //randomly_place_new_cells(initNumCells);
+    simState = SIM_STATE_MAIN_MENU; //SIM_STATE_STEP_FRAMES;
 }
 // Deallocate memory when an exception occurs (ideally) or when the program terminates
 int exit_sim(){
@@ -272,14 +276,8 @@ void assign_cells_to_correct_regions(){
     }
 }
 
-// Repeat this function each frame
-void do_frame(int frameNum, bool doCellDecisions = true){
-
-    // Initialize, restart, or quit the simulation if needed
-    if(simState == SIM_STATE_QUIT) return;
-    if(simState == SIM_STATE_INIT) init_sim(initNumCells);
-    if(simState == SIM_STATE_RESTART) restart_sim(initNumCells);
-
+// Repeat this function each frame. Return the frame number
+int do_frame(int frameNum, bool doCellDecisions = true){
     if(doCellDecisions){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
@@ -326,10 +324,32 @@ void do_frame(int frameNum, bool doCellDecisions = true){
 
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
     if(frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){
-        increase_sim_gnd_energy(GND_ENERGY_PER_INCREASE);
+        increase_sim_gnd_energy(gndEnergyPerIncrease);
     }
 
     // Rendering and User Interactions
     SDL_draw_frame();
     SDL_event_handler();
+    return ++frameNum;
+}
+
+void do_sim_iteration(int& frameNum, bool doCellDecisions = true){
+    switch(simState){
+        case SIM_STATE_QUIT:
+        exit_sim();
+        return;
+        case SIM_STATE_MAIN_MENU:
+        SDL_event_handler();
+        break;
+        case SIM_STATE_INIT:
+        init_sim(initNumCells);
+        break;
+        case SIM_STATE_RESTART:
+        restart_sim(initNumCells);
+        break;
+        default:
+        frameNum = do_frame(frameNum, doCellDecisions);
+        //SDL_draw_frame();
+        //SDL_event_handler();
+    }
 }
