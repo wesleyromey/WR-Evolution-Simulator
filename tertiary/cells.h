@@ -668,7 +668,7 @@ struct Cell {
         pClone->pSelf = pClone;
         pClone->parent = pSelf;
         pSelf->energy -= pSelf->energyCostToClone;
-        pClone->energy = 1000; // TODO: change this into a mutatable value
+        pClone->energy = initEnergy;
         // Update the new cell's position
         // Determine the cloning direction
         if(targetCloningDir < 0 || 360 <= targetCloningDir) {

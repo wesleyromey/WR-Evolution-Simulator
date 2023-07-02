@@ -52,6 +52,37 @@ float saturate_float(float num, float lb, float ub){
 float abs_float(float num){
     return (num > 0 ? num : -num);
 }
+int spline_int(int x, int xLb, int xUb, int fLb, int fUb, float fxLb, float fxUb){
+    assert(xLb <= x && x <= xUb);
+    // x: The value to use as an interpolation metric
+    // xLb, xUb: The bounds for the variable x
+    // fLb, fUb: The function values at xLb and xUb
+    // fxLb, fxUb: The derivative of the function at values xLb and xUb
+
+    if(x == xLb) return fLb;
+    if(x == xUb) return fUb;
+    float t = (float)(x - xLb) / (xUb - xLb);
+    float a = fxLb*(xUb-xLb) - (fUb - fLb);
+    float b = -fxUb*(xUb-xLb) + (fUb - fLb);
+    float ansFloat = (1-t)*fLb + t*fUb + t*(1-t)*( (1-t)*a + t*b );
+    return (int)(ansFloat + 0.5);
+}
+// x: input, xLb and xUb: bounds on x, fLb and fUb: function value at xLb and xUb
+int linear_interp_x_int(int x, std::vector<int> xVec, std::vector<int> fcnValVec){
+    assert(xVec.size() >= 2 && xVec.size() == fcnValVec.size());
+    if(x <= xVec[0]) return fcnValVec[0];
+    if(x >= xVec[xVec.size()-1]) return fcnValVec[xVec.size()-1];
+    int iLb = 0; // Index of Lower Bound
+    while(iLb < xVec.size() - 1 && x >= xVec[iLb+1]) iLb++;
+    int xLb = xVec[iLb], xUb = xVec[iLb+1];
+    int fLb = fcnValVec[iLb], fUb = fcnValVec[iLb+1];
+
+    //cout << "  iLb: " << iLb << endl;
+    int numerator = (x - xLb) * (fUb - fLb);
+    int denominator = xUb - xLb;
+    //cout << "  f(" << x << "): " << fLb << " + " << numerator << " / " << denominator << endl;
+    return fLb + (float)numerator / denominator;
+}
 
 // Modified probability and statistic functions
 float std_uniform_dist(std::mt19937& rng){

@@ -96,10 +96,10 @@ SDL_Texture* pCellSkeleton = convArrToSDLTex(_cellSkeletonImg, 10, 10);
 
 // Black, dark red, light red, grey
 //  The Alpha value is lower here than for the opaque versions
-#define _aBLK 0x00, 0x00, 0x00, 0x9a
-#define aDRED 0x82, 0x00, 0x1b, 0x9a
-#define _aRED 0xeb, 0x1b, 0x20, 0x9a
-#define aGREY 0x53, 0x53, 0x53, 0x9a
+#define _aBLK 0x00, 0x00, 0x00, 0x70
+#define aDRED 0x82, 0x00, 0x1b, 0x70
+#define _aRED 0xeb, 0x1b, 0x20, 0x70
+#define aGREY 0x53, 0x53, 0x53, 0x70
 unsigned char _deadCellImg[] = {
   _aBLK,  ___0,  ___0, _aBLK, _aBLK, _aBLK, _aBLK,  ___0,  ___0, _aBLK,
    ___0, _aBLK, _aBLK, _aBLK, aDRED, aDRED, _aBLK, _aBLK, _aBLK,  ___0,
@@ -2710,49 +2710,21 @@ void draw_gnd(){
 
 // The background is drawn using 1 color.
 //  This function was made to ensure color transitions are smooth
-// efs = energyFromSunlight
 void draw_bkgnd(int energyFromSunPerSec){
   int efs = energyFromSunPerSec;
-  // (Approximately)
-  // efs  | Red   | Green | Blue
-  // 0    | 0     | 0     | 0
-  // 1    | 40    | 0     | 0
-  // 10   | 100   | 0     | 0
-  // 50   | 160   | 160   | 0
-  // 250  | 200   | 200   | 200
-  // 1000 | 0     | 255   | 255  // Remains here forever
-  
-  // Every color logarithmically increases from a starting point.
-  //  and may in some cases linearly go back down to a different end point.
-  //  If the starting point is the value at the start of the function:
-  //      color = C0 + C1*ln(efs), or alternatively:
-  //  If the starting point is at an initial efs:
-  //      color = C1 * (ln(efs) - ln(startEfs))
-  static const int LN_RED_C0 = 40, LN_RED_C1 = 30;
-  #define fRedLn(efs) saturate_int(LN_RED_C0 + LN_RED_C1*ln(efs), RGB_MIN, RGB_MAX)
-  static const int MID_EFS_RED = 250, END_EFS_RED = 1000;
-  static const int RED_START = 40, RED_MID = fRedLn(MID_EFS_RED), RED_END = 0;
-  static const int RED_SLOPE = (RED_END - RED_MID) / (END_EFS_RED - MID_EFS_RED);
-  #define fRedLinear(efs) saturate_int(RED_MID + RED_SLOPE * (efs - MID_EFS_RED), RGB_MIN, RGB_MAX)
+  // Linearly interpolate the rgb values based on efs
+  std::vector<int> efsVec = {0,   1,   2,   4,    8,   15,   30,   50,  100,  200  };
+  std::vector<int> redVec = {0,  40,  70, 100,  130,  160,  180,  200,  100,  0    };
+  std::vector<int> grnVec = {0,   0,   0,   0,  100,  160,  180,  200,  230,  255  };
+  std::vector<int> bluVec = {0,   0,   0,   0,    0,    0,  100,  200,  230,  255  };
+  assert(efsVec.size() == redVec.size());
+  assert(efsVec.size() == grnVec.size());
+  assert(efsVec.size() == bluVec.size());
+  int red  = linear_interp_x_int(efs, efsVec, redVec);
+  int grn  = linear_interp_x_int(efs, efsVec, grnVec);
+  int blue = linear_interp_x_int(efs, efsVec, bluVec);
 
-  static const int START_EFS_GRN = 10;
-  static const int LN_GRN_C1 = 55; // Increase to make the increase for Green last shorter
-  #define fGrnLn(efs) saturate_int(LN_GRN_C1*(ln(efs) - ln(START_EFS_GRN)), RGB_MIN, RGB_MAX)
-
-  static const int START_EFS_BLUE = 50;
-  static const int LN_BLUE_C1 = 85;
-  #define fBlueLn(efs) saturate_int(LN_BLUE_C1*(ln(efs) - ln(START_EFS_BLUE)), RGB_MIN, RGB_MAX)
-
-  // First, set the RGB values for the background based on sunlight
-  int red = 0, grn = 0, blue = 0; // Set for efs == 0
-  if(efs != 0){
-    red = (efs <= 250) ? fRedLn(efs) : fRedLinear(efs);
-    grn = fGrnLn(efs);
-    blue = fBlueLn(efs);
-  }
-
-  // Second, create the texture using the calculated RGB values
-  //cout << "efs: " << efs << "; RGB: " << red << ", " << grn << ", " << blue << endl;
+  // Create the texture using the calculated RGB values
   SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
   SDL_Rect bkgnd = {0, 0, UB_X_PX, UB_Y_PX};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);

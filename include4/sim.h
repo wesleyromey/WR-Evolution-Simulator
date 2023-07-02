@@ -114,7 +114,7 @@ void increase_sim_gnd_energy(int increaseAmt){
 // If the target is set to a positive time, then set the time.
 //  Otherwise, increment the time by 1.
 void update_dayNightCycleTime(int target = -1){
-    if (target < 0) dayNightCycleTime = ++dayNightCycleTime % dayLenSec;
+    if(target < 0) dayNightCycleTime = ++dayNightCycleTime % dayLenSec;
     else dayNightCycleTime = target % dayLenSec;
 }
 

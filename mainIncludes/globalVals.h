@@ -17,7 +17,7 @@ static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have 
 // Global Simulation Parameters
 int initNumCells = 400;
 // TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
-static const int UB_X = 120, UB_Y = 80;  // 120, 80
+static const int UB_X = 60, UB_Y = 40;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
 // of nearby cells to calculate forces, crowding, interactions, vision, etc.
 static const int CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
@@ -33,7 +33,7 @@ static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calc
 int cellLimit = 1000;
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
-int overcrowdingEnergyCoef = 30;
+int overcrowdingEnergyCoef = 100;
 // Energy accumulation for all ground spaces
 int maxGndEnergy = 2000;
 //int initGndEnergy = maxGndEnergy / 2;
@@ -45,10 +45,10 @@ int gndEnergyPerIncrease = 10;
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
 // Max energy which can be accumulated from the sun 
-int maxSunEnergyPerSec = 500;
+int maxSunEnergyPerSec = 50;
 // Number of seconds per day (Not sure if this is actually day length in frames
 //  or day length in seconds)
-int dayLenSec = 100;
+int dayLenSec = 200;
 static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 static const int DAY_NIGHT_BINARY_MODE = 1;
 static const int DAY_NIGHT_DEFAULT_MODE = 2;
@@ -154,12 +154,12 @@ void update_global_params(){
 // Each global parameters has different lower and upper bounds
 void enforce_global_param_bounds(){
     int defaultMax = pow_int(10,6);
-    initNumCells = saturate_int(initNumCells, 0, defaultMax);
+    initNumCells = saturate_int(initNumCells, 0, 2000);
     //UB_X = saturate_int(UB_X, 1, defaultMax);
     //UB_Y = saturate_int(UB_X, 1, defaultMax);
-    cellLimit = saturate_int(cellLimit, 0, defaultMax);
+    cellLimit = saturate_int(cellLimit, 0, 2000);
     dayLenSec = saturate_int(dayLenSec, 1, defaultMax);
-    maxSunEnergyPerSec = saturate_int(maxSunEnergyPerSec, 0, defaultMax);
+    maxSunEnergyPerSec = saturate_int(maxSunEnergyPerSec, 0, 1000);
     maxGndEnergy = saturate_int(maxGndEnergy, 1, defaultMax);
     gndEnergyPerIncrease = saturate_int(gndEnergyPerIncrease, 0, defaultMax);
     forceDampingFactor = saturate_int(forceDampingFactor, 1, defaultMax);
