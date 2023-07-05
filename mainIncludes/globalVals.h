@@ -14,8 +14,57 @@ static const std::set<char> LETTERS = {
 static const std::set<char> OPERATORS = {'+','-','*','/'};
 static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have in C++
 
+
+
+// A structure for integer simulation parameters to be held in,
+//  where each simulation parameter contains a list of possible values
+struct SimParamInt{
+    int val;
+    int valIndex;
+    std::vector<int> possibleVals; // Recommended to sort these in ascending order
+
+    SimParamInt(int initVal, std::vector<int> possibleValues): val(initVal), possibleVals(possibleValues){
+        for(valIndex = 0; valIndex < possibleVals.size(); valIndex++){
+            if(val <= possibleVals[valIndex]) break;
+        }
+        correct_val_and_valIndex();
+        //cout << "valIndex = " << valIndex << ", val: " << val << endl;
+    }
+
+    void correct_val_and_valIndex(){
+        while(valIndex < 0) valIndex += possibleVals.size();
+        valIndex %= possibleVals.size();
+        val = possibleVals[valIndex];
+    }
+
+    void increment_val(bool doIncrease){
+        if(doIncrease) valIndex++;
+        else valIndex--;
+        correct_val_and_valIndex();
+    }
+};
+
+
+
 // Global Simulation Parameters
-int initNumCells = 400;
+int pow_int(int root, int exponent);
+#define p(magnitude) pow_int(10,magnitude)
+#define valVec(mag) 1*p(mag), 12*p(mag-1), 15*p(mag-1), 2*p(mag), 3*p(mag), 4*p(mag), 5*p(mag), 6*p(mag), 7*p(mag), 8*p(mag), 9*p(mag)
+std::vector<int> possibleVals_0_to_1M = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), valVec(3), valVec(4), valVec(5), 1000000
+};
+std::vector<int> possibleVals_0_to_2000 = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), 1000, 1200, 1400, 1600, 2000
+};
+std::vector<int> possibleVals_0_to_1000 = {
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), 1000
+};
+#undef p
+#undef valVec
+
+
+// Global Simulation Parameters
+SimParamInt initNumCells(400, possibleVals_0_to_1M); //int initNumCells = 400;
 // TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
 static const int UB_X = 60, UB_Y = 40;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
@@ -30,29 +79,32 @@ static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-int cellLimit = 1000;
+SimParamInt cellLimit(1000, possibleVals_0_to_2000); //int cellLimit = 1000;
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
-int overcrowdingEnergyCoef = 100;
+SimParamInt overcrowdingEnergyCoef(1000, possibleVals_0_to_1M); //int overcrowdingEnergyCoef = 1000;
 // Energy accumulation for all ground spaces
-int maxGndEnergy = 2000;
+SimParamInt maxGndEnergy(2000, possibleVals_0_to_1M); //int maxGndEnergy = 2000;
 //int initGndEnergy = maxGndEnergy / 2;
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
-int gndEnergyPerIncrease = 10;
+SimParamInt gndEnergyPerIncrease(10, possibleVals_0_to_1M); //int gndEnergyPerIncrease = 10;
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
 // Max energy which can be accumulated from the sun 
-int maxSunEnergyPerSec = 50;
+SimParamInt maxSunEnergyPerSec(50, possibleVals_0_to_1000); //int maxSunEnergyPerSec = 50;
 // Number of seconds per day (Not sure if this is actually day length in frames
 //  or day length in seconds)
-int dayLenSec = 200;
+SimParamInt dayLenSec(200, possibleVals_0_to_1M); //int dayLenSec = 200;
 static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 static const int DAY_NIGHT_BINARY_MODE = 1;
 static const int DAY_NIGHT_DEFAULT_MODE = 2;
-static const int DAY_NIGHT_MODE = DAY_NIGHT_DEFAULT_MODE;
+//static const std::vector<int> dayNightModePossibleVals = {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE};
+//int dayNightMode = DAY_NIGHT_DEFAULT_MODE; // DAY_NIGHT_DEFAULT_MODE
+SimParamInt dayNightMode(DAY_NIGHT_DEFAULT_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE});
+// dayNightExponent: Only applies for dayNightMode::PERIODIC
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
 // A value of 1.75 approximates a sine wave
@@ -64,14 +116,14 @@ float dayNightLb = 0.0, dayNightUb = 0.5;
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
 // Calculate DRAW_SCALE_FACTOR (rounded down to nearest int)
-static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
-static const int TARGET_SCREEN_HEIGHT = 800; // Try 800, or 400 for a quarter screen
+static const int TARGET_SCREEN_WIDTH = 1540; // Try 1540 for full screen and 770 for half screen
+static const int TARGET_SCREEN_HEIGHT = 700; // Try 800 for full screeen, or 400 for a quarter screen
 int tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
 int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
 int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
 static const int DRAW_SCALE_FACTOR = tmpDrawScale;
-static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
-static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR*UB_Y / 9;
+static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR * UB_X;
+static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR * UB_Y / 9; // 10 * DRAW_SCALE_FACTOR * UB_Y / 9
 static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
 static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
 static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
@@ -107,7 +159,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
-int forceDampingFactor = 100;
+SimParamInt forceDampingFactor(100, possibleVals_0_to_1M); //int forceDampingFactor = 100;
     // Default: 100
     // Applies to the repulsive force that keeps cells apart
     // Smaller values increase the strength of repulsive force
@@ -131,6 +183,7 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
 };
 
+/*
 // When the global parameters are changed, dependent global parameters also change
 int saturate_int(int num, int lb, int ub);
 int pow_int(int root, int exponent);
@@ -167,7 +220,7 @@ void enforce_global_param_bounds(){
 
     update_global_params();
 }
-
+*/
 
 
 

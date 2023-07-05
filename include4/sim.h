@@ -92,7 +92,7 @@ void deallocate_cell_memory(Cell* pCell) {
 
 void init_sim_gnd_energy(){
     // We are dealing with global variables
-    int initGndEnergy = maxGndEnergy / 2;
+    int initGndEnergy = maxGndEnergy.val / 2;
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] = initGndEnergy;
@@ -104,8 +104,8 @@ void increase_sim_gnd_energy(int increaseAmt){
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] += increaseAmt;
-            if(simGndEnergy[x][y] > maxGndEnergy){
-                simGndEnergy[x][y] = maxGndEnergy;
+            if(simGndEnergy[x][y] > maxGndEnergy.val){
+                simGndEnergy[x][y] = maxGndEnergy.val;
             }
         }
     }
@@ -114,19 +114,26 @@ void increase_sim_gnd_energy(int increaseAmt){
 // If the target is set to a positive time, then set the time.
 //  Otherwise, increment the time by 1.
 void update_dayNightCycleTime(int target = -1){
-    if(target < 0) dayNightCycleTime = ++dayNightCycleTime % dayLenSec;
-    else dayNightCycleTime = target % dayLenSec;
+    if(target < 0) dayNightCycleTime = ++dayNightCycleTime % dayLenSec.val;
+    else dayNightCycleTime = target % dayLenSec.val;
 }
 
 // Update the amount of energy each cell gets from the sun per second
 void do_day_night_cycle(){
     // Stick with a simple polynomial equation to approximate a sine wave during the day phase
     //  (the day occurs between times LB and UB) and set to 0 during the night phase
-    float timeNormalized = (float)dayNightCycleTime / dayLenSec - (dayNightLb + dayNightUb) / 2;
+    float timeNormalized = (float)dayNightCycleTime / dayLenSec.val - (dayNightLb + dayNightUb) / 2;
     float energyFrac;
-    switch(DAY_NIGHT_MODE){
+    int lb, ub;
+    switch(dayNightMode.val){
         case DAY_NIGHT_ALWAYS_DAY_MODE:
-        energyFromSunPerSec = maxSunEnergyPerSec;
+        energyFromSunPerSec = maxSunEnergyPerSec.val;
+        return;
+
+        case DAY_NIGHT_BINARY_MODE:
+        lb = dayNightLb * dayLenSec.val;
+        ub = dayNightUb * dayLenSec.val;
+        energyFromSunPerSec = (lb <= dayNightCycleTime && dayNightCycleTime <= ub) ? maxSunEnergyPerSec.val : 0;
         return;
 
         case DAY_NIGHT_DEFAULT_MODE:
@@ -139,12 +146,7 @@ void do_day_night_cycle(){
         energyFrac = abs_float(2 * timeNormalized / (dayNightUb - dayNightLb));
         energyFrac = 1.0 - pow(energyFrac, dayNightExponent);
         energyFrac = saturate_float(energyFrac, 0, 1);
-        energyFromSunPerSec = energyFrac * maxSunEnergyPerSec; // Round down
-        return;
-
-        case DAY_NIGHT_BINARY_MODE:
-        int lb = dayNightLb * dayLenSec, ub = dayNightUb * dayLenSec;
-        energyFromSunPerSec = (lb <= dayNightCycleTime && dayNightCycleTime <= ub) ? maxSunEnergyPerSec : 0;
+        energyFromSunPerSec = energyFrac * maxSunEnergyPerSec.val; // Round down
         return;
     }
 }
@@ -232,14 +234,14 @@ void deallocate_all_cells(){
     pAlivesRegions.clear(); pDeadsRegions.clear();
 }
 // Initialize the simulation
-void init_sim(int initNumCells){
+void init_sim(){
     assert(simState == SIM_STATE_INIT);
     init_sim_global_vals();
-    randomly_place_new_cells(initNumCells);
+    randomly_place_new_cells(initNumCells.val);
     simState = SIM_STATE_STEP_FRAMES;
 }
 // Restart the simulation
-void restart_sim(int initNumCells){
+void restart_sim(){
     assert(simState == SIM_STATE_RESTART);
     // Deallocate and remove all cells from the simulation
     deallocate_all_cells();
@@ -324,7 +326,7 @@ int do_frame(int frameNum, bool doCellDecisions = true){
 
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
     if(frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){
-        increase_sim_gnd_energy(gndEnergyPerIncrease);
+        increase_sim_gnd_energy(gndEnergyPerIncrease.val);
     }
 
     // Rendering and User Interactions
@@ -342,10 +344,10 @@ void do_sim_iteration(int& frameNum, bool doCellDecisions = true){
         SDL_event_handler();
         break;
         case SIM_STATE_INIT:
-        init_sim(initNumCells);
+        init_sim();
         break;
         case SIM_STATE_RESTART:
-        restart_sim(initNumCells);
+        restart_sim();
         break;
         default:
         frameNum = do_frame(frameNum, doCellDecisions);

@@ -74,18 +74,23 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
 
 
 // Return true if the box was clicked (and the sim state changed)
-bool change_simState_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int x0, int y0, int x1, int y1, int newSimStateIfClicked){
-    if(mousePosX < x0 || mousePosX >= x1) return false;
-    if(mousePosY < y0 || mousePosY >= y1) return false;
+bool check_if_mouse_clicked_on_box(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb){
+    if(mousePosX < xLb || mousePosX >= xUb) return false;
+    if(mousePosY < yLb || mousePosY >= yUb) return false;
+    return true;
+}
+bool change_simState_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb, int newSimStateIfClicked){
+    if(!check_if_mouse_clicked_on_box(mousePosX, mousePosY, xLb, yLb, xUb, yUb)) return false;
     simState = newSimStateIfClicked;
     return true;
 }
 // Return true if the box was clicked
-bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb, int* pVarToChange, bool doIncrease){
+/*
+//bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb, int* pVarToChange, bool doIncrease){
+void increment_var(int* pVarToChange, bool doIncrease){
     // lb = lower bound, ub = upper bound, x and y are coordinates
     //cout << "xLb: " << xLb << ", xUb: " << xUb << ", yLb: " << yLb << ", yUb: " << yUb << endl;
-    if(mousePosX < xLb || mousePosX >= xUb) return false;
-    if(mousePosY < yLb || mousePosY >= yUb) return false;
+    //if(!check_if_mouse_clicked_on_box(mousePosX, mousePosY, xLb, yLb, xUb, yUb)) return false;
     if(doIncrease && *pVarToChange < pow_int(10,9)){
         int incrementExponent = (int)(log10(max_int(1, *pVarToChange / 2)));
         int varIncrement = pow_int(10, incrementExponent);
@@ -96,11 +101,20 @@ bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int
         int varIncrement = pow_int(10, incrementExponent);
         *pVarToChange -= varIncrement;
     }
-    enforce_global_param_bounds();
+    //enforce_global_param_bounds();
+    //return true;
+}
+*/
+// Return true if the box was clicked
+//  This function only works for vars whose possible values include only the values between 0 and endVal
+bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb,
+        SimParamInt* pVarToIncrement, bool doIncrease){
+    if(!check_if_mouse_clicked_on_box(mousePosX, mousePosY, xLb, yLb, xUb, yUb)) return false;
+    pVarToIncrement->increment_val(doIncrease);
     return true;
 }
 void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>>& optionText);
-void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<std::pair<string, int*>>& simParamsText, int xLbStart, int yLbStart, int dyStart);
+void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<std::pair<string, SimParamInt*>>& simParamsText, int xLbStart, int yLbStart, int dyStart);
 void SDL_draw_frame();
 void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
     std::vector<std::pair<int, string>> optionText;
@@ -135,7 +149,7 @@ void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& sim
 // Allow the user to customize various simulation parameters before each simulation
 void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
     frameStart = SDL_GetTicks();
-    std::vector<std::pair<string, int*>> simParamsText;
+    std::vector<std::pair<string, SimParamInt*>> simParamsText;
     simParamsText.push_back({"Initial # of Cells", &initNumCells});
     simParamsText.push_back({"Max # of Cells", &cellLimit});
     simParamsText.push_back({"Day Length", &dayLenSec});
@@ -156,7 +170,7 @@ void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simSta
     int xLbStart = xVec[2], yLbStart = y0, dyStart = 0.75*(y1-y0);
     #undef wfx
     #undef wfy
-
+    
     #define deal_with_box_click(xLb, xUb, yLb, yUb, pVarToIncrement, doIncrease) increment_var_on_box_click(mousePosX, mousePosY, xLb, yLb, xUb, yUb, pVarToIncrement, doIncrease)
     while(simState == SIM_STATE_MAIN_MENU){
         draw_main_menu(xVec, yVec, simParamsText, xLbStart, yLbStart, dyStart);
@@ -170,7 +184,7 @@ void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simSta
             for(int i = 0; i < simParamsText.size(); i++){
                 int yLb = yVec[yIndex++];
                 string paramText = simParamsText[i].first;
-                int* pParameter = simParamsText[i].second;
+                SimParamInt* pParameter = simParamsText[i].second;
                 deal_with_box_click(xVec[2], xVec[3], yLb, yLb + dy, pParameter, false);
                 deal_with_box_click(xVec[3], xVec[4], yLb, yLb + dy, pParameter, true);
                 //cout << paramText << ": " << *pParameter << " ";

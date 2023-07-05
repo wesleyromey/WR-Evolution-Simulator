@@ -2687,8 +2687,6 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int heig
     SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
     //  This renders the opject according to pDst
     //  I could replace NULL with pSrc, but I don't know what pSrc refers to
-    
-    // TODO: If this line ends up ruining the program, delete it
     delete pDst;
 }
 
@@ -2700,10 +2698,8 @@ void draw_gnd(){
       int drawY = DRAW_SCALE_FACTOR*col;
       int drawSize = DRAW_SCALE_FACTOR;
       assert(drawX >= 0 && drawY >= 0 && simGndEnergy[row][col] >= 0);
-      draw_texture(
-        findSDLTex(100 * simGndEnergy[row][col] / maxGndEnergy, P_GND_TEX),
-        drawX, drawY, drawSize, drawSize
-      );
+      SDL_Texture* pTexture = findSDLTex(100 * simGndEnergy[row][col] / maxGndEnergy.val, P_GND_TEX); // Divide by 0 error
+      draw_texture(pTexture, drawX, drawY, drawSize, drawSize);
     }
   }
 }
@@ -2933,7 +2929,7 @@ void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string
 
 // dy: The height of the text
 // simParamsText: Contains the set of setting names and their corresponding values
-void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<std::pair<string, int*>>& simParamsText, int xLbStart, int yLbStart, int dyStart){
+void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<std::pair<string, SimParamInt*>>& simParamsText, int xLbStart, int yLbStart, int dyStart){
   // Format:
   //  [] represents a text box
   //  text: value [-][+]
@@ -2950,8 +2946,8 @@ void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<
     // ele == {val, text}
     yIndex++;
     string settingName = ele.first;
-    //int* tmp = ele.second;
-    string settingVal = std::to_string(*ele.second);
+    SimParamInt* param = ele.second;
+    string settingVal = std::to_string(param->val);
     draw_text(xVec[0], yVec[yIndex], xVec[1]-xVec[0], dy, borderPx, 1, settingName + ":");
     draw_text(xVec[1], yVec[yIndex], xVec[2]-xVec[1], dy, borderPx, 1, settingVal);
     draw_text_box(xVec[2], yVec[yIndex], xVec[3]-xVec[2], dy, borderPx, 1, "-");

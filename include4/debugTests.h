@@ -13,6 +13,8 @@
 // test functions that don't belong in the main program
 
 
+// Show people what every portion of the cell refers to
+
 // Test the global energy-related parameters, such as day-night cycles
 void testGlobalEnergy(){
     gen_cell();
@@ -26,7 +28,7 @@ void testGlobalEnergy(){
 
     // Test the day-night cycle, sun energy, and ground energy (Test complete!)
     std::vector<int> solarEnergyPerUnitTime;
-    for(int i = 0; i < dayLenSec; i++){
+    for(int i = 0; i < dayLenSec.val; i++){
         do_frame(i);
         solarEnergyPerUnitTime.push_back(energyFromSunPerSec);
     }
@@ -110,7 +112,7 @@ void testForce(){
     std::cout << "Need UB_X = 100 and UB_Y = 100 ";
     assert(UB_X == 100 && UB_Y == 100);
     std::cout << "(done!)\n";
-    std::cout << "forceDampingFactor: " << forceDampingFactor << "\n\n";
+    std::cout << "forceDampingFactor.val: " << forceDampingFactor.val << "\n\n";
 
     int numCells = 2;
     randomly_place_new_cells(numCells);
@@ -347,7 +349,6 @@ void redraw_existing_tex(){
             SDL_RenderPresent(P_RENDERER);
             enforce_frame_rate(frameStart, FRAME_DELAY);
             count++;
-            std::cout << ".";
             break;
             case SDL_QUIT:
             exitSim = true;

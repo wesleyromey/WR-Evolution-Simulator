@@ -818,7 +818,7 @@ struct Cell {
     }
     void apply_forces(){
         // Apply the forces which should already calculated
-        increment_pos(forceX / forceDampingFactor, forceY / forceDampingFactor);
+        increment_pos(forceX / forceDampingFactor.val, forceY / forceDampingFactor.val);
         forceX = 0;
         forceY = 0;
         //enforce_valid_cell();
@@ -864,7 +864,7 @@ struct Cell {
                 }
             }
         }
-        if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit){
+        if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit.val){
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();
             pCellsHist.push_back(pCell);
