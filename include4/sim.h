@@ -122,7 +122,7 @@ void update_dayNightCycleTime(int target = -1){
 void do_day_night_cycle(){
     // Stick with a simple polynomial equation to approximate a sine wave during the day phase
     //  (the day occurs between times LB and UB) and set to 0 during the night phase
-    float timeNormalized = (float)dayNightCycleTime / dayLenSec.val - (dayNightLb + dayNightUb) / 2;
+    float timeNormalized = (float)dayNightCycleTime / dayLenSec.val - (float)(dayNightLbPct.val + dayNightUbPct.val) / 200;
     float energyFrac;
     int lb, ub;
     switch(dayNightMode.val){
@@ -131,8 +131,8 @@ void do_day_night_cycle(){
         return;
 
         case DAY_NIGHT_BINARY_MODE:
-        lb = dayNightLb * dayLenSec.val;
-        ub = dayNightUb * dayLenSec.val;
+        lb = (float)dayNightLbPct.val / 100 * dayLenSec.val;
+        ub = (float)dayNightUbPct.val / 100 * dayLenSec.val;
         energyFromSunPerSec = (lb <= dayNightCycleTime && dayNightCycleTime <= ub) ? maxSunEnergyPerSec.val : 0;
         return;
 
@@ -143,8 +143,8 @@ void do_day_night_cycle(){
         //  The smallest values mean the sun remains essentially at the horizon during the day
         //      except possibly for the instant it is mid-day
         //  EXPONENT == 1.75 is a good approximation of a sine wave
-        energyFrac = abs_float(2 * timeNormalized / (dayNightUb - dayNightLb));
-        energyFrac = 1.0 - pow(energyFrac, dayNightExponent);
+        energyFrac = abs_float(200. * timeNormalized / (float)(dayNightUbPct.val - dayNightLbPct.val));
+        energyFrac = 1.0 - pow(energyFrac, (float)dayNightExponentPct.val / 100);
         energyFrac = saturate_float(energyFrac, 0, 1);
         energyFromSunPerSec = energyFrac * maxSunEnergyPerSec.val; // Round down
         return;
@@ -239,6 +239,7 @@ void init_sim(){
     init_sim_global_vals();
     randomly_place_new_cells(initNumCells.val);
     simState = SIM_STATE_STEP_FRAMES;
+    frameStart = SDL_GetTicks();
 }
 // Restart the simulation
 void restart_sim(){

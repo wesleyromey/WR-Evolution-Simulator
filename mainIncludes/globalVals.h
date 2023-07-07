@@ -15,13 +15,14 @@ static const std::set<char> OPERATORS = {'+','-','*','/'};
 static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have in C++
 
 
-
 // A structure for integer simulation parameters to be held in,
 //  where each simulation parameter contains a list of possible values
 struct SimParamInt{
     int val;
     int valIndex;
     std::vector<int> possibleVals; // Recommended to sort these in ascending order
+    std::map<int, int> nextPossibleVal;
+    int lastIncrement = 0; // The last input in the increment_val(...) function (regularly resets to 0)
 
     SimParamInt(int initVal, std::vector<int> possibleValues): val(initVal), possibleVals(possibleValues){
         for(valIndex = 0; valIndex < possibleVals.size(); valIndex++){
@@ -31,40 +32,81 @@ struct SimParamInt{
         //cout << "valIndex = " << valIndex << ", val: " << val << endl;
     }
 
+    SimParamInt(int initVal, int smallestPossibleVal, int largestPossibleVal): val(initVal){
+        init_nextPossibleVal_map();
+        init_standard_possibleVals(smallestPossibleVal, largestPossibleVal);
+        for(valIndex = 0; valIndex < possibleVals.size(); valIndex++){
+            if(val <= possibleVals[valIndex]) break;
+        }
+        correct_val_and_valIndex();
+        //cout << "valIndex = " << valIndex << ", val: " << val << endl;
+    }
+
+    void init_nextPossibleVal_map(){
+        for(int val = 0; val < 10; val++) nextPossibleVal[val] = val+1;
+        int pow_int(int root, int exponent);
+        #define p(magnitude) pow_int(10,magnitude)
+
+        //MAX_INT_DEFAULT == 2147483647
+        //lb = -2*p(9), ub = 2*p(9);
+        std::vector<int> valsSoFar;
+        nextPossibleVal[0] = 1; valsSoFar.push_back(0);
+        for(int mag = 1; mag < 9; mag++){
+            nextPossibleVal[1*p(mag)] = 12*p(mag-1);    valsSoFar.push_back(1*p(mag));
+            nextPossibleVal[12*p(mag-1)] = 15*p(mag-1); valsSoFar.push_back(12*p(mag-1));
+            nextPossibleVal[15*p(mag-1)] = 2*p(mag);    valsSoFar.push_back(15*p(mag-1));
+            nextPossibleVal[2*p(mag)] = 3*p(mag);       valsSoFar.push_back(2*p(mag));
+            nextPossibleVal[3*p(mag)] = 4*p(mag);       valsSoFar.push_back(3*p(mag));
+            nextPossibleVal[4*p(mag)] = 5*p(mag);       valsSoFar.push_back(4*p(mag));
+            nextPossibleVal[5*p(mag)] = 6*p(mag);       valsSoFar.push_back(5*p(mag));
+            nextPossibleVal[6*p(mag)] = 7*p(mag);       valsSoFar.push_back(6*p(mag));
+            nextPossibleVal[7*p(mag)] = 8*p(mag);       valsSoFar.push_back(7*p(mag));
+            nextPossibleVal[8*p(mag)] = 9*p(mag);       valsSoFar.push_back(8*p(mag));
+            nextPossibleVal[9*p(mag)] = 10*p(mag);      valsSoFar.push_back(9*p(mag));
+        }
+        nextPossibleVal[1*p(9)] = 12*p(8);  valsSoFar.push_back(1*p(9));
+        nextPossibleVal[12*p(8)] = 15*p(8); valsSoFar.push_back(12*p(8));
+        nextPossibleVal[15*p(8)] = 2*p(9);  valsSoFar.push_back(15*p(8));
+        nextPossibleVal[2*p(9)] = INT_MAX;   valsSoFar.push_back(INT_MAX);
+        // Deal with the negative values
+        for(int i = 1; i < valsSoFar.size(); i++){
+            int val = -valsSoFar[i], nextVal = -valsSoFar[i-1];
+            nextPossibleVal[val] = nextVal;
+        }
+        #undef p
+    }
+
     void correct_val_and_valIndex(){
         while(valIndex < 0) valIndex += possibleVals.size();
         valIndex %= possibleVals.size();
         val = possibleVals[valIndex];
     }
 
+    void init_standard_possibleVals(int lb, int ub){
+        assert(lb <= ub);
+        assert(nextPossibleVal.count(lb));
+        for(int val = lb; val <= ub; val = nextPossibleVal[val]){
+            possibleVals.push_back(val);
+        }
+    }
+
     void increment_val(bool doIncrease){
         if(doIncrease) valIndex++;
         else valIndex--;
         correct_val_and_valIndex();
+        lastIncrement = (doIncrease ? 1 : -1);
     }
+
+    //void update_val(int index){
+    //    valIndex = index;
+    //    val = possibleVals[valIndex];
+    //}
 };
 
 
 
 // Global Simulation Parameters
-int pow_int(int root, int exponent);
-#define p(magnitude) pow_int(10,magnitude)
-#define valVec(mag) 1*p(mag), 12*p(mag-1), 15*p(mag-1), 2*p(mag), 3*p(mag), 4*p(mag), 5*p(mag), 6*p(mag), 7*p(mag), 8*p(mag), 9*p(mag)
-std::vector<int> possibleVals_0_to_1M = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), valVec(3), valVec(4), valVec(5), 1000000
-};
-std::vector<int> possibleVals_0_to_2000 = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), 1000, 1200, 1400, 1600, 2000
-};
-std::vector<int> possibleVals_0_to_1000 = {
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, valVec(1), valVec(2), 1000
-};
-#undef p
-#undef valVec
-
-
-// Global Simulation Parameters
-SimParamInt initNumCells(400, possibleVals_0_to_1M); //int initNumCells = 400;
+SimParamInt initNumCells(400, 0, 10000); //int initNumCells = 400;
 // TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
 static const int UB_X = 60, UB_Y = 40;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
@@ -79,39 +121,48 @@ static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-SimParamInt cellLimit(1000, possibleVals_0_to_2000); //int cellLimit = 1000;
+SimParamInt cellLimit(1000, 0, 2000); //int cellLimit = 1000;
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
-SimParamInt overcrowdingEnergyCoef(1000, possibleVals_0_to_1M); //int overcrowdingEnergyCoef = 1000;
+SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000); //int overcrowdingEnergyCoef = 1000;
 // Energy accumulation for all ground spaces
-SimParamInt maxGndEnergy(2000, possibleVals_0_to_1M); //int maxGndEnergy = 2000;
+SimParamInt maxGndEnergy(2000, 0, 1000000); //int maxGndEnergy = 2000;
 //int initGndEnergy = maxGndEnergy / 2;
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
-SimParamInt gndEnergyPerIncrease(10, possibleVals_0_to_1M); //int gndEnergyPerIncrease = 10;
+SimParamInt gndEnergyPerIncrease(10, 0, 10000); //int gndEnergyPerIncrease = 10;
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
 // Max energy which can be accumulated from the sun 
-SimParamInt maxSunEnergyPerSec(50, possibleVals_0_to_1000); //int maxSunEnergyPerSec = 50;
+SimParamInt maxSunEnergyPerSec(50, 0, 1000); //int maxSunEnergyPerSec = 50;
 // Number of seconds per day (Not sure if this is actually day length in frames
 //  or day length in seconds)
-SimParamInt dayLenSec(200, possibleVals_0_to_1M); //int dayLenSec = 200;
+SimParamInt dayLenSec(200, 1, 1000000); //int dayLenSec = 200;
 static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 static const int DAY_NIGHT_BINARY_MODE = 1;
 static const int DAY_NIGHT_DEFAULT_MODE = 2;
 //static const std::vector<int> dayNightModePossibleVals = {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE};
 //int dayNightMode = DAY_NIGHT_DEFAULT_MODE; // DAY_NIGHT_DEFAULT_MODE
 SimParamInt dayNightMode(DAY_NIGHT_DEFAULT_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE});
-// dayNightExponent: Only applies for dayNightMode::PERIODIC
+#define seqOf10(lb, dx) lb, lb+dx, lb+2*dx, lb+3*dx, lb+4*dx, lb+5*dx, lb+6*dx, lb+7*dx, lb+8*dx, lb+9*dx
+#define seqOf50(lb, dx) seqOf10(lb,dx), seqOf10(lb+10*dx,dx), seqOf10(lb+20*dx,dx), seqOf10(lb+30*dx,dx), seqOf10(lb+40*dx,dx)
+#define seqOf100(lb, dx) seqOf50(lb,dx), seqOf50(lb+50*dx,dx)
+// dayNightExponentPct: Applies to day-night cycles where the sun's path is periodic
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
-// A value of 1.75 approximates a sine wave
-float dayNightExponent = 2.0; // 0 <= EXPONENT < infinity
+// A value of 175 approximates a sine wave
+SimParamInt dayNightExponentPct(200, {seqOf100(0,10), 1000});
+//int dayNightExponentPct = 200; // 0 <= EXPONENT < infinity
 // The day lasts between dayNightLb and dayNightUb
-// The night lasts from dayNightUb to 1.0 and 0.0 to dayNightLb
-float dayNightLb = 0.0, dayNightUb = 0.5;
+// The night lasts from dayNightUb to 100 and 0 to dayNightLb
+SimParamInt dayNightLbPct(0,{seqOf100(0,1)});
+SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
+//int dayNightLbPct = 0, dayNightUbPct = 50;
+#undef seqOf100
+#undef seqOf50
+#undef seqOf10
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
@@ -159,7 +210,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
-SimParamInt forceDampingFactor(100, possibleVals_0_to_1M); //int forceDampingFactor = 100;
+SimParamInt forceDampingFactor(100, 0, 1000000); //int forceDampingFactor = 100;
     // Default: 100
     // Applies to the repulsive force that keeps cells apart
     // Smaller values increase the strength of repulsive force
@@ -204,23 +255,29 @@ void update_global_params(){
     //static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
     return;
 }
-// Each global parameters has different lower and upper bounds
-void enforce_global_param_bounds(){
-    int defaultMax = pow_int(10,6);
-    initNumCells = saturate_int(initNumCells, 0, 2000);
-    //UB_X = saturate_int(UB_X, 1, defaultMax);
-    //UB_Y = saturate_int(UB_X, 1, defaultMax);
-    cellLimit = saturate_int(cellLimit, 0, 2000);
-    dayLenSec = saturate_int(dayLenSec, 1, defaultMax);
-    maxSunEnergyPerSec = saturate_int(maxSunEnergyPerSec, 0, 1000);
-    maxGndEnergy = saturate_int(maxGndEnergy, 1, defaultMax);
-    gndEnergyPerIncrease = saturate_int(gndEnergyPerIncrease, 0, defaultMax);
-    forceDampingFactor = saturate_int(forceDampingFactor, 1, defaultMax);
-    overcrowdingEnergyCoef = saturate_int(overcrowdingEnergyCoef, 0, defaultMax);
-
-    update_global_params();
-}
 */
+// The values of certain global parameters are restricted by others
+//  NOTE: This is updated so that the SimIntParam variable automatically does this
+void enforce_global_param_constraints(){
+    switch(dayNightLbPct.lastIncrement){
+        case -1:
+        while(dayNightLbPct.val >= dayNightUbPct.val) dayNightLbPct.increment_val(false);
+        break;
+        case 1:
+        while(dayNightLbPct.val >= dayNightUbPct.val) dayNightLbPct.increment_val(true);
+        break;
+    }
+    dayNightLbPct.lastIncrement = 0;
+    switch(dayNightUbPct.lastIncrement){
+        case -1:
+        while(dayNightLbPct.val >= dayNightUbPct.val) dayNightUbPct.increment_val(false);
+        break;
+        case 1:
+        while(dayNightLbPct.val >= dayNightUbPct.val) dayNightUbPct.increment_val(true);
+        break;
+    }
+    dayNightUbPct.lastIncrement = 0;
+}
 
 
 

@@ -111,6 +111,7 @@ bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int
         SimParamInt* pVarToIncrement, bool doIncrease){
     if(!check_if_mouse_clicked_on_box(mousePosX, mousePosY, xLb, yLb, xUb, yUb)) return false;
     pVarToIncrement->increment_val(doIncrease);
+    enforce_global_param_constraints();
     return true;
 }
 void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>>& optionText);
@@ -146,33 +147,64 @@ void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& sim
     #undef deal_with_box_click
     SDL_draw_frame();
 }
-// Allow the user to customize various simulation parameters before each simulation
-void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
-    frameStart = SDL_GetTicks();
+std::vector<std::pair<string, SimParamInt*>> decide_sim_settings_options_text(){
     std::vector<std::pair<string, SimParamInt*>> simParamsText;
     simParamsText.push_back({"Initial # of Cells", &initNumCells});
     simParamsText.push_back({"Max # of Cells", &cellLimit});
-    simParamsText.push_back({"Day Length", &dayLenSec});
-    simParamsText.push_back({"Max Sun Energy Regeneration", &maxSunEnergyPerSec});
+    simParamsText.push_back({"Day-Night Cycle Mode", &dayNightMode});
+    switch(dayNightMode.val){
+        case DAY_NIGHT_ALWAYS_DAY_MODE:
+        simParamsText.push_back({"Sun Energy Regeneration", &maxSunEnergyPerSec});
+        break;
+        case DAY_NIGHT_BINARY_MODE:
+        simParamsText.push_back({"Day Length", &dayLenSec});
+        simParamsText.push_back({"Max Sun Energy Regeneration", &maxSunEnergyPerSec});
+        simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
+        simParamsText.push_back({"Day end (pct)", &dayNightUbPct});
+        break;
+        case DAY_NIGHT_DEFAULT_MODE:
+        simParamsText.push_back({"Day Length", &dayLenSec});
+        simParamsText.push_back({"Max Sun Energy Regeneration", &maxSunEnergyPerSec});
+        simParamsText.push_back({"Sun Path coef (Default 200)", &dayNightExponentPct});
+        simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
+        simParamsText.push_back({"Day end (pct)", &dayNightUbPct});
+        break;
+    }
     simParamsText.push_back({"Max Ground Energy per cell", &maxGndEnergy});
     simParamsText.push_back({"Ground Energy Regeneration", &gndEnergyPerIncrease});
     simParamsText.push_back({"Force Damping Factor", &forceDampingFactor});
     simParamsText.push_back({"Overcrowding energy coefficient", &overcrowdingEnergyCoef});
-
-    // Specify the x and y coordinates to draw the text and allow it to respond when clicking on it
+    return simParamsText;
+}
+std::vector<int> decide_sim_settings_options_x_coords(std::vector<std::pair<string, SimParamInt*>>& simParamsText){
     #define wfx(fraction) (int)(fraction*WINDOW_WIDTH)
-    #define wfy(fraction) (int)(fraction*WINDOW_HEIGHT)
     std::vector<int> xVec = {wfx(0.05), wfx(0.6), wfx(0.8), wfx(0.84), wfx(0.88)};
-    int y0 = wfy(0), y1 = wfy(0.2), dy = 0.075*WINDOW_HEIGHT;
+    #undef wfx
+    return xVec;
+}
+std::vector<int> decide_sim_settings_options_y_coords(std::vector<std::pair<string, SimParamInt*>>& simParamsText){
+    #define wfy(fraction) (int)(fraction*WINDOW_HEIGHT)
+    //max_int()
+    int y0 = wfy(0), y1 = wfy(0.20), dy = 0.08*WINDOW_HEIGHT; // 0.075*WINDOW_HEIGHT can fit 10 options
+    if(simParamsText.size() > 10) dy *= 10.0 / simParamsText.size();
     std::vector<int> yVec = {y0};
     for(int i = 0; i < simParamsText.size(); i++) yVec.push_back(y1 + i*dy);
     //cout << "yVec: { "; for(auto num : yVec) cout << num << " "; cout << "}\n";
-    int xLbStart = xVec[2], yLbStart = y0, dyStart = 0.75*(y1-y0);
-    #undef wfx
     #undef wfy
-    
+    return yVec;
+}
+// Allow the user to customize various simulation parameters before each simulation
+void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
+    //frameStart = SDL_GetTicks();
     #define deal_with_box_click(xLb, xUb, yLb, yUb, pVarToIncrement, doIncrease) increment_var_on_box_click(mousePosX, mousePosY, xLb, yLb, xUb, yUb, pVarToIncrement, doIncrease)
     while(simState == SIM_STATE_MAIN_MENU){
+        std::vector<std::pair<string, SimParamInt*>> simParamsText = decide_sim_settings_options_text();
+        // Specify the x and y coordinates to draw the text and allow it to respond when clicking on it
+        std::vector<int> xVec = decide_sim_settings_options_x_coords(simParamsText);
+        std::vector<int> yVec = decide_sim_settings_options_y_coords(simParamsText);
+        int xLbStart = xVec[2], yLbStart = yVec[0], dyStart = 0.75*(yVec[1]-yVec[0]);
+        int dy = yVec[2]-yVec[1];
+
         draw_main_menu(xVec, yVec, simParamsText, xLbStart, yLbStart, dyStart);
         SDL_WaitEvent(&windowEvent);
         Uint32 mouseClickType = 0;
