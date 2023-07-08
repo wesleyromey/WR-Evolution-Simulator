@@ -337,7 +337,7 @@ SDL_Texture* pEAMs2c2Tex = convArrToSDLTex(_EAMs2c2Img, 10, 10);
 /////////////////////////////////////////////////////////////////////////
 
 // Cell 
-unsigned char _energy0Img[] = {
+unsigned char _energy0PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -349,8 +349,8 @@ unsigned char _energy0Img[] = {
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy0Tex = convArrToSDLTex(_energy0Img, 10, 10);
-unsigned char _energy100Img[] = {
+SDL_Texture* pEnergy0PctTex = convArrToSDLTex(_energy0PctImg, 10, 10);
+unsigned char _energy1PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -362,8 +362,8 @@ unsigned char _energy100Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy100Tex = convArrToSDLTex(_energy100Img, 10, 10);
-unsigned char _energy200Img[] = {
+SDL_Texture* pEnergy1PctTex = convArrToSDLTex(_energy1PctImg, 10, 10);
+unsigned char _energy2PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -375,8 +375,8 @@ unsigned char _energy200Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy200Tex = convArrToSDLTex(_energy200Img, 10, 10);
-unsigned char _energy300Img[] = {
+SDL_Texture* pEnergy2PctTex = convArrToSDLTex(_energy2PctImg, 10, 10);
+unsigned char _energy3PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -388,8 +388,8 @@ unsigned char _energy300Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy300Tex = convArrToSDLTex(_energy300Img, 10, 10);
-unsigned char _energy400Img[] = {
+SDL_Texture* pEnergy3PctTex = convArrToSDLTex(_energy3PctImg, 10, 10);
+unsigned char _energy4PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -401,8 +401,8 @@ unsigned char _energy400Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy400Tex = convArrToSDLTex(_energy400Img, 10, 10);
-unsigned char _energy500Img[] = {
+SDL_Texture* pEnergy4PctTex = convArrToSDLTex(_energy4PctImg, 10, 10);
+unsigned char _energy5PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -414,8 +414,8 @@ unsigned char _energy500Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy500Tex = convArrToSDLTex(_energy500Img, 10, 10);
-unsigned char _energy600Img[] = {
+SDL_Texture* pEnergy5PctTex = convArrToSDLTex(_energy5PctImg, 10, 10);
+unsigned char _energy6PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -427,8 +427,8 @@ unsigned char _energy600Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy600Tex = convArrToSDLTex(_energy600Img, 10, 10);
-unsigned char _energy700Img[] = {
+SDL_Texture* pEnergy6PctTex = convArrToSDLTex(_energy6PctImg, 10, 10);
+unsigned char _energy7PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, GREY, GREY, ___0, ___0, GREY, GREY, ___0, ___0,
@@ -440,8 +440,8 @@ unsigned char _energy700Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy700Tex = convArrToSDLTex(_energy700Img, 10, 10);
-unsigned char _energy800Img[] = {
+SDL_Texture* pEnergy7PctTex = convArrToSDLTex(_energy7PctImg, 10, 10);
+unsigned char _energy8PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, GREY, ___0, ___0, GREY, DGRN, ___0, ___0,
@@ -453,8 +453,8 @@ unsigned char _energy800Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy800Tex = convArrToSDLTex(_energy800Img, 10, 10);
-unsigned char _energy900Img[] = {
+SDL_Texture* pEnergy8PctTex = convArrToSDLTex(_energy8PctImg, 10, 10);
+unsigned char _energy9PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, GREY, GREY, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -466,8 +466,8 @@ unsigned char _energy900Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy900Tex = convArrToSDLTex(_energy900Img, 10, 10);
-unsigned char _energy1000Img[] = {
+SDL_Texture* pEnergy9PctTex = convArrToSDLTex(_energy9PctImg, 10, 10);
+unsigned char _energy10PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -479,8 +479,8 @@ unsigned char _energy1000Img[] = {
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy1000Tex = convArrToSDLTex(_energy1000Img, 10, 10);
-unsigned char _energy2000Img[] = {
+SDL_Texture* pEnergy10PctTex = convArrToSDLTex(_energy10PctImg, 10, 10);
+unsigned char _energy20PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -492,8 +492,8 @@ unsigned char _energy2000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy2000Tex = convArrToSDLTex(_energy2000Img, 10, 10);
-unsigned char _energy3000Img[] = {
+SDL_Texture* pEnergy20PctTex = convArrToSDLTex(_energy20PctImg, 10, 10);
+unsigned char _energy30PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -505,8 +505,8 @@ unsigned char _energy3000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy3000Tex = convArrToSDLTex(_energy3000Img, 10, 10);
-unsigned char _energy4000Img[] = {
+SDL_Texture* pEnergy30PctTex = convArrToSDLTex(_energy30PctImg, 10, 10);
+unsigned char _energy40PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -518,8 +518,8 @@ unsigned char _energy4000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy4000Tex = convArrToSDLTex(_energy4000Img, 10, 10);
-unsigned char _energy5000Img[] = {
+SDL_Texture* pEnergy40PctTex = convArrToSDLTex(_energy40PctImg, 10, 10);
+unsigned char _energy50PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -531,8 +531,8 @@ unsigned char _energy5000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy5000Tex = convArrToSDLTex(_energy5000Img, 10, 10);
-unsigned char _energy6000Img[] = {
+SDL_Texture* pEnergy50PctTex = convArrToSDLTex(_energy50PctImg, 10, 10);
+unsigned char _energy60PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -544,8 +544,8 @@ unsigned char _energy6000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy6000Tex = convArrToSDLTex(_energy6000Img, 10, 10);
-unsigned char _energy7000Img[] = {
+SDL_Texture* pEnergy60PctTex = convArrToSDLTex(_energy60PctImg, 10, 10);
+unsigned char _energy70PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -557,8 +557,8 @@ unsigned char _energy7000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy7000Tex = convArrToSDLTex(_energy7000Img, 10, 10);
-unsigned char _energy8000Img[] = {
+SDL_Texture* pEnergy70PctTex = convArrToSDLTex(_energy70PctImg, 10, 10);
+unsigned char _energy80PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, DGRN, DGRN, ___0, ___0, DGRN, DGRN, ___0, ___0,
@@ -570,8 +570,8 @@ unsigned char _energy8000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy8000Tex = convArrToSDLTex(_energy8000Img, 10, 10);
-unsigned char _energy9000Img[] = {
+SDL_Texture* pEnergy80PctTex = convArrToSDLTex(_energy80PctImg, 10, 10);
+unsigned char _energy90PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, DGRN, DGRN, ___0, ___0, ___0, ___0,
   ___0, ___0, _GRN, _GRN, ___0, ___0, _GRN, _GRN, ___0, ___0,
@@ -583,8 +583,8 @@ unsigned char _energy9000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy9000Tex = convArrToSDLTex(_energy9000Img, 10, 10);
-unsigned char _energy10000Img[] = {
+SDL_Texture* pEnergy90PctTex = convArrToSDLTex(_energy90PctImg, 10, 10);
+unsigned char _energy100PctImg[] = {
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, _GRN, _GRN, ___0, ___0, _GRN, _GRN, ___0, ___0,
@@ -596,7 +596,7 @@ unsigned char _energy10000Img[] = {
   ___0, ___0, ___0, ___0, _GRN, _GRN, ___0, ___0, ___0, ___0,
   ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0, ___0,
 };
-SDL_Texture* pEnergy10000Tex = convArrToSDLTex(_energy10000Img, 10, 10);
+SDL_Texture* pEnergy100PctTex = convArrToSDLTex(_energy100PctImg, 10, 10);
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -2441,6 +2441,42 @@ unsigned char _dashSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
 };
 SDL_Texture* pDashSymbol = convArrToSDLTex(_dashSymbol, 15, 32);
+unsigned char _equalSymbol[] = {
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  X,X,X,X,X,X,X,X,X,X,X,X,X,X,X,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+};
+SDL_Texture* pEqualSymbol = convArrToSDLTex(_equalSymbol, 15, 32);
+
 unsigned char _leftSquareBracket[] = {
   X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
   X,X,X,X,X,X,X,X,X,X,X,_,_,_,_,
@@ -2581,6 +2617,77 @@ unsigned char _hashtagSymbol[] = {
   _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
 };
 SDL_Texture* pHashtagSymbol = convArrToSDLTex(_hashtagSymbol, 15, 32);
+unsigned char _periodSymbol[] = {
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+};
+SDL_Texture* pPeriodSymbol = convArrToSDLTex(_periodSymbol, 15, 32);
+unsigned char _exclamationMarkSymbol[] = {
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,X,X,X,X,X,X,X,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+};
+SDL_Texture* pExclamationMarkSymbol = convArrToSDLTex(_exclamationMarkSymbol, 15, 32);
+
 
 
 #undef _
@@ -2610,13 +2717,13 @@ SDL_Texture* pHashtagSymbol = convArrToSDLTex(_hashtagSymbol, 15, 32);
 
 // SDL Frame Rendering, Textures, etc.
 static const std::vector<std::pair<int, SDL_Texture*>> P_CELL_ENERGY_TEX = {
-  {0,     pEnergy0Tex   }, {100,   pEnergy100Tex }, {200,   pEnergy200Tex},
-  {300,   pEnergy300Tex }, {400,   pEnergy400Tex }, {500,   pEnergy500Tex},
-  {600,   pEnergy600Tex }, {700,   pEnergy700Tex }, {800,   pEnergy800Tex },
-  {900,   pEnergy900Tex }, {1000,  pEnergy1000Tex}, {2000,  pEnergy2000Tex},
-  {3000,  pEnergy3000Tex}, {4000,  pEnergy4000Tex}, {5000,  pEnergy5000Tex},
-  {6000,  pEnergy6000Tex}, {7000,  pEnergy7000Tex}, {8000,  pEnergy8000Tex},
-  {9000,  pEnergy9000Tex}, {10000, pEnergy10000Tex},
+  {0,     pEnergy0PctTex   }, {1,   pEnergy1PctTex }, {2,   pEnergy2PctTex},
+  {3,   pEnergy3PctTex }, {4,   pEnergy4PctTex }, {5,   pEnergy5PctTex},
+  {6,   pEnergy6PctTex }, {7,   pEnergy7PctTex }, {8,   pEnergy8PctTex },
+  {9,   pEnergy9PctTex }, {10,  pEnergy10PctTex}, {20,  pEnergy20PctTex},
+  {30,  pEnergy30PctTex}, {40,  pEnergy40PctTex}, {50,  pEnergy50PctTex},
+  {60,  pEnergy60PctTex}, {70,  pEnergy70PctTex}, {80,  pEnergy80PctTex},
+  {90,  pEnergy90PctTex}, {100, pEnergy100PctTex},
 };
 static const std::vector<std::pair<int, SDL_Texture*>> P_CELL_HEALTH_TEX = {
   {0,   pHealth0pctTex }, {10,  pHealth10pctTex}, {20,  pHealth20pctTex},
@@ -2840,12 +2947,19 @@ SDL_Texture* retrieve_symbol_texture(char symbol){
     return pRightSquareBracketSymbol;
     case '-':
     return pDashSymbol;
+    case '=':
+    return pEqualSymbol;
     case '+':
     return pPlusSymbol;
     case ':':
     return pColonSymbol;
     case '#':
     return pHashtagSymbol;
+    case '.':
+    return pPeriodSymbol;
+    case '!':
+    return pExclamationMarkSymbol;
+
     case '\n':
     case ' ':
     return pSpaceSymbol;
@@ -2900,16 +3014,37 @@ void draw_text_box(int x0, int y0, int dx, int dy, int borderPx,
   draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
   if(text.size() > 0) draw_text(x0, y0, dx, dy, borderPx, maxNumLines, text);
 }
-void draw_user_interface(){
+void draw_user_interface(int numCells = 0){
   // Include a button for next frame, skip frames, and options
-  static const int UI_X0 = 0, UI_Y0 = WINDOW_HEIGHT*0.90001;
-  static const int UI_X1 = WINDOW_WIDTH, UI_Y1 = WINDOW_HEIGHT;
-  static const int BOX_DX = (UI_X1 - UI_X0) / 3;
-  static const int BOX_DY = UI_Y1 - UI_Y0;
-  int borderPx = BOX_DY / 20;
-  draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Next Frame  [N]");
-  draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Skip Frames [A]");
-  draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, "    Options     ");
+  #define dX(ixLb, ixUb) (X_VEC_GUI[ixUb] - X_VEC_GUI[ixLb])
+  #define dY(iyLb, iyUb) (Y_VEC_GUI[iyUb] - Y_VEC_GUI[iyLb])
+  //static const int UI_X0 = 0, UI_Y0 = WINDOW_HEIGHT*0.9; // ...*0.90001;
+  //static const int UI_X1 = WINDOW_WIDTH, UI_Y1 = WINDOW_HEIGHT;
+  //static const int BOX_DX = (UI_X1 - UI_X0) / 3;
+  //static const int BOX_DY = UI_Y1 - UI_Y0;
+  int borderPx = (Y_VEC_GUI[3]-Y_VEC_GUI[1]) / 20;
+  //#define borderPx(iyLb, iyUb) = (dY(iyLb, iyUb) / 20)
+  #define draw_TB(iX, text) draw_text_box(X_VEC_GUI[iX], Y_VEC_GUI[1], dX(iX, iX+1), dY(1,3), borderPx, 1, text)
+  draw_TB(0, " Next Frame  [N]");
+  draw_TB(1, " Skip Frames [A]");
+  draw_TB(2, " Options");
+  draw_TB(3, "");
+  //draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Next Frame  [N]");
+  //draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Skip Frames [A]");
+  //draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX / 2, BOX_DY, borderPx, 1, " Options");
+  //draw_text_box(2.5 * BOX_DX, UI_Y0, BOX_DX / 2, BOX_DY, borderPx, 1, "");
+  #define draw_global_stats(iY, text, value) draw_text(X_VEC_GUI[3], Y_VEC_GUI[iY], dX(3,4), dY(iY,iY+1), borderPx / 2, 1, text + std::to_string(value))
+  draw_global_stats(1, " Frame #: ", frameNum);
+  draw_global_stats(2, " # Cells: ", numCells);
+  //draw_text(X_VEC_GUI[3], Y_VEC_GUI[1], X_VEC_GUI[4]-X_VEC_GUI[3], Y_VEC_GUI[2]-Y_VEC_GUI[1], borderPx, 1, " Frame #: " + std::to_string(frameNum));
+  //draw_text(X_VEC_GUI[3], Y_VEC_GUI[2], X_VEC_GUI[4]-X_VEC_GUI[3], Y_VEC_GUI[3]-Y_VEC_GUI[2], borderPx, 1, " # Cells: " + std::to_string(numCells));
+  #undef draw_global_stats
+  #undef draw_TB
+  #undef borderPx
+  #undef dY
+  #undef d
+
+
 }
 
 void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>>& optionText){

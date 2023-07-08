@@ -96,22 +96,17 @@ struct SimParamInt{
         correct_val_and_valIndex();
         lastIncrement = (doIncrease ? 1 : -1);
     }
-
-    //void update_val(int index){
-    //    valIndex = index;
-    //    val = possibleVals[valIndex];
-    //}
 };
 
 
 
 // Global Simulation Parameters
-SimParamInt initNumCells(400, 0, 10000); //int initNumCells = 400;
+SimParamInt initNumCells(400, 0, 10000);
 // TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
 static const int UB_X = 60, UB_Y = 40;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
 // of nearby cells to calculate forces, crowding, interactions, vision, etc.
-static const int CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
+static const int CELL_REGION_SIDE_LEN = 10; //(int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
 static const int CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
 // If a region near the bottom or the right side is smaller, then it is absorbed
 // into the neighboring region(s)
@@ -121,31 +116,28 @@ static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
-SimParamInt cellLimit(1000, 0, 2000); //int cellLimit = 1000;
+SimParamInt cellLimit(400, 0, 1000);
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
-SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000); //int overcrowdingEnergyCoef = 1000;
+SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000);
 // Energy accumulation for all ground spaces
-SimParamInt maxGndEnergy(2000, 0, 1000000); //int maxGndEnergy = 2000;
-//int initGndEnergy = maxGndEnergy / 2;
+SimParamInt maxGndEnergy(2000, 0, 1000000);
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
-SimParamInt gndEnergyPerIncrease(10, 0, 10000); //int gndEnergyPerIncrease = 10;
+SimParamInt gndEnergyPerIncrease(10, 0, 10000);
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
 int dayNightCycleTime = 0; // Wraps between 0 and dayLenSec - 1
 // Max energy which can be accumulated from the sun 
-SimParamInt maxSunEnergyPerSec(50, 0, 1000); //int maxSunEnergyPerSec = 50;
+SimParamInt maxSunEnergyPerSec(50, 0, 1000);
 // Number of seconds per day (Not sure if this is actually day length in frames
 //  or day length in seconds)
-SimParamInt dayLenSec(200, 1, 1000000); //int dayLenSec = 200;
+SimParamInt dayLenSec(200, 1, 1000000);
 static const int DAY_NIGHT_ALWAYS_DAY_MODE = 0;
 static const int DAY_NIGHT_BINARY_MODE = 1;
 static const int DAY_NIGHT_DEFAULT_MODE = 2;
-//static const std::vector<int> dayNightModePossibleVals = {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE};
-//int dayNightMode = DAY_NIGHT_DEFAULT_MODE; // DAY_NIGHT_DEFAULT_MODE
-SimParamInt dayNightMode(DAY_NIGHT_DEFAULT_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE});
+SimParamInt dayNightMode(DAY_NIGHT_ALWAYS_DAY_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, DAY_NIGHT_BINARY_MODE, DAY_NIGHT_DEFAULT_MODE});
 #define seqOf10(lb, dx) lb, lb+dx, lb+2*dx, lb+3*dx, lb+4*dx, lb+5*dx, lb+6*dx, lb+7*dx, lb+8*dx, lb+9*dx
 #define seqOf50(lb, dx) seqOf10(lb,dx), seqOf10(lb+10*dx,dx), seqOf10(lb+20*dx,dx), seqOf10(lb+30*dx,dx), seqOf10(lb+40*dx,dx)
 #define seqOf100(lb, dx) seqOf50(lb,dx), seqOf50(lb+50*dx,dx)
@@ -159,7 +151,6 @@ SimParamInt dayNightExponentPct(200, {seqOf100(0,10), 1000});
 // The night lasts from dayNightUb to 100 and 0 to dayNightLb
 SimParamInt dayNightLbPct(0,{seqOf100(0,1)});
 SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
-//int dayNightLbPct = 0, dayNightUbPct = 50;
 #undef seqOf100
 #undef seqOf50
 #undef seqOf10
@@ -174,7 +165,7 @@ int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
 int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
 static const int DRAW_SCALE_FACTOR = tmpDrawScale;
 static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR * UB_X;
-static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR * UB_Y / 9; // 10 * DRAW_SCALE_FACTOR * UB_Y / 9
+static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR * UB_Y / 9;
 static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
 static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
 static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
@@ -184,6 +175,7 @@ int mousePosX = 0, mousePosY = 0;
 static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
+int frameNum = 0; // The frame number of the simulation
 
 // Simulation States: These control the GUI, simulation mode, etc.
 static const int SIM_STATE_UNDEF = -1;
@@ -196,6 +188,10 @@ static const int SIM_STATE_OPTIONS = 4;
 static const int SIM_STATE_INIT = 5;
 static const int SIM_STATE_RESTART = 6;
 int simState = SIM_STATE_UNDEF;
+
+// The x and y coordinates defining the GUI
+static const std::vector<int> X_VEC_GUI = {0, WINDOW_WIDTH / 3, 2 * WINDOW_WIDTH / 3, 5 * WINDOW_WIDTH / 6, WINDOW_WIDTH};
+static const std::vector<int> Y_VEC_GUI = {0, 9 * WINDOW_HEIGHT / 10, 19 * WINDOW_HEIGHT / 20, WINDOW_HEIGHT};
 
 
 // Values used for all Cell type variables
@@ -210,7 +206,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
-SimParamInt forceDampingFactor(100, 0, 1000000); //int forceDampingFactor = 100;
+SimParamInt forceDampingFactor(100, 0, 1000000);
     // Default: 100
     // Applies to the repulsive force that keeps cells apart
     // Smaller values increase the strength of repulsive force
@@ -228,7 +224,7 @@ std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
-    {"stickiness", "2*x"}, {"mutationRate", "x/100"},
+    {"stickiness", "2*x"}, {"mutationRate", "0"}, //"x/100"},
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
     {"attack", "20*x/size/size"},
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}

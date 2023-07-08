@@ -70,14 +70,14 @@ void SDL_draw_frame(){
 
     draw_texture(p_D_Symbol, ds, 4*dsSymVert + ds, (int)symbolWidth*5, (int)symbolHeight*5);
 
-    draw_user_interface();
+    draw_user_interface(pAlives.size());
     #else
     //SDL_RenderClear(P_RENDERER);
     draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();
     for(auto pCell : pDeads) pCell->draw_cell();
-    draw_user_interface();
+    draw_user_interface(pAlives.size());
     #endif
     if(simState != SIM_STATE_SKIP_FRAMES) enforce_frame_rate(frameStart, FRAME_DELAY);
     SDL_RenderPresent(P_RENDERER);
@@ -240,6 +240,7 @@ void init_sim(){
     randomly_place_new_cells(initNumCells.val);
     simState = SIM_STATE_STEP_FRAMES;
     frameStart = SDL_GetTicks();
+    frameNum = 0;
 }
 // Restart the simulation
 void restart_sim(){
@@ -280,7 +281,7 @@ void assign_cells_to_correct_regions(){
 }
 
 // Repeat this function each frame. Return the frame number
-int do_frame(int frameNum, bool doCellDecisions = true){
+int do_frame(bool doCellDecisions = true){
     if(doCellDecisions){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
@@ -336,7 +337,7 @@ int do_frame(int frameNum, bool doCellDecisions = true){
     return ++frameNum;
 }
 
-void do_sim_iteration(int& frameNum, bool doCellDecisions = true){
+void do_sim_iteration(bool doCellDecisions = true){
     switch(simState){
         case SIM_STATE_QUIT:
         exit_sim();
@@ -351,8 +352,6 @@ void do_sim_iteration(int& frameNum, bool doCellDecisions = true){
         restart_sim();
         break;
         default:
-        frameNum = do_frame(frameNum, doCellDecisions);
-        //SDL_draw_frame();
-        //SDL_event_handler();
+        frameNum = do_frame(doCellDecisions);
     }
 }

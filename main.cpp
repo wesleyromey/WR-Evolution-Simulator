@@ -27,9 +27,8 @@ int main(int argc, char* argv[]){
     //test_cur_tex();
     redraw_existing_tex();
 #else
-    int frameNum = 0;
     while(simState != SIM_STATE_QUIT){
-        do_sim_iteration(frameNum);
+        do_sim_iteration();
     }
 #endif
     if(simState == SIM_STATE_QUIT) exit_sim();

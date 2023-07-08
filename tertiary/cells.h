@@ -71,10 +71,12 @@ struct Cell {
     int energyCostPerFrame = 0;
 
     // Bounds
-    int maxEnergy = 10000;
+    int maxEnergy = 10000; // = Const * size
     //  TODO: Multiply this by size
-    int maxMutationRate = 10000;
-    int maxDia = 30;
+    int ubMutationRate = 10000;
+    int lbDia = 2, ubDia = 8;
+    int lbHealth = 1;
+    int lbAttack = 0;
     int maxAttackCooldown = 10;
 
     // Struct-specific methods
@@ -142,8 +144,12 @@ struct Cell {
         else posY = saturate_int(posY, 0, UB_Y);
         assign_self_to_xyRegion();
     }
+    void update_max_energy(){
+        maxEnergy = 5000*size;
+    }
     void update_size(){
         size = PI*dia*dia/4 + 0.5; // size is an int
+        update_max_energy();
     }
     int calc_EAM_sum(){
         int EAM_sum = 0;
@@ -430,9 +436,10 @@ struct Cell {
         assert(uniqueCellNum >= 0);
         while(speedDir < 0) speedDir += 360*100;
         speedDir %= 360;
-        saturate_int(dia, 0, maxDia);
+        saturate_int(dia, lbDia, ubDia);
+        update_size();
         saturate_int(energy, 0, maxEnergy);
-        saturate_int(mutationRate, 0, maxMutationRate);
+        saturate_int(mutationRate, 0, ubMutationRate);
         //cout << "valid cell 2, ";
         while(cloningDirection < 0) cloningDirection += 360*100;
         cloningDirection %= 360;
@@ -441,7 +448,6 @@ struct Cell {
         enforce_valid_xyPos();
         enforce_EAM_constraints();
         enforce_valid_ai();
-        update_size();
         //cout << "valid cell 4, ";
         update_energy_costs();
         //cout << "valid cell 5\n";
@@ -536,7 +542,7 @@ struct Cell {
         enforce_valid_cell();
     }
     void mutate_ai(){
-        float prob = (float)mutationRate / maxMutationRate;
+        float prob = (float)mutationRate / ubMutationRate;
         for(int i = 0; i < aiNetwork.size(); i++){
             for(int j = 0; j < aiNetwork[i].size(); j++){
                 aiNetwork[i][j].mutate_node(mutationRate, prob);
@@ -546,16 +552,16 @@ struct Cell {
     }
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
-        float probDefault = (float)parent->mutationRate / (float)parent->maxMutationRate;
+        float probDefault = (float)parent->mutationRate / (float)parent->ubMutationRate;
         speedWalk = gen_normal_int_dist_special(rng, probDefault, parent->speedWalk, 1, 1, INT_MAX);
         speedRun = gen_normal_int_dist_special(rng, probDefault, parent->speedRun, 1, parent->speedRun + 1, INT_MAX);
         visionDist = gen_normal_int_dist_special(rng, probDefault, parent->visionDist, 1 + mutationRate/50, 0, INT_MAX);
         stickiness = 0;
-        mutationRate = gen_normal_int_dist_special(rng, 1, parent->mutationRate, 5 + parent->mutationRate/50, 0, maxMutationRate);
-        maxHealth = gen_normal_int_dist_special(rng, probDefault, parent->maxHealth, 1 + parent->maxHealth/20, 1, INT_MAX);
+        mutationRate = gen_normal_int_dist_special(rng, 1, parent->mutationRate, 5 + parent->mutationRate/50, 0, ubMutationRate);
+        maxHealth = gen_normal_int_dist_special(rng, probDefault, parent->maxHealth, 1 + parent->maxHealth/20, lbHealth, INT_MAX);
         health = maxHealth;
-        attack = gen_normal_int_dist_special(rng, probDefault, parent->attack, 1 + parent->attack/20, 0, INT_MAX);
-        dia = gen_normal_int_dist_special(rng, probDefault, parent->dia, 1 + parent->dia/20, 1, maxDia);
+        attack = gen_normal_int_dist_special(rng, probDefault, parent->attack, 1 + parent->attack/20, lbAttack, INT_MAX);
+        dia = gen_normal_int_dist_special(rng, probDefault, parent->dia, 1 + parent->dia/20, lbDia, ubDia);
         set_initEnergy(gen_normal_int_dist_special(rng, probDefault, parent->initEnergy, 10 + parent->initEnergy/20, 100, maxEnergy), false);
         update_size();
         for(int i = 0; i < NUM_EAM_ELE; i++){
@@ -585,24 +591,21 @@ struct Cell {
         pSelf = pCell;
         parent = NULL;
         uniqueCellNum = cellNum;
-        speedWalk = gen_uniform_int_dist(rng, 1, 3);
-        speedRun = gen_uniform_int_dist(rng, speedWalk + 1, 3*speedWalk);
+        speedWalk = 1; //gen_uniform_int_dist(rng, 1, 3);
+        speedRun = 2; //gen_uniform_int_dist(rng, speedWalk + 1, 3*speedWalk);
         visionDist = 0;
         stickiness = 0;
         mutationRate = 1000;
-        maxHealth = gen_uniform_int_dist(rng, 1, 3);
+        maxHealth = lbHealth; //gen_uniform_int_dist(rng, lbHealth, 10);
         health = maxHealth;
-        attack = 1;
-        dia = gen_uniform_int_dist(rng, 1, 3);
-        set_initEnergy(gen_uniform_int_dist(rng, 500, 2000), true);
+        attack = lbAttack; //gen_uniform_int_dist(rng, lbAttack, 10);
+        dia = lbDia; //gen_uniform_int_dist(rng, lbDia, ubDia);
+        set_initEnergy(1000); //set_initEnergy(gen_uniform_int_dist(rng, 500, 2000), true);
         update_size();
-        for(int i = 0; i < NUM_EAM_ELE; i++){
-            EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
-        }
+        //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = 33;
+        for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
         enforce_EAM_constraints();
-        for(int i = 0; i < ID_LEN; i++){
-            id[i] = std_uniform_dist(rng) < 0.5;
-        }
+        for(int i = 0; i < ID_LEN; i++) id[i] = 0; //std_uniform_dist(rng) < 0.5;
         init_ai(pAlivesRegions);
         update_energy_costs();
 
@@ -901,7 +904,7 @@ struct Cell {
         //cout << "EAM:     " << EAM[0] << ", " << EAM[1] << ", " << EAM[2] << endl;
         return weights;
     }
-    std::vector<SDL_Texture*> findEAMTex(std::vector<int> EAM_weights){
+    std::vector<SDL_Texture*> findEAMTex(){
         std::vector<SDL_Texture*> ans;
         // First, check if everything is balanced
         int minEAM = EAM[EAM_SUN], maxEAM = EAM[EAM_SUN];
@@ -909,19 +912,23 @@ struct Cell {
             if(EAM[i] < minEAM) minEAM = EAM[i];
             if(EAM[i] > maxEAM) maxEAM = EAM[i];
         }
-        if(maxEAM <= 1.7*minEAM){
+        if(maxEAM <= 2*minEAM){
             ans.push_back(P_EAM_TEX["balanced"]);
             return ans;
         }
-        // Now that we know it is not perfectly "balanced"
-        //  NOTE: there are 4 pixels to color in
-        if(EAM_weights[EAM_GND]) ans.push_back(P_EAM_TEX["g4"]);
-        if(EAM_weights[EAM_SUN]){
-            std::string nextFile = "s" + std::to_string(EAM_weights[EAM_SUN]);
+        int numPixelsInEAMTex = 4;
+        int EAMPerPixel = REQ_EAM_SUM / numPixelsInEAMTex;
+        if(EAM[EAM_GND] < EAMPerPixel) ans.push_back(P_EAM_TEX["balanced"]);
+        else ans.push_back(P_EAM_TEX["g4"]); // Ground (or balanced) will fill in the empty spaces
+        // NOTE: there are 4 pixels to color in
+        // We only have to worry about the sun and predation textures, since the remaining
+        //  is already taken care of
+        if(EAM[EAM_SUN] / EAMPerPixel > 0){
+            std::string nextFile = "s" + std::to_string(EAM[EAM_SUN] / EAMPerPixel);
             ans.push_back(P_EAM_TEX[nextFile]);
         }
-        if(EAM_weights[EAM_CELLS]){
-            std::string nextFile = "c" + std::to_string(EAM_weights[EAM_SUN]);
+        if(EAM[EAM_CELLS] / EAMPerPixel > 0){
+            std::string nextFile = "c" + std::to_string(EAM[EAM_CELLS] / EAMPerPixel);
             ans.push_back(P_EAM_TEX[nextFile]);
         }
         return ans;
@@ -932,15 +939,14 @@ struct Cell {
         int drawSize = DRAW_SCALE_FACTOR*dia;
         draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
-        SDL_Texture* energyTex = findSDLTex(energy, P_CELL_ENERGY_TEX);
+        SDL_Texture* energyTex = findSDLTex(energy * 100 / maxEnergy, P_CELL_ENERGY_TEX);
         draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
         SDL_Texture* healthTex = findSDLTex(100*health/maxHealth, P_CELL_HEALTH_TEX);
         draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
         if(doAttack)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
         if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
-        // EAM
-        std::vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
-        std::vector<SDL_Texture*> EAM_Tex = findEAMTex(EAM_weights);
+        //std::vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
+        std::vector<SDL_Texture*> EAM_Tex = findEAMTex();
         for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
     }
 };
@@ -1069,7 +1075,7 @@ struct DeadCell {
         pOldSelf = NULL;
         pDead->decayPeriod = 20;
         pDead->decayRate = 5;
-        pDead->dia = 1;
+        pDead->dia = 2;
         pDead->energy = 1000;
         pDead->timeSinceDead = 1;
         pDead->randomize_pos(0, UB_X, 0, UB_Y);
@@ -1085,13 +1091,6 @@ struct DeadCell {
                 }
             }
         }
-        /*
-        for(auto pAlive : pAlives){
-            if(pAlive->calc_distance_from_point(posX, posY) <= (float)(dia + pAlive->dia + 0.1) / 2){
-                ans.push_back(pAlive);
-            }
-        }
-        */
         return ans;
     }
     // The dead cells and ground transfer energy to the living cells and / or the environment

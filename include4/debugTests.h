@@ -130,7 +130,7 @@ void testForce(){
         std::cout << "Testing cells with diameter 1";
         // Place the cells in various locations to test the different options
         pAlives[0]->update_pos(30, 30); pAlives[1]->update_pos(30, 30);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         std::cout << "\n";
     }
     if(DO_DIA_10_TESTS){
@@ -140,17 +140,17 @@ void testForce(){
             pAlives[i]->update_size();
         }
         pAlives[0]->update_pos(30, 30); pAlives[1]->update_pos(30, 30);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(51, 50);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(50, 51);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(51, 51);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         pAlives[0]->update_pos(0, 0); pAlives[1]->update_pos(99, 99);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
         pAlives[0]->update_pos(20, 20); pAlives[1]->update_pos(22, 24);
-        print_cell_coords(pAlives); do_frame(0, false); print_cell_coords(pAlives);
+        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
     }
 
     exit_sim();

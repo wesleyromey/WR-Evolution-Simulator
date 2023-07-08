@@ -53,13 +53,13 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
         //cout << "mouseClickType: " << mouseClickType << ", mousePosX: " << mousePosX << ", mousePosY: " << mousePosY << endl;
         if(mouseClickType == 1){
             // Left Click
-            if(mousePosY < UB_Y_PX) break;
+            if(mousePosY < UB_Y_PX || mousePosX >= X_VEC_GUI[3]) break;
             else{
-                if(mousePosX < WINDOW_WIDTH / 3){
+                if(mousePosX < X_VEC_GUI[1]){
                     run_step_frames_press_n(pauseSim, autoAdvanceSim);
-                } else if(mousePosX < 2 * WINDOW_WIDTH / 3){
+                } else if(mousePosX < X_VEC_GUI[2]){
                     run_step_frames_press_a(simState, autoAdvanceSim);
-                } else {
+                } else if(mousePosX < X_VEC_GUI[3]){
                     simState = SIM_STATE_OPTIONS;
                 }
             }
@@ -145,7 +145,6 @@ void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& sim
         }
     }
     #undef deal_with_box_click
-    SDL_draw_frame();
 }
 std::vector<std::pair<string, SimParamInt*>> decide_sim_settings_options_text(){
     std::vector<std::pair<string, SimParamInt*>> simParamsText;
@@ -229,7 +228,6 @@ void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simSta
         }
     }
     #undef deal_with_box_click
-    SDL_draw_frame();
 }
 
 
@@ -245,6 +243,7 @@ void SDL_event_handler(){
         switch(simState){
             case SIM_STATE_MAIN_MENU:
             run_sim_state_main_menu(windowEvent, pauseSim, simState);
+            SDL_draw_frame();
             break;
             case SIM_STATE_STEP_FRAMES:
             run_sim_state_step_frames(windowEvent, pauseSim, autoAdvanceSim, simState);
@@ -257,6 +256,7 @@ void SDL_event_handler(){
             break;
             case SIM_STATE_OPTIONS:
             run_sim_state_options_menu(windowEvent, pauseSim, simState);
+            SDL_draw_frame();
             break;
             case SIM_STATE_QUIT:
             case SIM_STATE_INIT:
