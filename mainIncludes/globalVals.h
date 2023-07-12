@@ -121,7 +121,7 @@ SimParamInt cellLimit(400, 0, 1000);
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
 SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000);
 // Energy accumulation for all ground spaces
-SimParamInt maxGndEnergy(2000, 0, 1000000);
+SimParamInt maxGndEnergy(500, 1, 1000000);
 int simGndEnergy[UB_X][UB_Y];
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 SimParamInt gndEnergyPerIncrease(10, 0, 10000);
@@ -158,8 +158,8 @@ SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
 // Calculate DRAW_SCALE_FACTOR (rounded down to nearest int)
-static const int TARGET_SCREEN_WIDTH = 1540; // Try 1540 for full screen and 770 for half screen
-static const int TARGET_SCREEN_HEIGHT = 700; // Try 800 for full screeen, or 400 for a quarter screen
+static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
+static const int TARGET_SCREEN_HEIGHT = 400; // Try 700 for full screeen, or 400 for a quarter screen
 int tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
 int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
 int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
@@ -172,7 +172,7 @@ static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
-static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
+static const Uint32 FRAME_DELAY = 25; // ms; frame rate is (1000/FRAME_DELAY) fps
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation
@@ -190,7 +190,7 @@ static const int SIM_STATE_RESTART = 6;
 int simState = SIM_STATE_UNDEF;
 
 // The x and y coordinates defining the GUI
-static const std::vector<int> X_VEC_GUI = {0, WINDOW_WIDTH / 3, 2 * WINDOW_WIDTH / 3, 5 * WINDOW_WIDTH / 6, WINDOW_WIDTH};
+static const std::vector<int> X_VEC_GUI = {0, WINDOW_WIDTH / 3, 2 * WINDOW_WIDTH / 3, 51 * WINDOW_WIDTH / 60, WINDOW_WIDTH};
 static const std::vector<int> Y_VEC_GUI = {0, 9 * WINDOW_HEIGHT / 10, 19 * WINDOW_HEIGHT / 20, WINDOW_HEIGHT};
 
 

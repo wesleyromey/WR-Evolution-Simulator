@@ -553,8 +553,10 @@ struct Cell {
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
         float probDefault = (float)parent->mutationRate / (float)parent->ubMutationRate;
-        speedWalk = gen_normal_int_dist_special(rng, probDefault, parent->speedWalk, 1, 1, INT_MAX);
-        speedRun = gen_normal_int_dist_special(rng, probDefault, parent->speedRun, 1, parent->speedRun + 1, INT_MAX);
+        speedWalk = gen_normal_int_dist_special(rng, probDefault, parent->speedWalk, 1, 0, INT_MAX); // lb used to be 1
+        // BUG FIXED: speedRun = ...; Used to have lb = parent->speedRun + 1
+        speedRun = gen_normal_int_dist_special(rng, probDefault, parent->speedRun, 1, speedWalk, INT_MAX);
+        if(speedRun < speedWalk) speedRun = speedWalk;
         visionDist = gen_normal_int_dist_special(rng, probDefault, parent->visionDist, 1 + mutationRate/50, 0, INT_MAX);
         stickiness = 0;
         mutationRate = gen_normal_int_dist_special(rng, 1, parent->mutationRate, 5 + parent->mutationRate/50, 0, ubMutationRate);
@@ -603,7 +605,28 @@ struct Cell {
         set_initEnergy(1000); //set_initEnergy(gen_uniform_int_dist(rng, 500, 2000), true);
         update_size();
         //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = 33;
-        for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
+        int cellType = gen_uniform_int_dist(rng, 0, 3); // Each type corresponds to its element number in EAM. The last type is "balanced"
+        for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = 0;
+        
+        #ifdef PLANT_INIT
+        cellType = EAM_SUN;
+        #endif
+
+        switch(cellType){
+            case EAM_SUN:
+            EAM[EAM_SUN] = 100;
+            break;
+            case EAM_GND:
+            EAM[EAM_GND] = 100;
+            break;
+            case EAM_CELLS:
+            EAM[EAM_CELLS] = 100;
+            attack = 1;
+            break;
+            default:
+            EAM[EAM_SUN] = 33; EAM[EAM_GND] = 34; EAM[EAM_CELLS] = 33;
+        }
+        //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
         enforce_EAM_constraints();
         for(int i = 0; i < ID_LEN; i++) id[i] = 0; //std_uniform_dist(rng) < 0.5;
         init_ai(pAlivesRegions);

@@ -79,7 +79,7 @@ void SDL_draw_frame(){
     for(auto pCell : pDeads) pCell->draw_cell();
     draw_user_interface(pAlives.size());
     #endif
-    if(simState != SIM_STATE_SKIP_FRAMES) enforce_frame_rate(frameStart, FRAME_DELAY);
+    enforce_frame_rate(frameStart, FRAME_DELAY);
     SDL_RenderPresent(P_RENDERER);
 }
 
@@ -282,6 +282,8 @@ void assign_cells_to_correct_regions(){
 
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
+    frameStart = SDL_GetTicks();
+
     if(doCellDecisions){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state

@@ -5,3 +5,7 @@
 //#define DEBUG_FRAMES
 //  Like #define DEBUG, except specifically for frames (MUST draw the textures in the function(s)
 //  devoted to drawing frames)
+
+
+// Determine what types of organisms initially spawn
+//#define PLANT_INIT

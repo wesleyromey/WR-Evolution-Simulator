@@ -25,9 +25,9 @@ void run_step_frames_press_n(bool& pauseSim, unsigned int& autoAdvanceSim){
     autoAdvanceSim = 0;
 }
 
-void run_step_frames_press_a(int& simState, unsigned int& autoAdvanceSim){
+void run_skip_frames(int& simState, unsigned int& autoAdvanceSim, int numFramesToSkip = AUTO_ADVANCE_DEFAULT){
     simState = SIM_STATE_SKIP_FRAMES;
-    autoAdvanceSim = AUTO_ADVANCE_DEFAULT;
+    autoAdvanceSim = numFramesToSkip;
     std::cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
 }
 
@@ -44,8 +44,10 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
             run_step_frames_press_n(pauseSim, autoAdvanceSim);
             break;
             case SDLK_a:
-            run_step_frames_press_a(simState, autoAdvanceSim);
+            run_skip_frames(simState, autoAdvanceSim, AUTO_ADVANCE_DEFAULT);
             break;
+            case SDLK_s:
+            run_skip_frames(simState, autoAdvanceSim, 10*AUTO_ADVANCE_DEFAULT);
         }
         break;
         case SDL_MOUSEBUTTONDOWN:
@@ -58,7 +60,7 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
                 if(mousePosX < X_VEC_GUI[1]){
                     run_step_frames_press_n(pauseSim, autoAdvanceSim);
                 } else if(mousePosX < X_VEC_GUI[2]){
-                    run_step_frames_press_a(simState, autoAdvanceSim);
+                    run_skip_frames(simState, autoAdvanceSim, AUTO_ADVANCE_DEFAULT);
                 } else if(mousePosX < X_VEC_GUI[3]){
                     simState = SIM_STATE_OPTIONS;
                 }

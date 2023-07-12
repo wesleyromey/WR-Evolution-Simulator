@@ -22,6 +22,7 @@ void exit_SDL(){
 }
 
 void enforce_frame_rate(Uint32 frameStart, Uint32 frameDelay){
+    // Deal with frameStart at the start of the frame in a different function
     Uint32 frameTime = SDL_GetTicks() - frameStart;
     if(frameDelay > frameTime) SDL_Delay(frameDelay - frameTime);
 }
