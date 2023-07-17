@@ -890,6 +890,7 @@ struct Cell {
                 }
             }
         }
+        // TODO: ensure there is surplus energy beyond energyCostToClone
         if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit.val){
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();

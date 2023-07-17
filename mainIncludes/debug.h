@@ -9,3 +9,7 @@
 
 // Determine what types of organisms initially spawn
 //#define PLANT_INIT
+
+
+// Draw video frames
+#define DO_VIDEO

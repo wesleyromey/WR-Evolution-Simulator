@@ -5,3 +5,4 @@
 
 #include "sim.h"
 #include "debugTests.h"
+#include "videoFrames.h"

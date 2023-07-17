@@ -228,6 +228,8 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
     {"attack", "20*x/size/size"},
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
+        // TODO: There may be a bug here, since overcrowdingEnergyCoef is now
+        //  a struct whose actual value is contained in overcrowdingEnergyCoef.val
 };
 
 /*

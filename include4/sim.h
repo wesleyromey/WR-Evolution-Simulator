@@ -4,6 +4,7 @@
 #endif
 #define SIM_H
 
+
 // This file determines what objects and cells are in the simulation initially
 // This file contains global simulation settings
 // This file enforces rules such as teleportation (for portals and map wrap-arounds)
@@ -17,6 +18,9 @@ std::map<std::pair<int,int>, std::vector<Cell*>> pAlivesRegions;
 std::vector<DeadCell*> pDeads; // All cells that are currently dead
 std::map<std::pair<int,int>, std::vector<DeadCell*>> pDeadsRegions;
 //  pDeads separated by region
+
+
+void do_video1();
 
 
 // Render the background, cell positions, etc using SDL
@@ -335,6 +339,9 @@ int do_frame(bool doCellDecisions = true){
 
     // Rendering and User Interactions
     SDL_draw_frame();
+#ifdef DO_VIDEO
+    do_video1();
+#endif
     SDL_event_handler();
     return ++frameNum;
 }

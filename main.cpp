@@ -26,6 +26,7 @@ int main(int argc, char* argv[]){
     //test_new_tex();
     //test_cur_tex();
     redraw_existing_tex();
+    //do_video1();
 #else
     while(simState != SIM_STATE_QUIT){
         do_sim_iteration();
