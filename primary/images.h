@@ -1014,7 +1014,11 @@ SDL_Texture* pHealth100pctTex = convArrToSDLTex(_health100pctImg, 10, 10);
 
 // Symbols (These are all 32 x 15 characters)
 #define W 0xff, 0xff, 0xff, 0xff
+#ifdef DO_VIDEO
+#define X W
+#else
 #define X _BLK
+#endif
 #define _ ___0
 
 // DIGITS (NUMERIC SYMBOLS)
@@ -2687,6 +2691,41 @@ unsigned char _exclamationMarkSymbol[] = {
   _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
 };
 SDL_Texture* pExclamationMarkSymbol = convArrToSDLTex(_exclamationMarkSymbol, 15, 32);
+unsigned char _apostropheSymbol[] = {
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,X,X,X,X,X,_,_,_,_,_,
+  _,_,_,_,_,_,X,X,X,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+  _,_,_,_,_,_,_,_,_,_,_,_,_,_,_,
+};
+SDL_Texture* pApostropheSymbol = convArrToSDLTex(_apostropheSymbol, 15, 32);
 
 
 
@@ -2959,6 +2998,8 @@ SDL_Texture* retrieve_symbol_texture(char symbol){
     return pPeriodSymbol;
     case '!':
     return pExclamationMarkSymbol;
+    case '\'':
+    return pApostropheSymbol;
 
     case '\n':
     case ' ':

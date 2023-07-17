@@ -94,9 +94,9 @@ void deallocate_cell_memory(Cell* pCell) {
     delete pCell;
 }
 
-void init_sim_gnd_energy(){
+void init_sim_gnd_energy(int initGndEnergy = -1){
     // We are dealing with global variables
-    int initGndEnergy = maxGndEnergy.val / 2;
+    if(initGndEnergy < 0) initGndEnergy = maxGndEnergy.val / 2;
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] = initGndEnergy;
@@ -159,7 +159,7 @@ void do_day_night_cycle(){
 void init_sim_global_vals(){
     dayNightCycleTime = 0;
     do_day_night_cycle();
-    init_sim_gnd_energy();
+    init_sim_gnd_energy(maxGndEnergy.val / 2);
 }
 
 void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
@@ -287,40 +287,40 @@ void assign_cells_to_correct_regions(){
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
     frameStart = SDL_GetTicks();
+    assign_cells_to_correct_regions();
 
-    if(doCellDecisions){
+    if(doCellDecisions && doCellAi){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
-        assign_cells_to_correct_regions();
         for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
     }
     
     // Cells move to their target positions based on their speed
-    assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_target_pos();
+    assign_cells_to_correct_regions();
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
-    assign_cells_to_correct_regions();
-    for(auto pCell : pAlives){
-        pCell->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
+    if(doCellAi){
+        for(auto pCell : pAlives){
+            pCell->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
+        }
+        assign_cells_to_correct_regions();
     }
 
     // Cells move to new positions if enough force is applied
-    assign_cells_to_correct_regions();
     for(auto pCell : pAlives) pCell->update_forces(pAlives, pAlivesRegions);
     for(auto pCell : pAlives) pCell->apply_forces();
-    //cout << "pAlives[0]->energy: " << pAlives[0]->energy << endl;
+    assign_cells_to_correct_regions();
 
-    // Increase cell energy based on EAM
     do_day_night_cycle();
     update_dayNightCycleTime();
-    assign_cells_to_correct_regions();
-    for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives, pAlivesRegions);
-    for(auto pCell : pDeads) pCell->do_energy_decay(pAlives, pAlivesRegions);
-
-    // Consume energy each 'tick'
-    for(auto pCell : pAlives) pCell->consume_energy_per_frame();
+    
+    if(automateEnergy){
+        for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives, pAlivesRegions);
+        for(auto pCell : pDeads) pCell->do_energy_decay(pAlives, pAlivesRegions);
+        for(auto pCell : pAlives) pCell->consume_energy_per_frame();
+    }
 
     // Kill all cells which meet at least one of the conditions for dying
     for(int i = pAlives.size() - 1; i >= 0; i--) {
@@ -333,14 +333,16 @@ int do_frame(bool doCellDecisions = true){
     }
 
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
-    if(frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){
+    if(automateEnergy && frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){
         increase_sim_gnd_energy(gndEnergyPerIncrease.val);
     }
 
     // Rendering and User Interactions
-    SDL_draw_frame();
+    assign_cells_to_correct_regions();
 #ifdef DO_VIDEO
     do_video1();
+#else
+    SDL_draw_frame();
 #endif
     SDL_event_handler();
     return ++frameNum;
@@ -352,7 +354,11 @@ void do_sim_iteration(bool doCellDecisions = true){
         exit_sim();
         return;
         case SIM_STATE_MAIN_MENU:
+        #ifdef DO_VIDEO
+        simState = SIM_STATE_INIT;
+        #else
         SDL_event_handler();
+        #endif
         break;
         case SIM_STATE_INIT:
         init_sim();

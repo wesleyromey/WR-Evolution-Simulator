@@ -149,7 +149,7 @@ struct Cell {
     }
     void update_size(){
         size = PI*dia*dia/4 + 0.5; // size is an int
-        update_max_energy();
+        if(automateEnergy) update_max_energy();
     }
     int calc_EAM_sum(){
         int EAM_sum = 0;
@@ -341,7 +341,6 @@ struct Cell {
     }
     void set_ai_outputs(int _speedDir, int _cloningDirection, char _speedMode,
             bool _doAttack, bool _doSelfDestruct, bool _doCloning){
-        //enforce_valid_cell();
         int _numAiOutputs = 0;
         assert(0 <= _speedDir && _speedDir < 360);
         speedDir = _speedDir; _numAiOutputs++;
@@ -356,7 +355,6 @@ struct Cell {
         enforce_valid_ai();
     }
     std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> get_ai_outputs(){
-        //enforce_valid_cell();
         std::vector<int> intVec;
         int _numAiOutputs = 0;
         intVec.push_back(speedDir); _numAiOutputs++;
@@ -431,26 +429,26 @@ struct Cell {
     }
     // If the cell isn't valid, change the variables so it is valid.
     // Also, update the dependent variables
-    void enforce_valid_cell(){
-        //cout << "valid cell 1, ";
+    void enforce_valid_cell(bool enforceStats){
         assert(uniqueCellNum >= 0);
         while(speedDir < 0) speedDir += 360*100;
         speedDir %= 360;
-        saturate_int(dia, lbDia, ubDia);
-        update_size();
+        if(enforceStats){
+            saturate_int(dia, lbDia, ubDia);
+            update_size();
+        }
         saturate_int(energy, 0, maxEnergy);
-        saturate_int(mutationRate, 0, ubMutationRate);
-        //cout << "valid cell 2, ";
+        if(enforceStats) saturate_int(mutationRate, 0, ubMutationRate);
         while(cloningDirection < 0) cloningDirection += 360*100;
         cloningDirection %= 360;
         assert(speedMode == IDLE_MODE || speedMode == WALK_MODE || speedMode == RUN_MODE);
-        //cout << "valid cell 3, ";
         enforce_valid_xyPos();
-        enforce_EAM_constraints();
-        enforce_valid_ai();
-        //cout << "valid cell 4, ";
-        update_energy_costs();
-        //cout << "valid cell 5\n";
+        if(enforceStats){
+            // Only run this if the stats were changed
+            enforce_EAM_constraints();
+            enforce_valid_ai();
+            update_energy_costs();
+        }
     }
     void set_int_stats(std::map<std::string, int>& varVals){
         // TODO: Include the ability to set the aiNetwork and nodesPerLayer
@@ -467,6 +465,7 @@ struct Cell {
         if(varVals.count("EAM[EAM_GND]"))   {lenVarVals++; EAM[EAM_GND] = varVals["EAM[EAM_GND]"];}
         if(varVals.count("EAM[EAM_SUN]"))   {lenVarVals++; EAM[EAM_SUN] = varVals["EAM[EAM_SUN]"];}
         if(varVals.count("energy"))         {lenVarVals++; energy = varVals["energy"];}
+        if(varVals.count("maxEnergy"))      {lenVarVals++; maxEnergy = varVals["maxEnergy"];}
         if(varVals.count("health"))         {lenVarVals++; health = varVals["health"];}
         if(varVals.count("maxHealth"))      {lenVarVals++; maxHealth = varVals["maxHealth"];}
         if(varVals.count("mutationRate"))   {lenVarVals++; mutationRate = varVals["mutationRate"];}
@@ -483,7 +482,7 @@ struct Cell {
         assert(lenVarVals == varVals.size());
         
         // Ensure we update all dependent variables
-        enforce_valid_cell();
+        enforce_valid_cell(true);
     }
     void init_ai(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // NOTE: Do NOT use this function until all the inputs are initialized
@@ -525,7 +524,7 @@ struct Cell {
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
-        enforce_valid_ai();
+        //enforce_valid_ai();
         std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
@@ -539,7 +538,7 @@ struct Cell {
         bool _doSelfDestruct = (layerInputs[5] >= 1); // If this condition is too easy to trigger, then cells die too easily
         bool _doCloning = (layerInputs[6] >= 0);
         set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-        enforce_valid_cell();
+        enforce_valid_cell(false);
     }
     void mutate_ai(){
         float prob = (float)mutationRate / ubMutationRate;
@@ -548,7 +547,8 @@ struct Cell {
                 aiNetwork[i][j].mutate_node(mutationRate, prob);
             }
         }
-        enforce_valid_cell();
+        //enforce_valid_cell(true);
+        enforce_valid_ai();
     }
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
@@ -576,7 +576,7 @@ struct Cell {
         mutate_ai();
         update_energy_costs();
 
-        enforce_valid_cell();
+        enforce_valid_cell(true);
     }
     void define_self(Cell* pCell){
         // NOTE: If I push a copy of the cell into a new location, I need to update self
@@ -632,7 +632,7 @@ struct Cell {
         init_ai(pAlivesRegions);
         update_energy_costs();
 
-        enforce_valid_cell();
+        enforce_valid_cell(true);
     }
     // NOTE: The full energy accumulation can only be done after this function is applied to every cell
     //  in the local area.
@@ -674,7 +674,7 @@ struct Cell {
         // Enforce energy constraints
         if(energy > maxEnergy) energy = maxEnergy;
 
-        enforce_valid_cell();
+        enforce_valid_cell(false);
     }
     void randomize_pos(int lbX, int ubX, int lbY, int ubY){
         // lb means lower bound, ub means upper bound,
@@ -710,7 +710,7 @@ struct Cell {
         pClone->attackCooldown = 0;
         //cout << "A cell cloned itself! id = "; for(auto digit : pClone->id) cout << digit; cout << endl;
         if(doMutation) pClone->mutate_stats();
-        enforce_valid_cell();
+        enforce_valid_cell(false);
         return pClone;
     }
     void print_id(){
@@ -839,7 +839,7 @@ struct Cell {
                 }
             }
         }
-        //enforce_valid_cell();
+        //enforce_valid_cell(false);
         return;
     }
     void apply_forces(){
@@ -847,7 +847,7 @@ struct Cell {
         increment_pos(forceX / forceDampingFactor.val, forceY / forceDampingFactor.val);
         forceX = 0;
         forceY = 0;
-        //enforce_valid_cell();
+        //enforce_valid_cell(false);
     }
     bool calc_if_cell_is_dead(){
         // Check if cell should be killed
@@ -871,7 +871,7 @@ struct Cell {
         pAttacked->health -= attack;
         attackCooldown = maxAttackCooldown;
         energy -= energyCostPerUse["attack"];
-        //enforce_valid_cell();
+        enforce_valid_cell(false);
     }
     void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist,
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
@@ -897,7 +897,7 @@ struct Cell {
             pCellsHist.push_back(pCell);
             pAlives.push_back(pCell);
         }
-        enforce_valid_cell();
+        enforce_valid_cell(false);
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;

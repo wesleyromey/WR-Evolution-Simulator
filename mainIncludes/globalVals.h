@@ -82,6 +82,11 @@ struct SimParamInt{
         val = possibleVals[valIndex];
     }
 
+    void correct_valIndex(){
+        while(valIndex < 0) valIndex += possibleVals.size();
+        valIndex %= possibleVals.size();
+    }
+
     void init_standard_possibleVals(int lb, int ub){
         assert(lb <= ub);
         assert(nextPossibleVal.count(lb));
@@ -96,6 +101,12 @@ struct SimParamInt{
         correct_val_and_valIndex();
         lastIncrement = (doIncrease ? 1 : -1);
     }
+
+    void set_val(int newVal){
+        // Disclaimer: This function does NOT ensure the value is valid
+        val = newVal;
+        correct_valIndex();
+    }
 };
 
 
@@ -103,7 +114,7 @@ struct SimParamInt{
 // Global Simulation Parameters
 SimParamInt initNumCells(400, 0, 10000);
 // TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
-static const int UB_X = 60, UB_Y = 40;  // 120, 80
+static const int UB_X = 30, UB_Y = 20;  // 120, 80
 // I split cells into square regions so I only have to compare the positions
 // of nearby cells to calculate forces, crowding, interactions, vision, etc.
 static const int CELL_REGION_SIDE_LEN = 10; //(int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
@@ -176,6 +187,10 @@ static const Uint32 FRAME_DELAY = 25; // ms; frame rate is (1000/FRAME_DELAY) fp
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation
+
+// Manually control cell decisions, frame ticks, etc.
+int doCellAi = true;
+int automateEnergy = true;
 
 // Simulation States: These control the GUI, simulation mode, etc.
 static const int SIM_STATE_UNDEF = -1;
