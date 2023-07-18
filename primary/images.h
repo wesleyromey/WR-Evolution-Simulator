@@ -2836,11 +2836,9 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int heig
     delete pDst;
 }
 
-// TODO: May have introduced a bug here on accident
 void draw_gnd(){
-  int numRows = UB_Y, numCols = UB_X;
-  for(int posX = 0; posX < UB_X; posX++){
-    for(int posY = 0; posY < UB_Y; posY++){
+  for(int posY = 0; posY < simGndEnergy.size(); posY++){
+    for(int posX = 0; posX < simGndEnergy[posY].size(); posX++){
       int drawX = drawScaleFactor*posX;
       int drawY = drawScaleFactor*posY;
       assert(drawX >= 0 && drawY >= 0 && simGndEnergy[posY][posX] >= 0);

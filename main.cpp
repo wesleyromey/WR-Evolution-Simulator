@@ -15,7 +15,6 @@ int main(int argc, char* argv[]){
 #ifdef DO_VIDEO
     automateEnergy = false; enableAutomaticAttack = false; enableAutomaticSelfDestruct = false; enableAutomaticCloning = false;
 #endif
-    //SDL_draw_frame();
     dispIntroMsg();
     simState = SIM_STATE_MAIN_MENU;
 #ifdef DEBUG
@@ -30,7 +29,6 @@ int main(int argc, char* argv[]){
     //test_cur_tex();
     redraw_existing_tex();
 #else
-    cout << "window height: " << WINDOW_HEIGHT << ", window width: " << WINDOW_WIDTH << endl;
     while(simState != SIM_STATE_QUIT){
         do_sim_iteration();
     }

@@ -151,7 +151,7 @@ void simulate_confused_movement(Cell* pCell, float chanceToChangeSpeed = 0.01, f
 // NOTE: This function may stop working properly I update my simulator and
 //  (possibly) create new videos
 void do_video1(){
-    assert(UB_X <= 30 && UB_Y <= 20);
+    ubX.set_val(30); ubY.set_val(20);
     if(frameNum == 0){
         deallocate_all_cells();
         doCellAi = true;
@@ -204,7 +204,6 @@ void do_video1(){
         gen_demo_cells_video1(3,3,4);
     } else if(frameNum <= 3000){
         // pAlives = {plant, worm, predator}
-        //pAlives[1]->posX = frameNum % UB_X; pAlives[1]->posY = 10;
         SDL_draw_frame();
     } else if(frameNum == 3001){
         // This is the last frame for the introduction

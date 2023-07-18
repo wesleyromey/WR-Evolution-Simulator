@@ -121,8 +121,8 @@ void draw_main_menu(std::vector<int>& xVec, std::vector<int>& yVec, std::vector<
 void SDL_draw_frame();
 void run_sim_state_options_menu(SDL_Event& windowEvent, bool& pauseSim, int& simState){
     std::vector<std::pair<int, string>> optionText;
-    #define wfx(fraction) (0 + (WINDOW_WIDTH-0)*fraction)
-    #define wfy(fraction) (0 + (WINDOW_HEIGHT-0)*fraction)
+    #define wfx(fraction) (WINDOW_WIDTH*fraction)
+    #define wfy(fraction) (WINDOW_HEIGHT*fraction)
     optionText.push_back({wfy(0.4), "Continue"});
     optionText.push_back({wfy(0.6), "Restart" });
     optionText.push_back({wfy(0.8), "Quit"    });
@@ -175,6 +175,8 @@ std::vector<std::pair<string, SimParamInt*>> decide_sim_settings_options_text(){
     simParamsText.push_back({"Ground Energy Regeneration", &gndEnergyPerIncrease});
     simParamsText.push_back({"Force Damping Factor", &forceDampingFactor});
     simParamsText.push_back({"Overcrowding energy coefficient", &overcrowdingEnergyCoef});
+    simParamsText.push_back({"Map height", &ubY});
+    simParamsText.push_back({"Map width", &ubX});
     return simParamsText;
 }
 std::vector<int> decide_sim_settings_options_x_coords(std::vector<std::pair<string, SimParamInt*>>& simParamsText){

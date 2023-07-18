@@ -25,6 +25,8 @@ static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have 
 
 // A structure for integer simulation parameters to be held in,
 //  where each simulation parameter contains a list of possible values
+void update_global_params();
+int cellRegionNumUbX = -1, cellRegionNumUbY = -1, drawScaleFactor = -1, ubX_px = -1, ubY_px = -1;
 struct SimParamInt{
     int val;
     int valIndex;
@@ -88,6 +90,7 @@ struct SimParamInt{
         while(valIndex < 0) valIndex += possibleVals.size();
         valIndex %= possibleVals.size();
         val = possibleVals[valIndex];
+        update_global_params();
     }
 
     void correct_valIndex(){
@@ -108,50 +111,35 @@ struct SimParamInt{
         else valIndex--;
         correct_val_and_valIndex();
         lastIncrement = (doIncrease ? 1 : -1);
+        update_global_params();
     }
 
     void set_val(int newVal){
         // Disclaimer: This function does NOT ensure the value is valid
         val = newVal;
         correct_valIndex();
+        update_global_params();
     }
-
-    /*
-    void update_all_global_params(){
-        //if()
-        if(drawScaleFactor != tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY){
-            return;
-        }
-    }
-    */
+    
 };
-
 
 
 // Global Simulation Parameters
 SimParamInt initNumCells(400, 0, 10000);
-// TODO: Ensure the actual window size is constant, but UB_X and UB_Y are free to be changed by the user
-static const int UB_X = 30, UB_Y = 20;  // 120, 80
-// I split cells into square regions so I only have to compare the positions
-// of nearby cells to calculate forces, crowding, interactions, vision, etc.
-static const int CELL_REGION_SIDE_LEN = 10; //(int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
-static const int CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
-// If a region near the bottom or the right side is smaller, then it is absorbed
-// into the neighboring region(s)
-static const int CELL_REGION_NUM_Y = UB_Y / CELL_REGION_SIDE_LEN;
+SimParamInt ubX(30, 1, 400); // 120
+SimParamInt ubY(20, 1, 400); // 80
 // NOTE: The program might not work properly if this is disabled
-static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < UB_X
+static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < ubX.val
 // NOTE: The program might not work properly if this is disabled
-static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < UB_Y
-static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated 
+static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < ubY.val
+static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated - This may be obsolete or confusing
 SimParamInt cellLimit(400, 0, 1000);
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
 SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000);
 // Energy accumulation for all ground spaces
 SimParamInt maxGndEnergy(500, 1, 1000000);
-//int simGndEnergy[UB_X][UB_Y];
-std::vector<std::vector<int>> simGndEnergy; // UB_X * UB_Y
+std::vector<std::vector<int>> simGndEnergy;
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 SimParamInt gndEnergyPerIncrease(10, 0, 10000);
 
@@ -188,13 +176,21 @@ SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
 static const char* WINDOW_TITLE = "Evolution Simulator";
 //static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
 //static const int TARGET_SCREEN_HEIGHT = 400; // Try 700 for full screeen, or 400 for a quarter screen
-static const int WINDOW_WIDTH  = 600;       // DRAW_SCALE_FACTOR * UB_X;          // Try 1540 for full screen and 770 for half screen
-static const int WINDOW_HEIGHT = 450;       // 10 * DRAW_SCALE_FACTOR * UB_Y / 9; // Try 700 for full screeen, or 450 for a quarter screen
-int tmpDrawScaleX = WINDOW_WIDTH / UB_X;    // TARGET_SCREEN_WIDTH / UB_X;
-int tmpDrawScaleY = WINDOW_HEIGHT / UB_Y;   // TARGET_SCREEN_HEIGHT / UB_Y;
-int drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
-int ubX_px = UB_X * drawScaleFactor;
-int ubY_px = UB_Y * drawScaleFactor;
+static const int WINDOW_WIDTH  = 600;       // Try 1540 for full screen and 770 for half screen
+static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 for a quarter screen
+// I split cells into square regions so I only have to compare the positions
+//  of nearby cells to calculate forces, crowding, interactions, vision, etc.
+// If a region near the bottom or the right side is smaller, then it is absorbed
+//  into the neighboring region(s)
+static const int CELL_REGION_SIDE_LEN = 10;
+//update_global_params(cellRegionNumUbX, cellRegionNumUbY, drawScaleFactor, ubX_px, ubY_px);
+//int cellRegionNumUbX = ubX.val / CELL_REGION_SIDE_LEN;
+//int cellRegionNumUbY = ubY.val / CELL_REGION_SIDE_LEN;
+//int tmpDrawScaleX = WINDOW_WIDTH / ubX.val;
+//int tmpDrawScaleY = WINDOW_HEIGHT / ubY.val;
+//int drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
+//int ubX_px = ubX.val * drawScaleFactor;
+//int ubY_px = ubY.val * drawScaleFactor;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
@@ -265,27 +261,23 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
         //  a struct whose actual value is contained in overcrowdingEnergyCoef.val
 };
 
-/*
-// When the global parameters are changed, dependent global parameters also change
-int saturate_int(int num, int lb, int ub);
-int pow_int(int root, int exponent);
-void update_global_params(){
-    // UB_X and UB_Y
-    //CELL_REGION_SIDE_LEN = (int)(sqrt(sqrt(UB_X*UB_X + UB_Y*UB_Y)));
-    //CELL_REGION_NUM_X = UB_X / CELL_REGION_SIDE_LEN;
-    //CELL_REGION_NUM_Y = UB_Y / CELL_REGION_SIDE_LEN;
 
-    // Draw scale (related to UB_X and UB_Y)
-    //tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
-    //tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
+// When the global parameters are changed, dependent global parameters also change
+int min_int(int num1, int num2);
+void update_global_params(){
+    // If a region near the bottom or the right side is smaller, then it is absorbed
+    //  into the neighboring region(s)
+    if(ubX.val <= 0 || ubY.val <= 0) return;
+    cellRegionNumUbX = ubX.val / CELL_REGION_SIDE_LEN;
+    cellRegionNumUbY = ubY.val / CELL_REGION_SIDE_LEN;
+    //int tmpDrawScaleX = WINDOW_WIDTH / ubX.val;
+    //int tmpDrawScaleY = 9 * WINDOW_HEIGHT / ubY.val / 10;
+    drawScaleFactor = min_int(WINDOW_WIDTH / ubX.val, 9 * WINDOW_HEIGHT / 10 / ubY.val);
     //drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
-    //static const int WINDOW_WIDTH  = drawScaleFactor*UB_X;
-    //static const int WINDOW_HEIGHT = 10 * drawScaleFactor*UB_Y / 9;
-    //static const int UB_X_PX = UB_X * drawScaleFactor;
-    //static const int UB_Y_PX = UB_Y * drawScaleFactor;
+    ubX_px = ubX.val * drawScaleFactor;
+    ubY_px = ubY.val * drawScaleFactor;
     return;
 }
-*/
 // The values of certain global parameters are restricted by others
 //  NOTE: This is updated so that the SimIntParam variable automatically does this
 void enforce_global_param_constraints(){

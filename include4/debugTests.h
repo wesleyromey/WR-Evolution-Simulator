@@ -109,8 +109,8 @@ void testAi(){
 
 // A function devoted to testing the application of forces to a cell
 void testForce(){
-    std::cout << "Need UB_X = 100 and UB_Y = 100 ";
-    assert(UB_X == 100 && UB_Y == 100);
+    std::cout << "Need ubX.val = 100 and ubY.val = 100 ";
+    ubX.set_val(100); ubY.set_val(100);
     std::cout << "(done!)\n";
     std::cout << "forceDampingFactor.val: " << forceDampingFactor.val << "\n\n";
 
@@ -269,7 +269,7 @@ void test_new_tex(){
     simState = SIM_STATE_STEP_FRAMES;
     while(simState != SIM_STATE_QUIT){
         ++row; ++col;
-        row %= UB_X; col %= UB_Y;
+        row %= ubX.val; col %= ubY.val;
         int drawX = drawScaleFactor*row;
         int drawY = drawScaleFactor*col;
         int drawSize = drawScaleFactor*10;
@@ -299,7 +299,7 @@ void test_cur_tex(){
     randomly_place_new_cells(10);
     while(simState != SIM_STATE_QUIT){
         ++row; ++col;
-        row %= UB_X; col %= UB_Y;
+        row %= ubX.val; col %= ubY.val;
         int drawX = drawScaleFactor*row;
         int drawY = drawScaleFactor*col;
         int drawSize = drawScaleFactor*2;

@@ -109,10 +109,10 @@ struct Cell {
             {xReg-1, yReg-1}, {xReg-1, yReg+1}, {xReg+1, yReg-1}, {xReg+1, yReg+1}
         };
         for(int i = 0; i < neighboringRegions.size(); i++){
-            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += CELL_REGION_NUM_X;
-            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += CELL_REGION_NUM_Y;
-            neighboringRegions[i].first %= CELL_REGION_NUM_X;
-            neighboringRegions[i].second %= CELL_REGION_NUM_Y;
+            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += cellRegionNumUbX;
+            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += cellRegionNumUbY;
+            neighboringRegions[i].first %= cellRegionNumUbX;
+            neighboringRegions[i].second %= cellRegionNumUbY;
         }
         return neighboringRegions;
     }
@@ -120,8 +120,8 @@ struct Cell {
     //  so a separate function needs to be run to organize the cells into
     //  region-based lists
     void assign_self_to_xyRegion(){
-        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_X-1);
-        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_Y-1);
+        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, cellRegionNumUbX-1);
+        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, cellRegionNumUbY-1);
     }
     void teleport_self(int target_x, int target_y){
         posX = target_x;
@@ -129,20 +129,20 @@ struct Cell {
         enforce_valid_xyPos();
     }
     void enforce_wrap_around_x(){
-        while(posX < 0) posX += UB_X;
-        posX %= UB_X;
+        while(posX < 0) posX += ubX.val;
+        posX %= ubX.val;
         assign_self_to_xyRegion();
     }
     void enforce_wrap_around_y(){
-        while(posY < 0) posY += UB_Y;
-        posY %= UB_Y;
+        while(posY < 0) posY += ubY.val;
+        posY %= ubY.val;
         assign_self_to_xyRegion();
     }
     void enforce_valid_xyPos(){
         if(WRAP_AROUND_X) enforce_wrap_around_x();
-        else posX = saturate_int(posX, 0, UB_X);
+        else posX = saturate_int(posX, 0, ubX.val);
         if(WRAP_AROUND_Y) enforce_wrap_around_y();
-        else posY = saturate_int(posY, 0, UB_Y);
+        else posY = saturate_int(posY, 0, ubY.val);
         assign_self_to_xyRegion();
     }
     void update_max_energy(){
@@ -206,14 +206,13 @@ struct Cell {
         return val;
     }
     // Only consider the nearest cells within the cell's field of view
-    //  Return the bounds of the regions (lbX, ubX, lbY, ubY)
     std::vector<Cell*> get_nearest_cells(int maxNumCellsToReturn,
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // visionDist: The distance the cell can see
         int xReg = xyRegion.first, yReg = xyRegion.second;
         int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
-        int lbX = posX - visionDist, ubX = posX + visionDist;
-        int lbY = posY - visionDist, ubY = posY + visionDist;
+        //int _lbX = posX - visionDist, _ubX = posX + visionDist;
+        //int _lbY = posY - visionDist, _ubY = posY + visionDist;
         
         // A region counts as too far if it its nearest point is out of range
         int visionDist_NumRegX = visionDist / reg_dX + 1;
@@ -682,11 +681,11 @@ struct Cell {
 
         enforce_valid_cell(false);
     }
-    void randomize_pos(int lbX, int ubX, int lbY, int ubY){
+    void randomize_pos(int _lbX, int _ubX, int _lbY, int _ubY){
         // lb means lower bound, ub means upper bound,
         // X means x-coordinate, Y means y-coordinate
-        posX = gen_uniform_int_dist(rng, lbX, ubX);
-        posY = gen_uniform_int_dist(rng, lbY, ubY);
+        posX = gen_uniform_int_dist(rng, _lbX, _ubX);
+        posY = gen_uniform_int_dist(rng, _lbY, _ubY);
         enforce_valid_xyPos();
     }
     Cell* clone_self(int cellNum, int targetCloningDir = -1, bool randomizeCloningDir = false, bool doMutation = true){
@@ -806,11 +805,11 @@ struct Cell {
                 int dX = pCell->posX - posX, dY = pCell->posY - posY;
                 assert(WRAP_AROUND_X && WRAP_AROUND_Y);
                 if (WRAP_AROUND_X) {
-                    int dX2 = (UB_X - abs(dX)) * -sign(dX); // Result has opposite sign vs dX
+                    int dX2 = (ubX.val - abs(dX)) * -sign(dX); // Result has opposite sign vs dX
                     dX = (abs(dX) < abs(dX2) ? dX : dX2);
                 }
                 if (WRAP_AROUND_Y) {
-                    int dY2 = (UB_Y - abs(dY)) * -sign(dY); // Result has opposite sign vs dX
+                    int dY2 = (ubY.val - abs(dY)) * -sign(dY); // Result has opposite sign vs dX
                     dY = (abs(dY) < abs(dY2) ? dY : dY2);
                 }
                 int dist = sqrt(dX*dX + dY*dY) + 0.5;
@@ -861,14 +860,14 @@ struct Cell {
         return (health <= 0 || energy <= 0 || doSelfDestruct);
     }
     float calc_distance_from_point(int xCoord, int yCoord){
-        // Assume -UB_X < posX and -UB_Y < posY
+        // Assume -ubX.val < posX and -ubY.val < posY
         int xDist = xCoord - posX;
-        if(WRAP_AROUND_X && abs(xDist) > abs(xCoord + UB_X - posX)){
-            xDist = xCoord + UB_X - posX;
+        if(WRAP_AROUND_X && abs(xDist) > abs(xCoord + ubX.val - posX)){
+            xDist = xCoord + ubX.val - posX;
         }
         int yDist = yCoord - posY;
-        if(WRAP_AROUND_Y && abs(yDist) > abs(yCoord + UB_Y - posY)){
-            yDist = yCoord + UB_Y - posY;
+        if(WRAP_AROUND_Y && abs(yDist) > abs(yCoord + ubY.val - posY)){
+            yDist = yCoord + ubY.val - posY;
         }
         float ans = std::sqrt(xDist * xDist + yDist * yDist);
         return ans;
@@ -1033,8 +1032,8 @@ struct DeadCell {
     //  so a separate function needs to be run to organize the cells into
     //  region-based lists
     void assign_self_to_xyRegion(){
-        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_X-1);
-        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, CELL_REGION_NUM_Y-1);
+        xyRegion.first = saturate_int(posX / CELL_REGION_SIDE_LEN, 0, cellRegionNumUbX-1);
+        xyRegion.second = saturate_int(posY / CELL_REGION_SIDE_LEN, 0, cellRegionNumUbY-1);
     }
     std::vector<std::pair<int, int>> get_neighboring_xyRegions(){
         int xReg = xyRegion.first, yReg = xyRegion.second;
@@ -1044,28 +1043,28 @@ struct DeadCell {
             {xReg-1, yReg-1}, {xReg-1, yReg+1}, {xReg+1, yReg-1}, {xReg+1, yReg+1}
         };
         for(int i = 0; i < neighboringRegions.size(); i++){
-            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += CELL_REGION_NUM_X;
-            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += CELL_REGION_NUM_Y;
-            neighboringRegions[i].first %= CELL_REGION_NUM_X;
-            neighboringRegions[i].second %= CELL_REGION_NUM_Y;
+            while(neighboringRegions[i].first < 0) neighboringRegions[i].first += cellRegionNumUbX;
+            while(neighboringRegions[i].second < 0) neighboringRegions[i].second += cellRegionNumUbY;
+            neighboringRegions[i].first %= cellRegionNumUbX;
+            neighboringRegions[i].second %= cellRegionNumUbY;
         }
         return neighboringRegions;
     }
     void enforce_wrap_around_x(){
-        while(posX < 0) posX += UB_X;
-        posX %= UB_X;
+        while(posX < 0) posX += ubX.val;
+        posX %= ubX.val;
         assign_self_to_xyRegion();
     }
     void enforce_wrap_around_y(){
-        while(posY < 0) posY += UB_Y;
-        posY %= UB_Y;
+        while(posY < 0) posY += ubY.val;
+        posY %= ubY.val;
         assign_self_to_xyRegion();
     }
     void enforce_valid_xyPos(){
         if(WRAP_AROUND_X) enforce_wrap_around_x();
-        else posX = saturate_int(posX, 0, UB_X);
+        else posX = saturate_int(posX, 0, ubX.val);
         if(WRAP_AROUND_Y) enforce_wrap_around_y();
-        else saturate_int(posY, 0, UB_Y);
+        else saturate_int(posY, 0, ubY.val);
         assign_self_to_xyRegion();
     }
     void enforce_valid_cell(){
@@ -1109,7 +1108,7 @@ struct DeadCell {
         pDead->dia = 2;
         pDead->energy = 1000;
         pDead->timeSinceDead = 1;
-        pDead->randomize_pos(0, UB_X, 0, UB_Y);
+        pDead->randomize_pos(0, ubX.val, 0, ubY.val);
     }
     std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives,
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
@@ -1157,11 +1156,11 @@ struct DeadCell {
 
         enforce_valid_cell();
     }
-    void randomize_pos(int lbX, int ubX, int lbY, int ubY){
+    void randomize_pos(int _lbX, int _ubX, int _lbY, int _ubY){
         // lb means lower bound, ub means upper bound,
         // X means x-coordinate, Y means y-coordinate
-        posX = gen_uniform_int_dist(rng, lbX, ubX);
-        posY = gen_uniform_int_dist(rng, lbY, ubY);
+        posX = gen_uniform_int_dist(rng, _lbX, _ubX);
+        posY = gen_uniform_int_dist(rng, _lbY, _ubY);
         enforce_valid_xyPos();
     }
     void print_pos(std::string startStr = "", bool newLine = true){

@@ -94,43 +94,19 @@ void deallocate_cell_memory(Cell* pCell) {
     delete pCell;
 }
 
-void init_sim_gnd_energy(int initGndEnergy = -1){
-    // We are dealing with global variables
-    cout << "init sim gnd energy\n";
+void init_sim_gnd_energy(int initGndEnergy){
     if(initGndEnergy < 0) initGndEnergy = maxGndEnergy.val / 2;
     simGndEnergy.clear();
-    std::vector<int> simGndEnergyRow(UB_X);
-    for(int posX = 0; posX < UB_X; posX++) simGndEnergyRow[posX] = initGndEnergy;
-    for(int posY = 0; posY < UB_Y; posY++) simGndEnergy.push_back(simGndEnergyRow);
-    //std::for_each(simGndEnergyRow.begin(), simGndEnergyRow.end(), printVec); cout << endl;
-    //std::for_each(simGndEnergy.begin(), simGndEnergy.end(), print2dVec);
-    /*
-    for(int posX = 0; posX < UB_X; posX++){
-        cout << "  ";
-        for(int posY = 0; posY < UB_Y; posY++){
-            cout << simGndEnergy[posY][posX] << " ";
-        }
-        cout << endl;
-    }
-    cout << "  done!\n";
-    */
-    /*
-    for(int x = 0; x < UB_X; x++){
-        for(int y = 0; y < UB_Y; y++){
-            simGndEnergy[x][y] = initGndEnergy;
-        }
-    }
-    */
+    std::vector<int> simGndEnergyRow(ubX.val);
+    for(int posX = 0; posX < ubX.val; posX++) simGndEnergyRow[posX] = initGndEnergy;
+    for(int posY = 0; posY < ubY.val; posY++) simGndEnergy.push_back(simGndEnergyRow);
 }
 
 void increase_sim_gnd_energy(int increaseAmt){
-    for(int posY = 0; posY < UB_Y; posY++){
-        for(int posX = 0; posX < UB_X; posX++){
+    for(int posY = 0; posY < simGndEnergy.size(); posY++){
+        for(int posX = 0; posX < simGndEnergy[posY].size(); posX++){
             simGndEnergy[posY][posX] += increaseAmt;
             simGndEnergy[posY][posX] = min_int(simGndEnergy[posY][posX], maxGndEnergy.val);
-            //if(simGndEnergy[posY][posX] > maxGndEnergy.val){
-            //    simGndEnergy[posY][posX] = maxGndEnergy.val;
-            //}
         }
     }
 }
@@ -178,6 +154,7 @@ void do_day_night_cycle(){
 // MUST run this before completing frames if the simulation is to run properly
 void init_sim_global_vals(){
     dayNightCycleTime = 0;
+    update_global_params();
     do_day_night_cycle();
     init_sim_gnd_energy(maxGndEnergy.val / 2);
 }
@@ -186,7 +163,7 @@ void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int clonin
     if(pParent == NULL){
         Cell *pCell = new Cell;
         pCell->gen_stats_random(pCellsHist.size(), pAlivesRegions, pCell);
-        pCell->randomize_pos(0, UB_X-1, 0, UB_Y-1);
+        pCell->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
     } else {
@@ -211,7 +188,7 @@ void gen_dead_cell(Cell* pAlive = NULL, int i_pAlive = -1) {
     if(pAlive == NULL){
         DeadCell* pDead = new DeadCell;
         pDead->gen_stats_random(pDead);
-        pDead->randomize_pos(0, UB_X-1, 0, UB_Y-1);
+        pDead->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
         pDeads.push_back(pDead);
     } else {
         kill_cell(pAlive, i_pAlive);
@@ -249,6 +226,7 @@ void deallocate_all_cells(){
 // Initialize the simulation
 void init_sim(){
     assert(simState == SIM_STATE_INIT);
+    update_global_params();
     init_sim_global_vals();
     randomly_place_new_cells(initNumCells.val);
     simState = SIM_STATE_STEP_FRAMES;
@@ -274,8 +252,8 @@ int exit_sim(){
 
 void assign_cells_to_correct_regions(){
     // Clear pAlivesRegions and pDeadsRegions
-    for(int _x = 0; _x < CELL_REGION_NUM_X; _x++){
-        for(int _y = 0; _y < CELL_REGION_NUM_Y; _y++){
+    for(int _x = 0; _x < cellRegionNumUbX; _x++){
+        for(int _y = 0; _y < cellRegionNumUbY; _y++){
             pAlivesRegions[{_x, _y}] = {};
             pDeadsRegions[{_x, _y}] = {};
         }
@@ -367,7 +345,6 @@ void do_sim_iteration(bool doCellDecisions = true){
         #endif
         break;
         case SIM_STATE_INIT:
-        cout << "init sim\n";
         init_sim();
         break;
         case SIM_STATE_RESTART:
