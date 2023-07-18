@@ -2836,16 +2836,17 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int heig
     delete pDst;
 }
 
+// TODO: May have introduced a bug here on accident
 void draw_gnd(){
-  int numRows = UB_X, numCols = UB_Y;
-  for(int row = 0; row < numRows; row++){
-    for(int col = 0; col < numCols; col++){
-      int drawX = DRAW_SCALE_FACTOR*row;
-      int drawY = DRAW_SCALE_FACTOR*col;
-      int drawSize = DRAW_SCALE_FACTOR;
-      assert(drawX >= 0 && drawY >= 0 && simGndEnergy[row][col] >= 0);
-      SDL_Texture* pTexture = findSDLTex(100 * simGndEnergy[row][col] / maxGndEnergy.val, P_GND_TEX); // Divide by 0 error
-      draw_texture(pTexture, drawX, drawY, drawSize, drawSize);
+  int numRows = UB_Y, numCols = UB_X;
+  for(int posX = 0; posX < UB_X; posX++){
+    for(int posY = 0; posY < UB_Y; posY++){
+      int drawX = drawScaleFactor*posX;
+      int drawY = drawScaleFactor*posY;
+      assert(drawX >= 0 && drawY >= 0 && simGndEnergy[posY][posX] >= 0);
+      SDL_Texture* pTexture = findSDLTex(0, P_GND_TEX);
+      if(maxGndEnergy.val > 0) pTexture = findSDLTex(100 * simGndEnergy[posY][posX] / maxGndEnergy.val, P_GND_TEX);
+      draw_texture(pTexture, drawX, drawY, drawScaleFactor, drawScaleFactor);
     }
   }
 }
@@ -2868,7 +2869,7 @@ void draw_bkgnd(int energyFromSunPerSec){
 
   // Create the texture using the calculated RGB values
   SDL_SetRenderDrawColor(P_RENDERER, red, grn, blue, SDL_ALPHA_OPAQUE);
-  SDL_Rect bkgnd = {0, 0, UB_X_PX, UB_Y_PX};
+  SDL_Rect bkgnd = {0, 0, ubX_px, ubY_px};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);
   SDL_RenderFillRect(P_RENDERER, &bkgnd);
 }

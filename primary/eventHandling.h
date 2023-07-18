@@ -55,7 +55,7 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
         //cout << "mouseClickType: " << mouseClickType << ", mousePosX: " << mousePosX << ", mousePosY: " << mousePosY << endl;
         if(mouseClickType == 1){
             // Left Click
-            if(mousePosY < UB_Y_PX || mousePosX >= X_VEC_GUI[3]) break;
+            if(mousePosY < ubY_px || mousePosX >= X_VEC_GUI[3]) break;
             else{
                 if(mousePosX < X_VEC_GUI[1]){
                     run_step_frames_press_n(pauseSim, autoAdvanceSim);
@@ -245,7 +245,7 @@ void SDL_event_handler(){
         switch(simState){
             case SIM_STATE_MAIN_MENU:
             run_sim_state_main_menu(windowEvent, pauseSim, simState);
-            SDL_draw_frame();
+            //SDL_draw_frame();
             break;
             case SIM_STATE_STEP_FRAMES:
             run_sim_state_step_frames(windowEvent, pauseSim, autoAdvanceSim, simState);

@@ -270,9 +270,9 @@ void test_new_tex(){
     while(simState != SIM_STATE_QUIT){
         ++row; ++col;
         row %= UB_X; col %= UB_Y;
-        int drawX = DRAW_SCALE_FACTOR*row;
-        int drawY = DRAW_SCALE_FACTOR*col;
-        int drawSize = DRAW_SCALE_FACTOR*10;
+        int drawX = drawScaleFactor*row;
+        int drawY = drawScaleFactor*col;
+        int drawSize = drawScaleFactor*10;
         SDL_RenderClear(P_RENDERER);
         draw_bkgnd(1000);
         draw_texture(pBlackTex3, drawX, drawY, drawSize, drawSize);
@@ -300,9 +300,9 @@ void test_cur_tex(){
     while(simState != SIM_STATE_QUIT){
         ++row; ++col;
         row %= UB_X; col %= UB_Y;
-        int drawX = DRAW_SCALE_FACTOR*row;
-        int drawY = DRAW_SCALE_FACTOR*col;
-        int drawSize = DRAW_SCALE_FACTOR*2;
+        int drawX = drawScaleFactor*row;
+        int drawY = drawScaleFactor*col;
+        int drawSize = drawScaleFactor*2;
         energyFromSunPerSec = 1000;
         SDL_draw_frame();
         SDL_event_handler();
@@ -320,8 +320,8 @@ void redraw_existing_tex(){
 
     // Inputs
     SDL_Texture* pTexture = p_V_Symbol;
-    int xPos = 12*DRAW_SCALE_FACTOR, yPos = 10*DRAW_SCALE_FACTOR;
-    int width = 5*DRAW_SCALE_FACTOR, height = 10*DRAW_SCALE_FACTOR;
+    int xPos = 12*drawScaleFactor, yPos = 10*drawScaleFactor;
+    int width = 5*drawScaleFactor, height = 10*drawScaleFactor;
 
     // Original Function
     SDL_Rect* pDst = new SDL_Rect;

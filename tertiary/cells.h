@@ -40,6 +40,7 @@ struct Cell {
     int attackCooldown = 0; // When this reaches 0, an attack can be done
     
     // Variables intrinsic to the creature's "genome"
+    int speedIdle = 0; // Keep this at 0
     int speedWalk = -1; // The walking speed
     int speedRun = -1; // The running speed
     int visionDist = -1; // How far out the creature can see
@@ -409,12 +410,15 @@ struct Cell {
             {{"x", speedRun}, {"size", size}});
         energyCostPerUse["speedWalk"] = StrExprInt::solve(ENERGY_COST_PER_USE["speed"],
             {{"x", speedWalk}, {"size", size}});
+        energyCostPerUse["speedIdle"] = StrExprInt::solve(ENERGY_COST_PER_USE["speed"],
+            {{"x", speedIdle}, {"size", size}});
         energyCostPerUse["attack"] = StrExprInt::solve(ENERGY_COST_PER_USE["attack"],
             {{"x", attack}, {"size", size}});
     }
     void consume_energy_per_frame(){
         update_energy_costs();
         energy -= energyCostPerFrame;
+        if(speedMode == IDLE_MODE) energy -= energyCostPerUse["speedIdle"] / TICKS_PER_SEC;
         if(speedMode == WALK_MODE) energy -= energyCostPerUse["speedWalk"] / TICKS_PER_SEC;
         if(speedMode == RUN_MODE)  energy -= energyCostPerUse["speedRun"] / TICKS_PER_SEC;
     }
@@ -475,6 +479,7 @@ struct Cell {
         if(varVals.count("speedMode"))      {lenVarVals++; speedMode = varVals["speedMode"];}
         if(varVals.count("speedRun"))       {lenVarVals++; speedRun = varVals["speedRun"];}
         if(varVals.count("speedWalk"))      {lenVarVals++; speedWalk = varVals["speedWalk"];}
+        if(varVals.count("speedIdle"))      {lenVarVals++; speedIdle = varVals["speedIdle"];}
         if(varVals.count("stickiness"))     {lenVarVals++; stickiness = varVals["stickiness"];}
         if(varVals.count("visionDist"))     {lenVarVals++; visionDist = varVals["visionDist"];}
 
@@ -534,9 +539,10 @@ struct Cell {
         int _speedDir = saturate_int((int)layerInputs[0], 0, 359);
         int _cloningDirection = saturate_int((int)layerInputs[2], 0, 359);
         char _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
-        bool _doAttack = (layerInputs[4] >= 0);
-        bool _doSelfDestruct = (layerInputs[5] >= 1); // If this condition is too easy to trigger, then cells die too easily
-        bool _doCloning = (layerInputs[6] >= 0);
+        bool _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
+        bool _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
+        bool _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
+        //if(frameNum > 0) cout << "Enable automatic attack / selfDestruct / cloning: " << enableAutomaticAttack << " / " << enableAutomaticSelfDestruct << " / " << enableAutomaticCloning << endl;
         set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         enforce_valid_cell(false);
     }
@@ -653,12 +659,12 @@ struct Cell {
         //  so it is better to add a pointer to the cell to each applicable ground cell's
         //  list of cells to which it will distribute energy
         enforce_valid_xyPos();
-        if(simGndEnergy[posX][posY] < EAM[EAM_GND]){
-            energy += simGndEnergy[posX][posY];
-            simGndEnergy[posX][posY] = 0;
+        if(simGndEnergy[posY][posX] < EAM[EAM_GND]){
+            energy += simGndEnergy[posY][posX];
+            simGndEnergy[posY][posX] = 0;
         } else {
             energy += EAM[EAM_GND];
-            simGndEnergy[posX][posY] -= EAM[EAM_GND];
+            simGndEnergy[posY][posX] -= EAM[EAM_GND];
         }
         
         // Energy from cells which just died -> Add a pointer to the cell to the list
@@ -724,7 +730,7 @@ struct Cell {
     int get_speed(){
         switch(speedMode){
             case IDLE_MODE:
-            return 0;
+            return speedIdle;
             case WALK_MODE:
             return speedWalk;
             case RUN_MODE:
@@ -892,6 +898,7 @@ struct Cell {
         }
         // TODO: ensure there is surplus energy beyond energyCostToClone
         if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit.val){
+            //cout << ".";
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();
             pCellsHist.push_back(pCell);
@@ -958,16 +965,16 @@ struct Cell {
         return ans;
     }
     void draw_cell(){
-        int drawX = DRAW_SCALE_FACTOR*posX;
-        int drawY = DRAW_SCALE_FACTOR*posY;
-        int drawSize = DRAW_SCALE_FACTOR*dia;
+        int drawX = drawScaleFactor*posX;
+        int drawY = drawScaleFactor*posY;
+        int drawSize = drawScaleFactor*dia;
         draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
         SDL_Texture* energyTex = findSDLTex(energy * 100 / maxEnergy, P_CELL_ENERGY_TEX);
         draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
         SDL_Texture* healthTex = findSDLTex(100*health/maxHealth, P_CELL_HEALTH_TEX);
         draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
-        if(doAttack)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
+        if(doAttack && attack > 0)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
         if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
         //std::vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
         std::vector<SDL_Texture*> EAM_Tex = findEAMTex();
@@ -1182,9 +1189,9 @@ struct DeadCell {
         delete pSelf;
     }
     void draw_cell(){
-        int drawX = DRAW_SCALE_FACTOR*posX;
-        int drawY = DRAW_SCALE_FACTOR*posY;
-        int drawSize = DRAW_SCALE_FACTOR*dia;
+        int drawX = drawScaleFactor*posX;
+        int drawY = drawScaleFactor*posY;
+        int drawSize = drawScaleFactor*dia;
         draw_texture(pDeadCellTex, drawX, drawY, drawSize, drawSize);
     }
 };

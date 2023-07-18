@@ -3,6 +3,14 @@
 //using namespace std;
 using std::cout, std::endl, std::string;
 
+// Use the following function to print vectors and 2d vectors of integers:
+//  std::for_each(vec2d.begin(), vec2d.end(), print2dVec);
+auto printVec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
+auto print2dVec = [](const std::vector<int>& vec) {
+    std::cout << "  ";
+    for(auto val : vec) std::cout << val << " ";
+    std::cout << endl;
+};
 
 // Universal Constants
 static const double PI = 3.141592653589793238462643;
@@ -107,6 +115,15 @@ struct SimParamInt{
         val = newVal;
         correct_valIndex();
     }
+
+    /*
+    void update_all_global_params(){
+        //if()
+        if(drawScaleFactor != tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY){
+            return;
+        }
+    }
+    */
 };
 
 
@@ -133,7 +150,8 @@ SimParamInt cellLimit(400, 0, 1000);
 SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000);
 // Energy accumulation for all ground spaces
 SimParamInt maxGndEnergy(500, 1, 1000000);
-int simGndEnergy[UB_X][UB_Y];
+//int simGndEnergy[UB_X][UB_Y];
+std::vector<std::vector<int>> simGndEnergy; // UB_X * UB_Y
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 SimParamInt gndEnergyPerIncrease(10, 0, 10000);
 
@@ -168,18 +186,15 @@ SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
-// Calculate DRAW_SCALE_FACTOR (rounded down to nearest int)
-static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
-static const int TARGET_SCREEN_HEIGHT = 400; // Try 700 for full screeen, or 400 for a quarter screen
-int tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
-int tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
-int tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
-static const int DRAW_SCALE_FACTOR = tmpDrawScale;
-static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR * UB_X;
-static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR * UB_Y / 9;
-static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
-static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
-static const unsigned char RGB_MIN = 0, RGB_MAX = 255;
+//static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
+//static const int TARGET_SCREEN_HEIGHT = 400; // Try 700 for full screeen, or 400 for a quarter screen
+static const int WINDOW_WIDTH  = 600;       // DRAW_SCALE_FACTOR * UB_X;          // Try 1540 for full screen and 770 for half screen
+static const int WINDOW_HEIGHT = 450;       // 10 * DRAW_SCALE_FACTOR * UB_Y / 9; // Try 700 for full screeen, or 450 for a quarter screen
+int tmpDrawScaleX = WINDOW_WIDTH / UB_X;    // TARGET_SCREEN_WIDTH / UB_X;
+int tmpDrawScaleY = WINDOW_HEIGHT / UB_Y;   // TARGET_SCREEN_HEIGHT / UB_Y;
+int drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
+int ubX_px = UB_X * drawScaleFactor;
+int ubY_px = UB_Y * drawScaleFactor;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
@@ -189,8 +204,11 @@ Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation
 
 // Manually control cell decisions, frame ticks, etc.
-int doCellAi = true;
-int automateEnergy = true;
+bool doCellAi = true;
+bool automateEnergy = true;
+bool enableAutomaticAttack = true;
+bool enableAutomaticSelfDestruct = true;
+bool enableAutomaticCloning = true;
 
 // Simulation States: These control the GUI, simulation mode, etc.
 static const int SIM_STATE_UNDEF = -1;
@@ -260,12 +278,11 @@ void update_global_params(){
     // Draw scale (related to UB_X and UB_Y)
     //tmpDrawScaleX = TARGET_SCREEN_WIDTH / UB_X;
     //tmpDrawScaleY = TARGET_SCREEN_HEIGHT / UB_Y;
-    //tmpDrawScale = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
-    //static const int DRAW_SCALE_FACTOR = tmpDrawScale;
-    //static const int WINDOW_WIDTH  = DRAW_SCALE_FACTOR*UB_X;
-    //static const int WINDOW_HEIGHT = 10 * DRAW_SCALE_FACTOR*UB_Y / 9;
-    //static const int UB_X_PX = UB_X * DRAW_SCALE_FACTOR;
-    //static const int UB_Y_PX = UB_Y * DRAW_SCALE_FACTOR;
+    //drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
+    //static const int WINDOW_WIDTH  = drawScaleFactor*UB_X;
+    //static const int WINDOW_HEIGHT = 10 * drawScaleFactor*UB_Y / 9;
+    //static const int UB_X_PX = UB_X * drawScaleFactor;
+    //static const int UB_Y_PX = UB_Y * drawScaleFactor;
     return;
 }
 */

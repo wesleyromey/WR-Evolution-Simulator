@@ -28,7 +28,7 @@ void SDL_draw_frame(){
     SDL_RenderClear(P_RENDERER);
     #ifdef DEBUG_FRAMES
     draw_bkgnd(100);
-    int ds = DRAW_SCALE_FACTOR;
+    int ds = drawScaleFactor;
     float symbolWidth = ds*15/16;
     int symbolHeight = ds*32/16;
     int dsSymVert = symbolHeight+2;
@@ -96,21 +96,41 @@ void deallocate_cell_memory(Cell* pCell) {
 
 void init_sim_gnd_energy(int initGndEnergy = -1){
     // We are dealing with global variables
+    cout << "init sim gnd energy\n";
     if(initGndEnergy < 0) initGndEnergy = maxGndEnergy.val / 2;
+    simGndEnergy.clear();
+    std::vector<int> simGndEnergyRow(UB_X);
+    for(int posX = 0; posX < UB_X; posX++) simGndEnergyRow[posX] = initGndEnergy;
+    for(int posY = 0; posY < UB_Y; posY++) simGndEnergy.push_back(simGndEnergyRow);
+    //std::for_each(simGndEnergyRow.begin(), simGndEnergyRow.end(), printVec); cout << endl;
+    //std::for_each(simGndEnergy.begin(), simGndEnergy.end(), print2dVec);
+    /*
+    for(int posX = 0; posX < UB_X; posX++){
+        cout << "  ";
+        for(int posY = 0; posY < UB_Y; posY++){
+            cout << simGndEnergy[posY][posX] << " ";
+        }
+        cout << endl;
+    }
+    cout << "  done!\n";
+    */
+    /*
     for(int x = 0; x < UB_X; x++){
         for(int y = 0; y < UB_Y; y++){
             simGndEnergy[x][y] = initGndEnergy;
         }
     }
+    */
 }
 
 void increase_sim_gnd_energy(int increaseAmt){
-    for(int x = 0; x < UB_X; x++){
-        for(int y = 0; y < UB_Y; y++){
-            simGndEnergy[x][y] += increaseAmt;
-            if(simGndEnergy[x][y] > maxGndEnergy.val){
-                simGndEnergy[x][y] = maxGndEnergy.val;
-            }
+    for(int posY = 0; posY < UB_Y; posY++){
+        for(int posX = 0; posX < UB_X; posX++){
+            simGndEnergy[posY][posX] += increaseAmt;
+            simGndEnergy[posY][posX] = min_int(simGndEnergy[posY][posX], maxGndEnergy.val);
+            //if(simGndEnergy[posY][posX] > maxGndEnergy.val){
+            //    simGndEnergy[posY][posX] = maxGndEnergy.val;
+            //}
         }
     }
 }
@@ -180,17 +200,6 @@ void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int clonin
 void kill_cell(Cell* pAlive, int i_pAlive) {
     DeadCell* pDead = new DeadCell;
     pDead->kill_cell(pAlive, pDead, i_pAlive);
-    /*
-    pDead->pSelf = pDead;
-    pDead->pOldSelf = pAlive;
-    pDead->decayPeriod = 20;
-    pDead->decayRate = 5;
-    pDead->dia = pAlive->dia;
-    pDead->energy = pAlive->energy + pAlive->energyCostToClone;
-    pDead->timeSinceDead = 1;
-    pDead->posX = pAlive->posX;
-    pDead->posY = pAlive->posY;
-    */
     // Remove pAlive from the list of alive cells
     pAlives.erase(pAlives.begin() + i_pAlive);
     // Add pDead to the list of dead cells
@@ -251,9 +260,6 @@ void restart_sim(){
     assert(simState == SIM_STATE_RESTART);
     // Deallocate and remove all cells from the simulation
     deallocate_all_cells();
-    // Re-initialize Simulation
-    //init_sim_global_vals();
-    //randomly_place_new_cells(initNumCells);
     simState = SIM_STATE_MAIN_MENU; //SIM_STATE_STEP_FRAMES;
 }
 // Deallocate memory when an exception occurs (ideally) or when the program terminates
@@ -361,6 +367,7 @@ void do_sim_iteration(bool doCellDecisions = true){
         #endif
         break;
         case SIM_STATE_INIT:
+        cout << "init sim\n";
         init_sim();
         break;
         case SIM_STATE_RESTART:
