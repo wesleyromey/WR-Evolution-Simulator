@@ -11,87 +11,97 @@
 #endif
 
 
-
-
-void gen_demo_cells_video1(int scenarioNum, int xPos, int yPos){
+std::map<std::string, int> gen_std_plant_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
     std::map<std::string, int> varVals;
-    varVals["age"] = 0;
-    varVals["attack"] = 0;
-    varVals["attackCooldown"] = 10;
-    varVals["cloningDirection"] = 0;
-    varVals["dia"] = 2;
-    varVals["doAttack"] = false;
-    varVals["doSelfDestruct"] = false;
-    varVals["EAM[EAM_SUN]"] = 0;
-    varVals["EAM[EAM_GND]"] = 0;
-    varVals["EAM[EAM_CELLS]"] = 0;
-    varVals["energy"] = 1000;
-    varVals["maxEnergy"] = 10000;
-    varVals["health"] = 1;
-    varVals["maxHealth"] = 1;
+    varVals["age"] = 0; varVals["attack"] = 0; varVals["attackCooldown"] = 10;
+    varVals["dia"] = dia;
+    varVals["EAM[EAM_SUN]"] = 100; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 0;
+    varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
+    varVals["maxHealth"] = 1; varVals["health"] = varVals["maxHealth"];
     varVals["mutationRate"] = 0;
-    varVals["posX"] = xPos;
-    varVals["posY"] = yPos;
-    varVals["speedDir"] = 0;
-    varVals["speedMode"] = IDLE_MODE;
-    varVals["speedRun"] = 0;
-    varVals["speedWalk"] = 0;
-    varVals["speedIdle"] = 0;
+    varVals["posX"] = posX; varVals["posY"] = posY;
+    varVals["speedIdle"] = 0; varVals["speedWalk"] = 0; varVals["speedRun"] = 0;
     varVals["visionDist"] = 0;
+    return varVals;
+}
+std::map<std::string, int> gen_std_worm_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
+    std::map<std::string, int> varVals;
+    varVals["age"] = 0; varVals["attack"] = 0; varVals["attackCooldown"] = 10;
+    varVals["dia"] = dia;
+    varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
+    varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
+    varVals["health"] = 1; varVals["maxHealth"] = 1;
+    varVals["mutationRate"] = 0;
+    varVals["posX"] = posX; varVals["posY"] = posY;
+    varVals["speedIdle"] = 0; varVals["speedWalk"] = 1; varVals["speedRun"] = 2;
+    varVals["visionDist"] = 0;
+    return varVals;
+}
+std::map<std::string, int> gen_std_predator_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
+    std::map<std::string, int> varVals;
+    varVals["age"] = 0; varVals["attack"] = 1; varVals["attackCooldown"] = 10;
+    varVals["dia"] = dia;
+    varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 100;
+    varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
+    varVals["health"] = 1; varVals["maxHealth"] = 1;
+    varVals["mutationRate"] = 0;
+    varVals["posX"] = posX; varVals["posY"] = posY;
+    varVals["speedIdle"] = 0; varVals["speedWalk"] = 1; varVals["speedRun"] = 2;
+    varVals["visionDist"] = 0;
+    return varVals;
+}
 
-
+void gen_demo_cells_video1(int scenarioNum){
+    dayNightCycleTime = 0;
+    
+    //int testVar1 = 102, testVar2 = 14;
+    //set_vals(&testVar1, 30, &testVar2, 50);
+    //print_scalar_vals("testVar1", testVar1, "testVar2", testVar2);
+    std::map<std::string, int> varVals;
     switch(scenarioNum){
         case 1:
-        automateEnergy = false;
-        gen_cell();
-        varVals["dia"] = 5;
-        varVals["EAM[EAM_SUN]"] = 100;
-        //varVals["maxEnergy"] = 10000;
-        //varVals["energy"] = 1000;
-        pAlives[0]->set_int_stats(varVals);
-        //cout << pAlives[0]->energy << ", " << pAlives[0]->maxEnergy << endl;
-        automateEnergy = true;
-        break;
-        case 2:
-        automateEnergy = false;
-        gen_cell();
-        varVals["dia"] = 5;
-        varVals["EAM[EAM_GND]"] = 100;
-        varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        varVals["maxEnergy"] = 10000;
-        pAlives[0]->set_int_stats(varVals);
-        automateEnergy = true;
-        break;
-        case 3:
+        // Plant cell gets sunlight rapidly, then dies at the end of the long night
         deallocate_all_cells();
-
-        // Create a plant, worm, and predator
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy, &dayLenSec},
+            {6, 4, DAY_NIGHT_DEFAULT_MODE, 200, 0, 100, 200});
         automateEnergy = false;
-        dayNightMode.set_val(DAY_NIGHT_ALWAYS_DAY_MODE);
-        maxSunEnergyPerSec.set_val(50);
-        varVals["dia"] = 5; varVals["attack"] = 0;
-        varVals["energy"] = 15000; varVals["maxEnergy"] = 25000;
-        enableAutomaticAttack = true;
-        maxGndEnergy.set_val(100);
-        init_sim_gnd_energy(100);
-        gndEnergyPerIncrease.set_val(10);
-
         gen_cell();
-        varVals["EAM[EAM_SUN]"] = 100; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 0;
-        varVals["speedWalk"] = 0; varVals["speedRun"] = 0;
-        varVals["posX"] = 2; varVals["posY"] = 6;
+        varVals.clear(); varVals = gen_std_plant_stats(1, 1, 2, 100, 600);
+        varVals["maxHealth"] = 60; varVals["health"] = varVals["maxHealth"];
+        pAlives[0]->set_int_stats(varVals);
+        //print_scalar_vals("EAM[EAM_SUN]", varVals["EAM[EAM_SUN]"], "EAM[EAM_SUN]", pAlives[0]->EAM[EAM_SUN]);
+        automateEnergy = true;
+        break;
+
+        case 2:
+        // A lone worm gains energy from the ground
+        deallocate_all_cells();
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {6, 4, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 10, 100});
+        automateEnergy = false;
+        gen_cell();
+        varVals.clear(); varVals = gen_std_worm_stats(1, 1, 2, 1000, 10000);
+        varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
+        pAlives[0]->set_int_stats(varVals);
+        automateEnergy = true;
+        break;
+
+        case 3:
+        // A plant and worm exist specifically to be eaten by a lone predator
+        deallocate_all_cells();
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {9, 6, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 10, 100});
+        set_vals(&automateEnergy, false, &enableAutomaticAttack, true);
+        gen_cell();
+        varVals.clear(); varVals = gen_std_plant_stats(2, 6, 2, 15000, 25000);
         pAlives[0]->set_int_stats(varVals);
         gen_cell();
-        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
+        varVals.clear(); varVals = gen_std_worm_stats(2, 12, 2, 15000, 25000);
         varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        varVals["posX"] = 2; varVals["posY"] = 12;
         pAlives[1]->set_int_stats(varVals);
         gen_cell();
-        varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 100;
+        varVals.clear(); varVals = gen_std_predator_stats(10, 14, 2, 5000, 10000);
         varVals["speedWalk"] = 3; varVals["speedRun"] = 3;
-        varVals["posX"] = xPos + 10; varVals["posY"] = 14;
-        varVals["energy"] = 5000; varVals["maxEnergy"] = 10000;
-        varVals["attack"] = 1;
         pAlives[2]->set_int_stats(varVals);
 
         automateEnergy = true;
@@ -100,15 +110,14 @@ void gen_demo_cells_video1(int scenarioNum, int xPos, int yPos){
         case 4:
         // Show a worm losing energy faster and faster despite getting identical sunlight
         // We may need a smaller window size for the remaining simulations
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {6, 4, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 20, 200});
+        automateEnergy = false;
         gen_cell();
-        dayNightMode.set_val(DAY_NIGHT_ALWAYS_DAY_MODE);
-        maxSunEnergyPerSec.set_val(0);
-        init_sim_gnd_energy(200);
-        gndEnergyPerIncrease.set_val(20);
-        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
+        varVals.clear(); varVals = gen_std_worm_stats(1, 1, 2, 5000, 10000);
         varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        varVals["posX"] = 1; varVals["posY"] = 1;
         pAlives[0]->set_int_stats(varVals);
+        automateEnergy = true;
         break;
         
 
@@ -136,94 +145,67 @@ void clear_frame(){
     SDL_RenderFillRect(P_RENDERER, &bkgnd);
 }
 
-/*
-void simulate_confused_movement(Cell* pCell, float chanceToChangeSpeed = 0.01, float chanceToChangeDir = 0.01){
-    // Based on random rng
-    if(std_uniform_dist(rng) < chanceToChangeSpeed * 1.5){
-        pCell->speedMode = gen_uniform_int_dist(rng, IDLE_MODE, RUN_MODE);
-    }
-    if(std_uniform_dist(rng) < chanceToChangeDir){
-        pCell->speedDir = gen_uniform_int_dist(rng, 0, 359);
-    }
-}
-*/
-
 // NOTE: This function may stop working properly I update my simulator and
 //  (possibly) create new videos
 void do_video1(){
-    ubX.set_val(30); ubY.set_val(20);
-    if(frameNum == 0){
-        deallocate_all_cells();
-        doCellAi = true;
-        automateEnergy = true;
-        bool enableAutomaticAttack = false;
-        bool enableAutomaticSelfDestruct = false;
-        bool enableAutomaticCloning = false;
-    }
-    //SDL_RenderClear(P_RENDERER);
     clear_frame();
 
-    // Start by generating 4 cells (plant, worm, predator, and [balanced] mutant)
-    // This is mostly for drawing text
     int x0 = 20, y0 = 20, textWidth = 60, textHeight = 60;
     int numFrames = 10000;
     string text = "";
+    static const int kF0 = 0, kF1 = 250, kF2 = 1000, kF3 = 2000, kF4 = 3000; // key frames
     frameNum %= numFrames;
-    if(frameNum == 0) draw_text(x0,y0,textWidth,textHeight,0,0,"testing text");
-    else if(frameNum == 1){
-        draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"I will talk\nabout  them\n   later");
-        frameNum = 2000;
-    }
-    else if(frameNum == 2){
-        // Plant cell gets sunlight rapidly, then dies at the end of the long night
-        gen_demo_cells_video1(1, 10, 10);
-        init_sim_gnd_energy(0);
-        gndEnergyPerIncrease.set_val(0);
-        
-        dayNightMode.set_val(DAY_NIGHT_DEFAULT_MODE);
-        maxSunEnergyPerSec.set_val(200);
-        dayLenSec.set_val(1000);
-        dayNightCycleTime = 0;
-        for(auto pAlive : pAlives) pAlive->set_ai_outputs(0, 0, IDLE_MODE, false, false, false);
-        //cout << dayNightCycleTime << endl;
-    } else if(frameNum <= 1200){
-        //cout << dayNightCycleTime << endl;
-        for(auto pAlive : pAlives) pAlive->set_ai_outputs(0, 0, IDLE_MODE, false, false, false);
-        //for(auto pAlive : pAlives) pAlive->energy += energyFromSunPerSec;
-        SDL_draw_frame();
-    } else if(frameNum == 1201){
-        gen_demo_cells_video1(2, 2, 2);
-        maxGndEnergy.set_val(100);
-        init_sim_gnd_energy(50);
-        gndEnergyPerIncrease.set_val(10);
-        dayNightMode.set_val(DAY_NIGHT_ALWAYS_DAY_MODE);
-        maxSunEnergyPerSec.set_val(0);
-    } else if(frameNum <= 2000){
-        SDL_draw_frame();
-    } else if(frameNum == 2001){
-        gen_demo_cells_video1(3,3,4);
-    } else if(frameNum <= 3000){
-        // pAlives = {plant, worm, predator}
-        SDL_draw_frame();
-    } else if(frameNum == 3001){
-        // This is the last frame for the introduction
-        draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"(Pretend this is true)");
-    } else if(frameNum < 3020){
-        // Show a predator killing a worm, teleporting to its corpse, then staying there and gaining energy rapidly
-        draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"TODO");
-    }
-    
-    if (frameNum > 5000) {
-        text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
-        text += " of " + conv_int_to_str(numFrames);
-        draw_text(x0,y0,textWidth,textHeight,0,0,text);
-    }
-    
-    
+    switch(frameNum){
+        case kF0:
+        deallocate_all_cells();
+        set_vals(&doCellAi, true, &automateEnergy, true, &enableAutomaticAttack, false,
+            &enableAutomaticCloning, false, &enableAutomaticSelfDestruct, false);
+        draw_text(x0,y0,textWidth,textHeight,0,0,"testing text");
+        break;
 
-    //SDL_Delay(10000);
-    //simState = SIM_STATE_QUIT;
-    //draw_user_interface(pAlives.size());
-    //SDL_Delay(5000);
+        case kF0+1:
+        draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"I will talk\nabout  them\n   later");
+        break;
+
+        case kF0+2:
+        gen_demo_cells_video1(1);
+        break;
+
+        case kF1:
+        gen_demo_cells_video1(2);
+        break;
+
+        case kF2:
+        gen_demo_cells_video1(3);
+        break;
+
+        case kF3:
+        // Show a predator killing a worm, teleporting to its corpse, then staying there and gaining energy rapidly
+        draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"(Pretend this is true)");
+        break;
+
+        case kF3+1:
+        gen_demo_cells_video1(4);
+        break;
+
+        default:
+        if(frameNum < kF1){
+            SDL_draw_frame();
+        } else if(frameNum < kF2){
+            pAlives[0]->set_ai_outputs(0, 0, WALK_MODE, false, false, false);
+            SDL_draw_frame();
+        } else if(frameNum < kF3){
+            pAlives[1]->set_ai_outputs(0, 0, WALK_MODE, false, false, false);
+            pAlives[2]->set_ai_outputs(0, 0, RUN_MODE, false, false, false);
+            SDL_draw_frame();
+        } else if(frameNum < kF4){
+            pAlives[0]->age += 9;
+            SDL_draw_frame();
+        } else {
+            text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
+            text += " of " + conv_int_to_str(numFrames);
+            draw_text(x0,y0,textWidth,textHeight,0,0,text);
+        }
+    }
     SDL_RenderPresent(P_RENDERER);
 }

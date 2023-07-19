@@ -183,14 +183,6 @@ static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 
 // If a region near the bottom or the right side is smaller, then it is absorbed
 //  into the neighboring region(s)
 static const int CELL_REGION_SIDE_LEN = 10;
-//update_global_params(cellRegionNumUbX, cellRegionNumUbY, drawScaleFactor, ubX_px, ubY_px);
-//int cellRegionNumUbX = ubX.val / CELL_REGION_SIDE_LEN;
-//int cellRegionNumUbY = ubY.val / CELL_REGION_SIDE_LEN;
-//int tmpDrawScaleX = WINDOW_WIDTH / ubX.val;
-//int tmpDrawScaleY = WINDOW_HEIGHT / ubY.val;
-//int drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
-//int ubX_px = ubX.val * drawScaleFactor;
-//int ubY_px = ubY.val * drawScaleFactor;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
@@ -264,16 +256,14 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
 
 // When the global parameters are changed, dependent global parameters also change
 int min_int(int num1, int num2);
+int max_int(int num1, int num2);
 void update_global_params(){
     // If a region near the bottom or the right side is smaller, then it is absorbed
     //  into the neighboring region(s)
     if(ubX.val <= 0 || ubY.val <= 0) return;
-    cellRegionNumUbX = ubX.val / CELL_REGION_SIDE_LEN;
-    cellRegionNumUbY = ubY.val / CELL_REGION_SIDE_LEN;
-    //int tmpDrawScaleX = WINDOW_WIDTH / ubX.val;
-    //int tmpDrawScaleY = 9 * WINDOW_HEIGHT / ubY.val / 10;
+    cellRegionNumUbX = max_int(ubX.val / CELL_REGION_SIDE_LEN, 1);
+    cellRegionNumUbY = max_int(ubY.val / CELL_REGION_SIDE_LEN, 1);
     drawScaleFactor = min_int(WINDOW_WIDTH / ubX.val, 9 * WINDOW_HEIGHT / 10 / ubY.val);
-    //drawScaleFactor = tmpDrawScaleX < tmpDrawScaleY ? tmpDrawScaleX : tmpDrawScaleY;
     ubX_px = ubX.val * drawScaleFactor;
     ubY_px = ubY.val * drawScaleFactor;
     return;

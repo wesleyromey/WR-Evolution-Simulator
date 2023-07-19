@@ -7,6 +7,40 @@
 // Macros
 #define ln(x) std::log(x)
 
+// Variadic Functions
+
+// Set the values of all valPtr to the new specified values
+void init_sim_gnd_energy(int initGndEnergy);
+void set_vals(){
+    init_sim_gnd_energy(maxGndEnergy.val / 2);
+}
+template <typename T, typename... Types>
+void set_vals(T* pVal, T newVal, Types... vals){
+    *pVal = newVal;
+    set_vals(vals...);
+}
+void print_scalar_vals(){cout << endl;}
+template<typename T, typename... Types>
+void print_scalar_vals(std::string valName, T val, Types... vals){
+    cout << valName << ": " << val << " ";
+    print_scalar_vals(vals...);
+}
+void set_sim_params(std::vector<SimParamInt*> vals, std::vector<int> newVals){
+    // e.g. set_sim_params({&ubX, &ubY, ...}, {30, 20, ...});
+    if(vals.size() != newVals.size()){
+        cout << "ERROR! The size of the input vectors should be equal!\n";
+        cout << "  Currently, the sizes are " << vals.size() << " and " << newVals.size() << endl;
+        return;
+    }
+    for(int i = 0; i < vals.size(); i++){
+        vals[i]->set_val(newVals[i]);
+    }
+}
+
+
+
+
+
 // Modified <cmath> functions
 float sin_deg(int input){
     return sin(input * PI / 180);

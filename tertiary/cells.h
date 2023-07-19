@@ -455,15 +455,16 @@ struct Cell {
     }
     void set_int_stats(std::map<std::string, int>& varVals){
         // TODO: Include the ability to set the aiNetwork and nodesPerLayer
+        // TODO: Since I removed the decisions from this function, I may have to edit the unit tests
         // Only contains functionality for the more important stats
         int lenVarVals = 0;
         if(varVals.count("age"))            {lenVarVals++; age = varVals["age"];}
         if(varVals.count("attack"))         {lenVarVals++; attack = varVals["attack"];}
         if(varVals.count("attackCooldown")) {lenVarVals++; attackCooldown = varVals["attackCooldown"];}
-        if(varVals.count("cloningDirection")) {lenVarVals++; cloningDirection = varVals["cloningDirection"];}
+        //if(varVals.count("cloningDirection")) {lenVarVals++; cloningDirection = varVals["cloningDirection"];} // decision
         if(varVals.count("dia"))            {lenVarVals++; dia = varVals["dia"];}
-        if(varVals.count("doAttack"))       {lenVarVals++; doAttack = varVals["doAttack"];}
-        if(varVals.count("doSelfDestruct")) {lenVarVals++; doSelfDestruct = varVals["doSelfDestruct"];}
+        //if(varVals.count("doAttack"))       {lenVarVals++; doAttack = varVals["doAttack"];} // decision
+        //if(varVals.count("doSelfDestruct")) {lenVarVals++; doSelfDestruct = varVals["doSelfDestruct"];} // decision
         if(varVals.count("EAM[EAM_CELLS]")) {lenVarVals++; EAM[EAM_CELLS] = varVals["EAM[EAM_CELLS]"];}
         if(varVals.count("EAM[EAM_GND]"))   {lenVarVals++; EAM[EAM_GND] = varVals["EAM[EAM_GND]"];}
         if(varVals.count("EAM[EAM_SUN]"))   {lenVarVals++; EAM[EAM_SUN] = varVals["EAM[EAM_SUN]"];}
@@ -474,8 +475,8 @@ struct Cell {
         if(varVals.count("mutationRate"))   {lenVarVals++; mutationRate = varVals["mutationRate"];}
         if(varVals.count("posX"))           {lenVarVals++; posX = varVals["posX"];}
         if(varVals.count("posY"))           {lenVarVals++; posY = varVals["posY"];}
-        if(varVals.count("speedDir"))       {lenVarVals++; speedDir = varVals["speedDir"];}
-        if(varVals.count("speedMode"))      {lenVarVals++; speedMode = varVals["speedMode"];}
+        //if(varVals.count("speedDir"))       {lenVarVals++; speedDir = varVals["speedDir"];}   // decision
+        //if(varVals.count("speedMode"))      {lenVarVals++; speedMode = varVals["speedMode"];} // decision
         if(varVals.count("speedRun"))       {lenVarVals++; speedRun = varVals["speedRun"];}
         if(varVals.count("speedWalk"))      {lenVarVals++; speedWalk = varVals["speedWalk"];}
         if(varVals.count("speedIdle"))      {lenVarVals++; speedIdle = varVals["speedIdle"];}
@@ -483,6 +484,7 @@ struct Cell {
         if(varVals.count("visionDist"))     {lenVarVals++; visionDist = varVals["visionDist"];}
 
         // Ensure that varVals does NOT contain values not accounted for in this function
+        if(lenVarVals != varVals.size()) print_scalar_vals("lenVarVals: ", lenVarVals, "varVals.size()", varVals.size());
         assert(lenVarVals == varVals.size());
         
         // Ensure we update all dependent variables
