@@ -32,8 +32,12 @@ struct Cell {
     
     // Creature AI (this drives the creature to make decisions)
     std::vector<std::vector<aiNode>> aiNetwork;
+    // Leave the first (input) and last (output) blank
     std::vector<int> nodesPerLayer = {-1, 10, -1}; // Fill in the hidden layer (middle) values.
-    //  Leave the first (input) and last (output) blank
+    // Each entry forces a decision on the frame it describes
+    //  The first entry in each slot represents the frame number the decision is repeatedly made until
+    //  The remaining entries are the decisions the cell makes
+    std::vector<std::tuple<int, int,int,int,bool,bool,bool>> forcedDecisionsQueue;
 
     // Internal timers
     int age = 0; // Relative to birth (limits lifespan)
@@ -73,7 +77,6 @@ struct Cell {
 
     // Bounds
     int maxEnergy = 10000; // = Const * size
-    //  TODO: Multiply this by size
     int ubMutationRate = 10000;
     int lbDia = 2, ubDia = 8;
     int lbHealth = 1;
@@ -339,7 +342,7 @@ struct Cell {
         assert(_numAiInputs == nodesPerLayer[0]);
         return ans;
     }
-    void set_ai_outputs(int _speedDir, int _cloningDirection, char _speedMode,
+    void set_ai_outputs(int _speedDir, int _cloningDirection, int _speedMode,
             bool _doAttack, bool _doSelfDestruct, bool _doCloning){
         int _numAiOutputs = 0;
         assert(0 <= _speedDir && _speedDir < 360);
@@ -453,7 +456,31 @@ struct Cell {
             update_energy_costs();
         }
     }
-    void set_int_stats(std::map<std::string, int>& varVals){
+    void apply_ai_preset(int aiPreset = -1){
+        //aiNode node = aiNetwork[layer][nodeNum];
+        int numWeightsPerNode;
+        std::vector<int> nodeWeightsAndBiases; // {bias, w1, ..., wLast}
+        int layer, node, i;
+        switch(aiPreset){
+            case 0:
+            for(layer = 0; layer < aiNetwork.size(); layer++){
+                for(node = 0; node < aiNetwork[layer].size(); node++){
+                    nodeWeightsAndBiases.clear();
+                    numWeightsPerNode = aiNetwork[layer][node].inputWeights.size();
+                    for(i = 0; i < numWeightsPerNode; i++){
+                        nodeWeightsAndBiases.push_back(0);
+                    }
+                    aiNetwork[layer][node].set_node_weights_and_biases(nodeWeightsAndBiases);
+                }
+            }
+            break;
+
+            default:
+            break;
+        }
+
+    }
+    void set_int_stats(std::map<std::string, int>& varVals, int aiPreset = -1){
         // TODO: Include the ability to set the aiNetwork and nodesPerLayer
         // TODO: Since I removed the decisions from this function, I may have to edit the unit tests
         // Only contains functionality for the more important stats
@@ -482,6 +509,9 @@ struct Cell {
         if(varVals.count("speedIdle"))      {lenVarVals++; speedIdle = varVals["speedIdle"];}
         if(varVals.count("stickiness"))     {lenVarVals++; stickiness = varVals["stickiness"];}
         if(varVals.count("visionDist"))     {lenVarVals++; visionDist = varVals["visionDist"];}
+
+        // AI weights
+        if(aiPreset >= 0) apply_ai_preset(aiPreset);
 
         // Ensure that varVals does NOT contain values not accounted for in this function
         if(lenVarVals != varVals.size()) print_scalar_vals("lenVarVals: ", lenVarVals, "varVals.size()", varVals.size());
@@ -526,11 +556,31 @@ struct Cell {
         age++;
         if(attackCooldown > 0) attackCooldown--;
     }
+    void force_decision(int numFrames, int _speedDir, int _cloningDir, int _speedMode, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
+        forcedDecisionsQueue.push_back({numFrames, _speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning});
+    }
+    // To override the ai, append an entry to forcedDecisionsQueue
     void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
         //enforce_valid_ai();
+        if(forcedDecisionsQueue.size() > 0){
+            update_timers();
+            #define x(i) std::get<i>(forcedDecisionsQueue[0])
+            x(0)--;
+            int _speedDir = x(1);
+            int _cloningDirection = x(2);
+            int _speedMode = x(3);
+            bool _doAttack = x(4) && attackCooldown == 0;
+            bool _doSelfDestruct = x(5);
+            bool _doCloning = x(6);
+            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+            if(x(0) == 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
+            //if(frameNum >= x(0)) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
+            #undef x
+            return;
+        }
         std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
@@ -539,11 +589,10 @@ struct Cell {
         // Format and set the outputs
         int _speedDir = saturate_int((int)layerInputs[0], 0, 359);
         int _cloningDirection = saturate_int((int)layerInputs[2], 0, 359);
-        char _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
+        int _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
         bool _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
         bool _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
         bool _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
-        //if(frameNum > 0) cout << "Enable automatic attack / selfDestruct / cloning: " << enableAutomaticAttack << " / " << enableAutomaticSelfDestruct << " / " << enableAutomaticCloning << endl;
         set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         enforce_valid_cell(false);
     }
@@ -898,7 +947,7 @@ struct Cell {
             }
         }
         // TODO: ensure there is surplus energy beyond energyCostToClone
-        if(doCloning && energy > energyCostToClone && pAlives.size() < cellLimit.val){
+        if(doCloning && energy > 1.2*energyCostToClone && pAlives.size() < cellLimit.val){
             //cout << ".";
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();

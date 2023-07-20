@@ -68,8 +68,9 @@ void gen_demo_cells_video1(int scenarioNum){
         gen_cell();
         varVals.clear(); varVals = gen_std_plant_stats(1, 1, 2, 100, 600);
         varVals["maxHealth"] = 60; varVals["health"] = varVals["maxHealth"];
-        pAlives[0]->set_int_stats(varVals);
-        //print_scalar_vals("EAM[EAM_SUN]", varVals["EAM[EAM_SUN]"], "EAM[EAM_SUN]", pAlives[0]->EAM[EAM_SUN]);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        //print_scalar_vals("EAM[EAM_SUN]", varVals["EAM[EAM_SUN]"], "EAM[EAM_SUN]", pCellsHist[0]->EAM[EAM_SUN]);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
         automateEnergy = true;
         break;
 
@@ -77,12 +78,12 @@ void gen_demo_cells_video1(int scenarioNum){
         // A lone worm gains energy from the ground
         deallocate_all_cells();
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
-            {6, 4, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 10, 100});
+            {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 20, 200});
         automateEnergy = false;
         gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(1, 1, 2, 1000, 10000);
-        varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        pAlives[0]->set_int_stats(varVals);
+        varVals.clear(); varVals = gen_std_worm_stats(1, 2, 5, 200, 2000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
         automateEnergy = true;
         break;
 
@@ -90,19 +91,28 @@ void gen_demo_cells_video1(int scenarioNum){
         // A plant and worm exist specifically to be eaten by a lone predator
         deallocate_all_cells();
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
-            {9, 6, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 10, 100});
+            {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 10, 100});
         set_vals(&automateEnergy, false, &enableAutomaticAttack, true);
         gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(2, 6, 2, 15000, 25000);
-        pAlives[0]->set_int_stats(varVals);
+        varVals.clear(); varVals = gen_std_plant_stats(2, 1, 3, 1000, 15000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
         gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(2, 12, 2, 15000, 25000);
-        varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        pAlives[1]->set_int_stats(varVals);
+        varVals.clear(); varVals = gen_std_worm_stats(6, 5, 2, 1000, 10000);
+        pCellsHist[1]->set_int_stats(varVals, 0);
+        pCellsHist[1]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
         gen_cell();
-        varVals.clear(); varVals = gen_std_predator_stats(10, 14, 2, 5000, 10000);
-        varVals["speedWalk"] = 3; varVals["speedRun"] = 3;
-        pAlives[2]->set_int_stats(varVals);
+        varVals.clear(); varVals = gen_std_predator_stats(2, 7, 2, 1000, 10000);
+        pCellsHist[2]->set_int_stats(varVals);
+        pCellsHist[2]->force_decision(10, 0, 0, WALK_MODE, true, false, false);     // (12,7)|(1,5)
+        pCellsHist[2]->force_decision(2, 315, 0, RUN_MODE, true, false, false);     // (14,5)|(3,5)
+        pCellsHist[2]->force_decision(3, 0, 0, RUN_MODE, true, false, false);       // (5,7)|(6,5)
+        pCellsHist[2]->force_decision(6, 0, 0, IDLE_MODE, true, false, false);      // (5,7)
+        pCellsHist[2]->force_decision(3, 0, 0, WALK_MODE, true, false, false);      // (8,7)
+        pCellsHist[2]->force_decision(4, 270, 0, WALK_MODE, true, false, false);    // (8,3)
+        pCellsHist[2]->force_decision(5, 180, 0, WALK_MODE, true, false, false);    // (3,3)
+        pCellsHist[2]->force_decision(8, 0, 0, IDLE_MODE, true, false, false);      // (3,3)
+        pCellsHist[2]->force_decision(1000, 0, 0, WALK_MODE, true, false, false);
 
         automateEnergy = true;
         break;
@@ -110,13 +120,14 @@ void gen_demo_cells_video1(int scenarioNum){
         case 4:
         // Show a worm losing energy faster and faster despite getting identical sunlight
         // We may need a smaller window size for the remaining simulations
+        deallocate_all_cells();
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
-            {6, 4, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 20, 200});
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 40, 200});
         automateEnergy = false;
         gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(1, 1, 2, 5000, 10000);
-        varVals["speedIdle"] = 1; varVals["speedWalk"] = 1; varVals["speedRun"] = 1;
-        pAlives[0]->set_int_stats(varVals);
+        varVals.clear(); varVals = gen_std_worm_stats(10, 5, 8, 500, 5000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
         automateEnergy = true;
         break;
         
@@ -132,6 +143,10 @@ void gen_demo_cells_video1(int scenarioNum){
         // Need text for 4a, 5a, and section 7.
         // Can most likely use simulations or windows I already have
         //  for the remaining animations and text.
+
+        // TODO: Allow the cell's AI to be controlled each frame using the following tactics:
+        //  (a) A function to set the weights of the AI (partially done)
+        //  (b) A function to set the outputs of the AI for the next few frames (done!)
     }
 }
 
@@ -153,7 +168,7 @@ void do_video1(){
     int x0 = 20, y0 = 20, textWidth = 60, textHeight = 60;
     int numFrames = 10000;
     string text = "";
-    static const int kF0 = 0, kF1 = 250, kF2 = 1000, kF3 = 2000, kF4 = 3000; // key frames
+    static const int kF0 = 0, kF1 = 250, kF2 = 350, kF3 = 400, kF4 = 700; // key frames
     frameNum %= numFrames;
     switch(frameNum){
         case kF0:
@@ -165,6 +180,7 @@ void do_video1(){
 
         case kF0+1:
         draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"I will talk\nabout  them\n   later");
+        //frameNum = kF3-1;
         break;
 
         case kF0+2:
@@ -192,14 +208,11 @@ void do_video1(){
         if(frameNum < kF1){
             SDL_draw_frame();
         } else if(frameNum < kF2){
-            pAlives[0]->set_ai_outputs(0, 0, WALK_MODE, false, false, false);
             SDL_draw_frame();
         } else if(frameNum < kF3){
-            pAlives[1]->set_ai_outputs(0, 0, WALK_MODE, false, false, false);
-            pAlives[2]->set_ai_outputs(0, 0, RUN_MODE, false, false, false);
             SDL_draw_frame();
         } else if(frameNum < kF4){
-            pAlives[0]->age += 9;
+            pCellsHist[0]->age += 49;
             SDL_draw_frame();
         } else {
             text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);

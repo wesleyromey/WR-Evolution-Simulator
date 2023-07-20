@@ -101,4 +101,19 @@ struct aiNode {
             }
         }
     }
+    void set_node_weights_and_biases(std::vector<int> weightsAndBiases){
+        // Set the weights and biases to {bias, w1, w2, ...}
+        if(weightsAndBiases.size() != inputWeights.size()){
+            cout << "WARNING! Size mismatch in setting the weights and biases of a node\n";
+            return;
+        }
+        for(int i = 0; i < inputWeights.size(); i++){
+            inputWeights[i] = weightsAndBiases[i];
+        }
+    }
+    void print_node_weights_and_biases(){
+        cout << "wb: ";
+        for(auto item : inputWeights) cout << item << " ";
+        cout << endl;
+    }
 };

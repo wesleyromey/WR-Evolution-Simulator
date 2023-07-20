@@ -11,9 +11,7 @@
 
 // Set the values of all valPtr to the new specified values
 void init_sim_gnd_energy(int initGndEnergy);
-void set_vals(){
-    init_sim_gnd_energy(maxGndEnergy.val / 2);
-}
+void set_vals(){}
 template <typename T, typename... Types>
 void set_vals(T* pVal, T newVal, Types... vals){
     *pVal = newVal;
@@ -35,6 +33,7 @@ void set_sim_params(std::vector<SimParamInt*> vals, std::vector<int> newVals){
     for(int i = 0; i < vals.size(); i++){
         vals[i]->set_val(newVals[i]);
     }
+    init_sim_gnd_energy(maxGndEnergy.val / 2);
 }
 
 
