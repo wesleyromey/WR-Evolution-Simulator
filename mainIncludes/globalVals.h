@@ -136,7 +136,7 @@ static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calc
 SimParamInt cellLimit(400, 0, 1000);
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
-SimParamInt overcrowdingEnergyCoef(1000, 0, 1000000);
+SimParamInt overcrowdingEnergyCoef(0, 0, 1000); // 1
 // Energy accumulation for all ground spaces
 SimParamInt maxGndEnergy(500, 1, 1000000);
 std::vector<std::vector<int>> simGndEnergy;
@@ -186,7 +186,7 @@ static const int CELL_REGION_SIDE_LEN = 10;
 
 //bool mouseButtonDownPrevFrame = false;
 int mousePosX = 0, mousePosY = 0;
-static const Uint32 FRAME_DELAY = 100; // ms; frame rate is (1000/FRAME_DELAY) fps
+static const Uint32 FRAME_DELAY = 10; // ms; frame rate is (1000/FRAME_DELAY) fps
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation
@@ -227,7 +227,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
-SimParamInt forceDampingFactor(100, 0, 1000000);
+SimParamInt forceDampingFactor(1000000, 0, 1000000);
     // Default: 100
     // Applies to the repulsive force that keeps cells apart
     // Smaller values increase the strength of repulsive force

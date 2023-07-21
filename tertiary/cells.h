@@ -88,11 +88,14 @@ struct Cell {
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<Cell*> ans;
         std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+        std::set<int> checkedCells = {uniqueCellNum};
         for(auto reg : neighboringRegions){
             for(auto pCell : pAlivesRegions[reg]){
-                if(pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
+                if(!checkedCells.count(pCell->uniqueCellNum) &&
+                pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
                     ans.push_back(pCell);
                 }
+                checkedCells.insert(pCell->uniqueCellNum);
             }
         }
         return ans;
@@ -720,8 +723,11 @@ struct Cell {
         // Energy loss from overcrowding directly
         // TODO: Create a dex stat to resist this overcrowding
         energy -= StrExprInt::solve(ENERGY_COST_PER_USE["overcrowding"],
-            {{"x", sumOfCellSizes}, {"size", size}});
-        //energy -= overcrowdingEnergyCoef * sumOfCellSizes / size;
+            {{"overcrowdingEnergyCoef", overcrowdingEnergyCoef.val},
+            {"x", sumOfCellSizes-size}, {"size", size}});
+        //cout << StrExprInt::solve(ENERGY_COST_PER_USE["overcrowding"],
+        //    {{"overcrowdingEnergyCoef", overcrowdingEnergyCoef.val},
+        //    {"x", sumOfCellSizes-size}, {"size", size}}) << ", ";
 
         // Enforce energy constraints
         if(energy > maxEnergy) energy = maxEnergy;

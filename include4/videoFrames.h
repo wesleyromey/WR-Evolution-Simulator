@@ -219,7 +219,7 @@ void gen_demo_cells_video1(int scenarioNum){
 
 
         //default:
-        // Need a new scenario to simulate 2f (???), 3d, 3f, 3g, 3i, 3j, 3k, 3l
+        // Need a new scenario to simulate 3d, 3f, 3g, 3i, 3j, 3k, 3l
         // Need new scenarios to simulate 4a (speed and direction, self-destruct)
         // Need new scenarios to simulate 4d, 4e, 4i, 6b, 6c, 6d, 6e, 6h, 7e, 7jk
         // Need text for 4a, 5a, and section 7.
@@ -308,9 +308,8 @@ void do_video1(){
         gen_demo_cells_video1(4);
         SDL_draw_frame();
         break;
-        case kF2f:
+        
 
-        break;
 
         default:
         if(kF2b <= frameNum && frameNum < kF2d){

@@ -160,21 +160,21 @@ std::vector<std::pair<string, SimParamInt*>> decide_sim_settings_options_text(){
         case DAY_NIGHT_BINARY_MODE:
         simParamsText.push_back({"Day Length", &dayLenSec});
         simParamsText.push_back({"Max Sun Energy Regeneration", &maxSunEnergyPerSec});
-        simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
-        simParamsText.push_back({"Day end (pct)", &dayNightUbPct});
+        //simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
+        simParamsText.push_back({"Pct of day with sunlight", &dayNightUbPct}); // Original title: "Day end (pct)"
         break;
         case DAY_NIGHT_DEFAULT_MODE:
         simParamsText.push_back({"Day Length", &dayLenSec});
         simParamsText.push_back({"Max Sun Energy Regeneration", &maxSunEnergyPerSec});
-        simParamsText.push_back({"Sun Path coef (Default 200)", &dayNightExponentPct});
-        simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
-        simParamsText.push_back({"Day end (pct)", &dayNightUbPct});
+        //simParamsText.push_back({"Sun Path coef (Default 200)", &dayNightExponentPct});
+        //simParamsText.push_back({"Day start (pct)", &dayNightLbPct});
+        simParamsText.push_back({"Pct of day with sunlight", &dayNightUbPct}); // Original title: "Day end (pct)"
         break;
     }
     simParamsText.push_back({"Max Ground Energy per cell", &maxGndEnergy});
     simParamsText.push_back({"Ground Energy Regeneration", &gndEnergyPerIncrease});
-    simParamsText.push_back({"Force Damping Factor", &forceDampingFactor});
-    simParamsText.push_back({"Overcrowding energy coefficient", &overcrowdingEnergyCoef});
+    //simParamsText.push_back({"Force Damping Factor", &forceDampingFactor});
+    //simParamsText.push_back({"Overcrowding energy coefficient", &overcrowdingEnergyCoef});
     simParamsText.push_back({"Map height", &ubY});
     simParamsText.push_back({"Map width", &ubX});
     return simParamsText;
