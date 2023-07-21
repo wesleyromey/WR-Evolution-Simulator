@@ -197,6 +197,8 @@ void gen_demo_cells_video1(int scenarioNum){
         // Energy - Show a plant gaining energy (loop through this animation quickly)
         // Health - Show a plant losing 1 health at a time (loop through this animation quickly)
         // Age - Show small text "idk how to illustrate"
+        //      Immediately after that text appears, replace it with
+        //      a plant pointing to a dead cell
         // Size - Show a diameter 2 plant pointing to a diameter 4 plant (use Paint 3d)
         // Remember to show the actual text for the options (energy, health, age, size)
         deallocate_all_cells();
