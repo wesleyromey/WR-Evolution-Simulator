@@ -456,6 +456,7 @@ struct Cell {
             update_energy_costs();
         }
     }
+    // TODO: Create a function to set the weights of the AI (partially done)
     void apply_ai_preset(int aiPreset = -1){
         //aiNode node = aiNetwork[layer][nodeNum];
         int numWeightsPerNode;
@@ -488,10 +489,7 @@ struct Cell {
         if(varVals.count("age"))            {lenVarVals++; age = varVals["age"];}
         if(varVals.count("attack"))         {lenVarVals++; attack = varVals["attack"];}
         if(varVals.count("attackCooldown")) {lenVarVals++; attackCooldown = varVals["attackCooldown"];}
-        //if(varVals.count("cloningDirection")) {lenVarVals++; cloningDirection = varVals["cloningDirection"];} // decision
         if(varVals.count("dia"))            {lenVarVals++; dia = varVals["dia"];}
-        //if(varVals.count("doAttack"))       {lenVarVals++; doAttack = varVals["doAttack"];} // decision
-        //if(varVals.count("doSelfDestruct")) {lenVarVals++; doSelfDestruct = varVals["doSelfDestruct"];} // decision
         if(varVals.count("EAM[EAM_CELLS]")) {lenVarVals++; EAM[EAM_CELLS] = varVals["EAM[EAM_CELLS]"];}
         if(varVals.count("EAM[EAM_GND]"))   {lenVarVals++; EAM[EAM_GND] = varVals["EAM[EAM_GND]"];}
         if(varVals.count("EAM[EAM_SUN]"))   {lenVarVals++; EAM[EAM_SUN] = varVals["EAM[EAM_SUN]"];}
@@ -502,8 +500,6 @@ struct Cell {
         if(varVals.count("mutationRate"))   {lenVarVals++; mutationRate = varVals["mutationRate"];}
         if(varVals.count("posX"))           {lenVarVals++; posX = varVals["posX"];}
         if(varVals.count("posY"))           {lenVarVals++; posY = varVals["posY"];}
-        //if(varVals.count("speedDir"))       {lenVarVals++; speedDir = varVals["speedDir"];}   // decision
-        //if(varVals.count("speedMode"))      {lenVarVals++; speedMode = varVals["speedMode"];} // decision
         if(varVals.count("speedRun"))       {lenVarVals++; speedRun = varVals["speedRun"];}
         if(varVals.count("speedWalk"))      {lenVarVals++; speedWalk = varVals["speedWalk"];}
         if(varVals.count("speedIdle"))      {lenVarVals++; speedIdle = varVals["speedIdle"];}
@@ -576,7 +572,7 @@ struct Cell {
             bool _doSelfDestruct = x(5);
             bool _doCloning = x(6);
             set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-            if(x(0) == 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
+            if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
             //if(frameNum >= x(0)) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
             #undef x
             return;
@@ -1015,6 +1011,8 @@ struct Cell {
         return ans;
     }
     void draw_cell(){
+        // TODO: After the video, draw the cells so they are centered on their center pixel
+        // TODO: If part of a cell is not fully rendered, render a copy of it on the other side
         int drawX = drawScaleFactor*posX;
         int drawY = drawScaleFactor*posY;
         int drawSize = drawScaleFactor*dia;
