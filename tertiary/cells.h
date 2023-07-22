@@ -558,28 +558,16 @@ struct Cell {
     void force_decision(int numFrames, int _speedDir, int _cloningDir, int _speedMode, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
         forcedDecisionsQueue.push_back({numFrames, _speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning});
     }
+    void clear_forced_decisions(){
+        forcedDecisionsQueue.clear();
+    }
     // To override the ai, append an entry to forcedDecisionsQueue
+    //  TODO: Allow for only certain decisions to be forced
     void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
         //enforce_valid_ai();
-        if(forcedDecisionsQueue.size() > 0){
-            update_timers();
-            #define x(i) std::get<i>(forcedDecisionsQueue[0])
-            x(0)--;
-            int _speedDir = x(1);
-            int _cloningDirection = x(2);
-            int _speedMode = x(3);
-            bool _doAttack = x(4) && attackCooldown == 0;
-            bool _doSelfDestruct = x(5);
-            bool _doCloning = x(6);
-            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-            if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
-            //if(frameNum >= x(0)) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
-            #undef x
-            return;
-        }
         std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
         for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
             layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
@@ -592,8 +580,27 @@ struct Cell {
         bool _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
         bool _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
         bool _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
-        set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-        enforce_valid_cell(false);
+
+        // If any forced decisions exist, override the AI now
+        if(forcedDecisionsQueue.size() > 0){
+            update_timers();
+            #define x(i) std::get<i>(forcedDecisionsQueue[0])
+            x(0)--;
+            if(0 <= x(1) && x(1) < 360) _speedDir = x(1);
+            if(0 <= x(2) && x(2) < 360) _cloningDirection = x(2);
+            if(x(3) == IDLE_MODE || x(3) == WALK_MODE || x(3) == RUN_MODE) _speedMode = x(3);
+            _doAttack = x(4) && attackCooldown == 0;
+            _doSelfDestruct = x(5);
+            _doCloning = x(6);
+            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+            if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
+            //if(frameNum >= x(0)) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
+            #undef x
+            return;
+        } else {
+            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+            enforce_valid_cell(false);
+        }
     }
     void mutate_ai(){
         float prob = (float)mutationRate / ubMutationRate;

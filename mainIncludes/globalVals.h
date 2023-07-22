@@ -162,8 +162,7 @@ SimParamInt dayNightMode(DAY_NIGHT_ALWAYS_DAY_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, 
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
 // A value of 175 approximates a sine wave
-SimParamInt dayNightExponentPct(200, {seqOf100(0,10), 1000});
-//int dayNightExponentPct = 200; // 0 <= EXPONENT < infinity
+SimParamInt dayNightExponentPct(150, {seqOf100(0,10), 1000}); // 0 <= EXPONENT < infinity (default = 200)
 // The day lasts between dayNightLb and dayNightUb
 // The night lasts from dayNightUb to 100 and 0 to dayNightLb
 SimParamInt dayNightLbPct(0,{seqOf100(0,1)});
