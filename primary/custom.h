@@ -47,6 +47,13 @@ float sin_deg(int input){
 float cos_deg(int input){
     return cos(input * PI / 180);
 }
+float tan_deg(int input){
+    return tan(input * PI / 180);
+}
+float arc_tan_deg(int dy, int dx){
+    //if(dx == 0) return INFINITY;
+    return atan((float)dy / (float)dx) * PI / 180;
+}
 int min_int(int num1, int num2){
     return (num1 <= num2 ? num1 : num2);
 }
@@ -115,6 +122,10 @@ int linear_interp_x_int(int x, std::vector<int> xVec, std::vector<int> fcnValVec
     int denominator = xUb - xLb;
     //cout << "  f(" << x << "): " << fLb << " + " << numerator << " / " << denominator << endl;
     return fLb + (float)numerator / denominator;
+}
+float calc_distance_between_points(int posX, int posY, int targetX, int targetY){
+    int dx = targetX - posX, dy = targetY - posY;
+    return sqrt(dx*dx + dy*dy);
 }
 
 // Modified probability and statistic functions

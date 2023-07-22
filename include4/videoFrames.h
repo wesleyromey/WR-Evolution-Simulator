@@ -37,7 +37,7 @@ int speedIdle = 0, int speedWalk = 1, int speedRun = 2, int visionDist = 0){
 
 // Generate random-ish movement that looks reasonable for a cell to do
 void preplan_random_cell_activity(Cell* pCell, int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
-int _enableAttack, int _enableCloning){
+bool _enableAttack, bool _enableCloning){
     int newSpeedDir = pCell->speedDir, newSpeedMode = pCell->speedMode;
     int numFramesSinceLastDecision = 0;
     bool changedSpeedDir = false;
@@ -60,6 +60,38 @@ int _enableAttack, int _enableCloning){
             numFramesSinceLastDecision++;
         }
     }
+}
+
+
+void preplan_shortest_path_to_point(Cell* pCell, int posX, int posY, int targetX, int targetY, bool enableRunning,
+bool _enableAttack, bool _enableCloning){
+    int targetDx = targetX - posX, targetDy = targetY - posY;
+    int optimalDir = 0;
+    float optimalDistance = abs(targetDx) + abs(targetDy) + 1;
+    int speed = enableRunning*pCell->speedRun + !enableRunning*pCell->speedWalk;
+    int nextPosX = posX, nextPosY = posY;
+    for(int testDir = 0; testDir < 360; testDir += 15){
+        int testDx = speed * cos_deg(testDir);
+        int testDy = speed * sin_deg(testDir);
+        float testDistance = calc_distance_between_points(posX + testDx, posY + testDy, targetX, targetY);
+        //cout << testDx << ", " << testDy << ", " << speed << ", " << testDistance << endl;
+        if(testDistance < optimalDistance){
+            optimalDistance = testDistance;
+            optimalDir = testDir;
+            nextPosX = posX + testDx; nextPosY = posY + testDy;
+        }
+    }
+    int _speedMode = (enableRunning ? RUN_MODE : WALK_MODE);
+    float targetDistance = calc_distance_between_points(posX, posY, targetX, targetY);
+    float newTargetDistance = calc_distance_between_points(nextPosX, nextPosY, targetX, targetY);
+    //print_scalar_vals("newTargetDistance", newTargetDistance, "targetDistance", targetDistance);
+    if(newTargetDistance >= targetDistance){
+        if(!enableRunning) return;
+        preplan_shortest_path_to_point(pCell, nextPosX, nextPosY, targetX, targetY, false, _enableAttack, _enableCloning);
+        return;
+    }
+    pCell->force_decision(1, optimalDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
+    preplan_shortest_path_to_point(pCell, nextPosX, nextPosY, targetX, targetY, enableRunning, _enableAttack, _enableCloning);
 }
 
 void gen_demo_cells_video1(int scenarioNum){
@@ -220,7 +252,6 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(5);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
-        
         #define init_small_predator(varVals, cellNum, dx, dy, attackCooldown, speedDir){ \
             varVals.clear(); varVals = gen_std_stats("predator", 10 + dx, 10 + dy, 2, 1000, 10000, 1, 100, 1, attackCooldown); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
@@ -235,7 +266,6 @@ void gen_demo_cells_video1(int scenarioNum){
         init_small_predator(varVals, 3,  9,  0, 2, 180);
         init_small_predator(varVals, 4,  0,  9, 2, 270);
         #undef init_small_predator
-
         scenario_postcode();
         break;
 
@@ -248,7 +278,6 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(5);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {16, 16, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 0, 1});
-        
         #define init_plant(cellNum, varVals, dx, dy, dia, cloningDir, initEnergy) { \
             varVals.clear(); varVals = gen_std_stats("plant", 8 + dx, 8 + dy, dia, initEnergy, 2*initEnergy, 200); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
@@ -261,25 +290,21 @@ void gen_demo_cells_video1(int scenarioNum){
         init_plant(3, varVals,  5,  0, 2, 180, 2500);
         init_plant(4, varVals,  0,  5, 2, 270, 2500);
         #undef init_plant
-
         scenario_postcode();
         break;
         
         case 32:
-        //(3i) 60x40 simulation. Start with two size 5 worms and two size 2 worms travelling in a straight line.
-        // Ensure ground energy's max amount is small. After wrapping across the screen twice each worm will clone themselves.
-        // They will all start going in separate directions. These new cells may start cloning themselves as needed.
-        // Required settings:
-	    //      Disable self-destruct, mutations
-	    // TODO: Create a function that causes cells to randomly change their movement direction and movement mode every once in awhile.
+        // (3i) 60x40 simulation. Start with twenty-five size 5 worms and twenty-five size 2 worms
+        // travelling in random directions and speeds (choosing between remaining idle, moving 1 tile
+        // diagonally, or moving 1-2 tiles adjacently) and cloning themselves when they have enough energy.
+        // The ground energy has a small max amount per cell and regenerates at the normal rate.
+        // As usual, self-destruct and mutations are disabled.
         scenario_precode(50);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {60, 40, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 10, 100});
         set_vals(&enableAutomaticAttack, false, &enableAutomaticCloning, true, &enableAutomaticSelfDestruct, false);
-        
         // Generate random movement patterns in advance
         //  (output a speed mode and direction at random)
-
         #define init_worm(cellNum, varVals, posX, posY, dia){ \
             varVals.clear(); varVals = gen_std_stats("worm", posX, posY, dia, 1500, 5000*dia); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
@@ -291,9 +316,36 @@ void gen_demo_cells_video1(int scenarioNum){
             init_worm(tmpVar, varVals, 13*(tmpVar^2+tmpVar+50) % ubX.val, 17*(tmpVar^2+tmpVar+100) % ubY.val, 5);
         }
         #undef init_worm
-
         scenario_postcode();
         break;
+
+        case 33:
+        // (3j) 30x20 simulation showing four size 2 predators and a size 4 predator swarm a size 6 plant,
+        // only for the size two predators to get less of the energy (ensure the max energy of each predator
+        // is proportional to their diameter)
+        //  NOTE: My prediction did NOT occur!
+        //  TODO: Figure out why my prediction did not work
+        scenario_precode(6);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 0, 1});
+        varVals.clear(); varVals = gen_std_stats("plant", 15, 10, 8, 40000, 40000, 16);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY){ \
+            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000, 10000, dia*dia/2); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
+            pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false); \
+        }
+        init_predator(1, varVals,  6,  9, 4, 16,  8);
+        init_predator(2, varVals,  3,  3, 2, 12, 10);
+        init_predator(3, varVals,  3, 17, 2, 12, 13);
+        init_predator(4, varVals, 27,  3, 2, 15, 13);
+        init_predator(5, varVals, 25, 18, 2, 18, 13);
+        #undef init_predator
+        scenario_postcode();
+        break;
+
 
         default:
         cout << "NOTE: Scenario " << scenarioNum << " was supposed to be played, but that scenario is not available\n";
@@ -337,7 +389,7 @@ void do_video1(){
     static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60;
     static const int kF3start = kF2e + 300;
     static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180;
-    static const int kF3j = kF3i + 2000, kF3k = kF3j + 100, kF4start = kF3k + 100;
+    static const int kF3j = kF3i + 2000, kF3k = kF3j + 200, kF4start = kF3k + 100;
     frameNum %= numFrames;
     switch(frameNum){
         case kF0:
@@ -363,7 +415,7 @@ void do_video1(){
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF3i - 1;
+        frameNum = kF3j - 1;
         break;
 
         case kF1c:
@@ -396,7 +448,7 @@ void do_video1(){
         gen_demo_cells_video1(31);
         break;
         case kF3i:
-        gen_demo_cells_video1(32); // TODO
+        gen_demo_cells_video1(32);
         break;
         case kF3j:
         gen_demo_cells_video1(33); // TODO

@@ -919,6 +919,26 @@ struct Cell {
         //  NOTE: Due to how the program is structured, I have to actually kill each dead cell outside of this struct
         return (health <= 0 || energy <= 0 || doSelfDestruct);
     }
+    int calc_direction_to_point(int targetX, int targetY){
+        float distanceToTarget = calc_distance_from_point(targetX, targetY);
+        int dx = targetX - posX, dy = targetY - posY;
+        if(dx == 0 && dy == 0) return 0;
+        if(dx == 0 && dy > 0) return 90;
+        if(dx == 0 && dy < 0) return 270;
+        int acuteAngle = ((int)arc_tan_deg(abs(dy), abs(dx)) + 360) % 360;
+        if(dx > 0 && dy >= 0) return acuteAngle;
+        if(dx > 0 && dy < 0) return (360 - acuteAngle) % 360;
+        if(dx < 0 && dy >= 0) return 180 - acuteAngle;
+        if(dx < 0 && dy < 0) return 180 + acuteAngle;
+        cout << "WARNING: An angle between 0 and 359 should have been returned! Returning 0\n";
+        return 0;
+    }
+    std::pair<int, int> calc_new_pos_given_target_speed_and_dir(int targetDirectionDeg, int targetSpeed){
+        // Return the new x and y position travelled to
+        int dx = targetSpeed * cos_deg(targetDirectionDeg);
+        int dy = targetSpeed * sin_deg(targetDirectionDeg);
+        return {dx, dy};
+    }
     float calc_distance_from_point(int xCoord, int yCoord){
         // Assume -ubX.val < posX and -ubY.val < posY
         int xDist = xCoord - posX;
