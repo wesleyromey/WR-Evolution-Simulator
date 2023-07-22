@@ -11,7 +11,34 @@
 #endif
 
 
-std::map<std::string, int> gen_std_plant_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
+std::map<std::string, int> gen_std_stats(std::string cellType, int posX, int posY, int dia, int initEnergy, int maxEnergy,
+int maxHealth = 1, int initHealthPct = 100, int attack = 1, int attackCooldown = 10, int age = 0, int mutationRate = 0,
+int speedIdle = 0, int speedWalk = 1, int speedRun = 2, int visionDist = 0){
+    std::map<std::string, int> varVals;
+    varVals["age"] = age; varVals["attack"] = max_int(attack, 0); varVals["attackCooldown"] = attackCooldown;
+    varVals["dia"] = dia;
+    if(cellType == "plant"){
+        varVals["EAM[EAM_SUN]"] = 100; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 0;
+    } else if(cellType == "worm"){
+        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
+    } else if(cellType == "predator"){
+        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 100;
+        if(attack < 0) varVals["attack"] = 1;
+    } else {
+        varVals["EAM[EAM_SUN]"] = 34; varVals["EAM[EAM_GND]"] = 33; varVals["EAM[EAM_CELLS]"] = 33;
+        if(attack < 0) varVals["attack"] = 1;
+    }
+    varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
+    varVals["maxHealth"] = maxHealth; varVals["health"] = varVals["maxHealth"] * initHealthPct / 100;
+    varVals["mutationRate"] = mutationRate;
+    varVals["posX"] = posX; varVals["posY"] = posY;
+    varVals["speedIdle"] = speedIdle; varVals["speedWalk"] = speedWalk; varVals["speedRun"] = speedRun;
+    varVals["visionDist"] = visionDist;
+    return varVals;
+}
+/*
+std::map<std::string, int> gen_std_plant_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy,
+int maxHealth = 1){
     std::map<std::string, int> varVals;
     varVals["age"] = 0; varVals["attack"] = 0; varVals["attackCooldown"] = 10;
     varVals["dia"] = dia;
@@ -24,81 +51,95 @@ std::map<std::string, int> gen_std_plant_stats(int posX, int posY, int dia, int 
     varVals["visionDist"] = 0;
     return varVals;
 }
-std::map<std::string, int> gen_std_worm_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
+std::map<std::string, int> gen_std_worm_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy,
+int maxHealth = 1){
     std::map<std::string, int> varVals;
     varVals["age"] = 0; varVals["attack"] = 0; varVals["attackCooldown"] = 10;
     varVals["dia"] = dia;
     varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
     varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
-    varVals["health"] = 1; varVals["maxHealth"] = 1;
+    varVals["maxHealth"] = maxHealth; varVals["health"] = varVals["maxHealth"];
     varVals["mutationRate"] = 0;
     varVals["posX"] = posX; varVals["posY"] = posY;
     varVals["speedIdle"] = 0; varVals["speedWalk"] = 1; varVals["speedRun"] = 2;
     varVals["visionDist"] = 0;
     return varVals;
 }
-std::map<std::string, int> gen_std_predator_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy){
+std::map<std::string, int> gen_std_predator_stats(int posX, int posY, int dia, int initEnergy, int maxEnergy,
+int maxHealth = 1){
     std::map<std::string, int> varVals;
     varVals["age"] = 0; varVals["attack"] = 1; varVals["attackCooldown"] = 10;
     varVals["dia"] = dia;
     varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 100;
     varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
-    varVals["health"] = 1; varVals["maxHealth"] = 1;
+    varVals["maxHealth"] = maxHealth; varVals["health"] = varVals["maxHealth"];
     varVals["mutationRate"] = 0;
     varVals["posX"] = posX; varVals["posY"] = posY;
     varVals["speedIdle"] = 0; varVals["speedWalk"] = 1; varVals["speedRun"] = 2;
     varVals["visionDist"] = 0;
     return varVals;
 }
+*/
 
 void gen_demo_cells_video1(int scenarioNum){
+    // Shorthand functions for these scenarios
+    #ifndef scenario_precode
+    #define scenario_precode(numCells) { \
+        deallocate_all_cells(); \
+        automateEnergy = false; \
+        randomly_place_new_cells(numCells); \
+    }
+    #endif
+    #ifndef scenario_postcode
+    #define scenario_postcode() { \
+        automateEnergy = true; \
+    }
+    #endif
+    
     dayNightCycleTime = 0;
     std::map<std::string, int> varVals;
     switch(scenarioNum){
-        case 1:
+        case 10:
         // Plant cell gets sunlight rapidly, then dies at the end of the long night
-        deallocate_all_cells();
+        scenario_precode(1);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy, &dayLenSec},
             {6, 4, DAY_NIGHT_DEFAULT_MODE, 200, 0, 100, 200});
-        automateEnergy = false;
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(1, 1, 2, 100, 600);
-        varVals["maxHealth"] = 60; varVals["health"] = varVals["maxHealth"];
+        //varVals.clear(); varVals = gen_std_plant_stats(2, 2, 2, 100, 600, 60);
+        varVals.clear(); varVals = gen_std_stats("plant", 2, 2, 2, 100, 600, 60);
         pCellsHist[0]->set_int_stats(varVals, 0);
-        //print_scalar_vals("EAM[EAM_SUN]", varVals["EAM[EAM_SUN]"], "EAM[EAM_SUN]", pCellsHist[0]->EAM[EAM_SUN]);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        automateEnergy = true;
+        scenario_postcode();
         break;
 
-        case 2:
+        case 11:
         // A lone worm gains energy from the ground
-        deallocate_all_cells();
+        scenario_precode(1);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 20, 200});
-        automateEnergy = false;
-        gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(1, 2, 5, 200, 2000);
+        //varVals.clear(); varVals = gen_std_worm_stats(3, 4, 5, 200, 2000);
+        varVals.clear(); varVals = gen_std_stats("worm", 3, 4, 5, 200, 2000);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
-        automateEnergy = true;
+        scenario_postcode();
         break;
 
-        case 3:
+        case 12:
         // A plant and worm exist specifically to be eaten by a lone predator
-        deallocate_all_cells();
+        scenario_precode(3);
+        //deallocate_all_cells();
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 10, 100});
-        set_vals(&automateEnergy, false, &enableAutomaticAttack, true);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(2, 1, 3, 1000, 15000);
+        //set_vals(&automateEnergy, false, &enableAutomaticAttack, true);
+        //varVals.clear(); varVals = gen_std_plant_stats(3, 2, 3, 1000, 15000);
+        varVals.clear(); varVals = gen_std_stats("plant", 3, 2, 3, 1000, 15000);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(6, 5, 2, 1000, 10000);
+        //varVals.clear(); varVals = gen_std_worm_stats(7, 6, 2, 1000, 10000);
+        varVals.clear(); varVals = gen_std_stats("worm", 7, 6, 2, 1000, 10000);
         pCellsHist[1]->set_int_stats(varVals, 0);
         pCellsHist[1]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_predator_stats(2, 7, 2, 1000, 10000);
+        //varVals.clear(); varVals = gen_std_predator_stats(3, 8, 2, 1000, 10000);
+        varVals.clear(); varVals = gen_std_stats("predator", 3, 8, 2, 1000, 10000);
         pCellsHist[2]->set_int_stats(varVals);
         pCellsHist[2]->force_decision(10, 0, 0, WALK_MODE, true, false, false);     // (12,7)|(1,5)
         pCellsHist[2]->force_decision(2, 315, 0, RUN_MODE, true, false, false);     // (14,5)|(3,5)
@@ -109,90 +150,33 @@ void gen_demo_cells_video1(int scenarioNum){
         pCellsHist[2]->force_decision(5, 180, 0, WALK_MODE, true, false, false);    // (3,3)
         pCellsHist[2]->force_decision(8, 0, 0, IDLE_MODE, true, false, false);      // (3,3)
         pCellsHist[2]->force_decision(1000, 0, 0, WALK_MODE, true, false, false);
-        automateEnergy = true;
+        scenario_postcode();
         break;
 
-        case 4:
-        // Show a worm losing energy faster and faster despite getting identical sunlight
-        // We may need a smaller window size for the remaining simulations
-        deallocate_all_cells();
-        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
-            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 40, 200});
-        automateEnergy = false;
-        gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(10, 5, 8, 500, 5000);
-        pCellsHist[0]->set_int_stats(varVals, 0);
-        pCellsHist[0]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
-        automateEnergy = true;
-        break;
-
-
-        case 5:
+        case 13:
         // 1f: Show a plant, worm, and predator cloning themselves as they gain energy
-        deallocate_all_cells();
+        scenario_precode(3);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 40, 200});
-        automateEnergy = false;
-        // pCellsHist = { plant, worm, predator, plant, worm}
-        // All cells want to clone themselves at all times
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(5, 6, 2, 1500, 4000);
+        //varVals.clear(); varVals = gen_std_plant_stats(6, 7, 2, 1500, 4000);
+        varVals.clear(); varVals = gen_std_stats("plant", 6, 7, 2, 1500, 4000);
         pCellsHist[0]->set_int_stats(varVals);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, true);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_worm_stats(21, 10, 2, 1000, 4000);
+        //varVals.clear(); varVals = gen_std_worm_stats(22, 11, 2, 1000, 4000);
+        varVals.clear(); varVals = gen_std_stats("worm", 22, 11, 2, 1000, 4000);
         pCellsHist[1]->set_int_stats(varVals);
         pCellsHist[1]->force_decision(1000, 0, 70, WALK_MODE, false, false, true);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_predator_stats(15, 17, 2, 1000, 4000);
+        //varVals.clear(); varVals = gen_std_predator_stats(16, 18, 2, 1000, 4000);
+        varVals.clear(); varVals = gen_std_stats("predator", 16, 18, 2, 1000, 4000);
         pCellsHist[2]->set_int_stats(varVals);
         pCellsHist[2]->force_decision(15, 0, 270, WALK_MODE, true, false, true);
         pCellsHist[2]->force_decision(6, 315, 270, RUN_MODE, true, false, true);
         pCellsHist[2]->force_decision(6, 0, 270, RUN_MODE, true, false, true);
         pCellsHist[2]->force_decision(100, 0, 270, IDLE_MODE, true, false, true);
-        automateEnergy = true;
+        scenario_postcode();
         break;
 
-        
-        case 6:
-        // 2c - Show a cell being attacked and losing some of their health
-        deallocate_all_cells();
-        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
-            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 40, 200});
-        automateEnergy = false;
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(18, 10, 7, 11000, 20000);
-        varVals["maxHealth"] = 10; varVals["health"] = varVals["maxHealth"];
-        pCellsHist[0]->set_int_stats(varVals);
-        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_predator_stats(5, 1, 2, 1000, 5000);
-        varVals["speedRun"] = 3; varVals["attackCooldown"] = 0;
-        pCellsHist[1]->set_int_stats(varVals);
-        pCellsHist[1]->force_decision(5, 330, 0, RUN_MODE, true, false, false);
-        pCellsHist[1]->force_decision(3, 0, 0, WALK_MODE, true, false, false);
-        pCellsHist[1]->force_decision(2, 270, 0, WALK_MODE, true, false, false);
-        pCellsHist[1]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false);
-        gen_cell();
-        varVals["posX"] = 20; varVals["posY"] = 7; varVals["speedRun"] = 3;
-        pCellsHist[2]->set_int_stats(varVals);
-        pCellsHist[2]->force_decision(10, 330, 0, RUN_MODE, true, false, false);
-        pCellsHist[2]->force_decision(3, 270, 0, WALK_MODE, true, false, false);
-        pCellsHist[2]->force_decision(13, 180, 0, WALK_MODE, true, false, false);
-        pCellsHist[2]->force_decision(2, 270, 0, WALK_MODE, true, false, false);
-        pCellsHist[2]->force_decision(6, 180, 0, WALK_MODE, true, false, false);
-        pCellsHist[2]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false);
-        gen_cell();
-        varVals["posX"] = 0; varVals["posY"] = 0; varVals["speedRun"] = 2;
-        pCellsHist[3]->set_int_stats(varVals);
-        pCellsHist[3]->force_decision(4, 45, 0, RUN_MODE, true, false, false);
-        pCellsHist[3]->force_decision(17, 0, 0, WALK_MODE, true, false, false);
-        pCellsHist[3]->force_decision(5, 90, 0, WALK_MODE, true, false, false);
-        pCellsHist[3]->force_decision(100, 0, 0, IDLE_MODE, true, false, false);
-        automateEnergy = true;
-        break;
-
-        case 7:
+        case 20:
         // 2b - Show several looped animations
         // Energy - Show a plant gaining energy (loop through this animation quickly)
         // Health - Show a plant losing 1 health at a time (loop through this animation quickly)
@@ -201,25 +185,118 @@ void gen_demo_cells_video1(int scenarioNum){
         //      a plant pointing to a dead cell
         // Size - Show a diameter 2 plant pointing to a diameter 4 plant (use Paint 3d)
         // Remember to show the actual text for the options (energy, health, age, size)
-        deallocate_all_cells();
+        scenario_precode(2);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {6, 4, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 0, 1});
-        automateEnergy = false;
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(0, 0, 2, 1000, 10000);
+        //varVals.clear(); varVals = gen_std_plant_stats(1, 1, 2, 1000, 10000);
+        varVals.clear(); varVals = gen_std_stats("plant", 1, 1, 2, 1000, 10000, 10);
+        //varVals["maxHealth"] = 10; varVals["health"] = varVals["maxHealth"];
+        pCellsHist[0]->set_int_stats(varVals);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        //varVals.clear(); varVals = gen_std_plant_stats(4, 1, 2, 1, 100000);
+        varVals.clear(); varVals = gen_std_stats("plant", 4, 1, 2, 1, 100000);
+        pCellsHist[1]->set_int_stats(varVals);
+        pCellsHist[1]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        scenario_postcode();
+        break;
+
+        case 21:
+        // 2c - Show a cell being attacked and losing some of their health
+        scenario_precode(4);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 40, 200});
+        //varVals.clear(); varVals = gen_std_plant_stats(21, 13, 7, 11000, 20000);
+        varVals.clear(); varVals = gen_std_stats("plant", 21, 13, 7, 11000, 20000);
         varVals["maxHealth"] = 10; varVals["health"] = varVals["maxHealth"];
         pCellsHist[0]->set_int_stats(varVals);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        gen_cell();
-        varVals.clear(); varVals = gen_std_plant_stats(3, 0, 2, 1, 100000);
+        //varVals.clear(); varVals = gen_std_predator_stats(6, 2, 2, 1000, 5000);
+        varVals.clear(); varVals = gen_std_stats("predator", 6, 2, 2, 1000, 5000, 1, 100,
+        1, 0, 0, 0, 0, 1, 3, 0);
+        //varVals["speedRun"] = 3; varVals["attackCooldown"] = 0;
         pCellsHist[1]->set_int_stats(varVals);
-        pCellsHist[1]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        automateEnergy = true;
+        pCellsHist[1]->force_decision(5, 330, 0, RUN_MODE, true, false, false);
+        pCellsHist[1]->force_decision(3, 0, 0, WALK_MODE, true, false, false);
+        pCellsHist[1]->force_decision(2, 270, 0, WALK_MODE, true, false, false);
+        pCellsHist[1]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false);
+        varVals["posX"] = 21; varVals["posY"] = 8; varVals["speedRun"] = 3;
+        pCellsHist[2]->set_int_stats(varVals);
+        pCellsHist[2]->force_decision(10, 330, 0, RUN_MODE, true, false, false);
+        pCellsHist[2]->force_decision(3, 270, 0, WALK_MODE, true, false, false);
+        pCellsHist[2]->force_decision(13, 180, 0, WALK_MODE, true, false, false);
+        pCellsHist[2]->force_decision(2, 270, 0, WALK_MODE, true, false, false);
+        pCellsHist[2]->force_decision(6, 180, 0, WALK_MODE, true, false, false);
+        pCellsHist[2]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false);
+        varVals["posX"] = 1; varVals["posY"] = 1; varVals["speedRun"] = 2;
+        pCellsHist[3]->set_int_stats(varVals);
+        pCellsHist[3]->force_decision(4, 45, 0, RUN_MODE, true, false, false);
+        pCellsHist[3]->force_decision(17, 0, 0, WALK_MODE, true, false, false);
+        pCellsHist[3]->force_decision(5, 90, 0, WALK_MODE, true, false, false);
+        pCellsHist[3]->force_decision(100, 0, 0, IDLE_MODE, true, false, false);
+        scenario_postcode();
         break;
 
+        case 22:
+        // Show a worm losing energy faster and faster despite getting identical sunlight
+        // We may need a smaller window size for the remaining simulations
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 40, 200});
+        //varVals.clear(); varVals = gen_std_worm_stats(14, 9, 8, 500, 5000);
+        varVals.clear(); varVals = gen_std_stats("worm", 14, 9, 8, 500, 5000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
+        scenario_postcode();
+        break;
 
-        //default:
-        // Need a new scenario to simulate 3d, 3f, 3g, 3i, 3j, 3k, 3l
+        case 30:
+        // (3d) A giant predator is attacked but not killed by a group of several weak predators.
+        // The giant predator instantly kills all of them in one attack
+        scenario_precode(5);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        //varVals.clear(); varVals = gen_std_predator_stats(10, 10, 6, 4000, 40000);
+        varVals.clear(); varVals = gen_std_stats("predator", 10, 10, 6, 4000, 40000, 7);
+        //varVals["maxHealth"] = 7; varVals["health"] = varVals["maxHealth"];
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
+        //varVals.clear(); varVals = gen_std_predator_stats(0, 0, 2, 1000, 10000);
+        varVals.clear(); varVals = gen_std_stats("predator", 0, 0, 2, 1000, 10000);
+        varVals["posX"] = 10; varVals["posY"] = 5; varVals["attackCooldown"] = 2;
+        pCellsHist[1]->set_int_stats(varVals, 0);
+        pCellsHist[1]->force_decision(2, 90, 0, WALK_MODE, true, false, false);
+        varVals["posX"] = 5; varVals["posY"] = 10; varVals["attackCooldown"] = 2;
+        pCellsHist[2]->set_int_stats(varVals, 0);
+        pCellsHist[2]->force_decision(2, 0, 0, WALK_MODE, true, false, false);
+        varVals["posX"] = 15; varVals["posY"] = 10; varVals["attackCooldown"] = 2;
+        pCellsHist[3]->set_int_stats(varVals, 0);
+        pCellsHist[3]->force_decision(2, 180, 0, WALK_MODE, true, false, false);
+        varVals["posX"] = 10; varVals["posY"] = 15; varVals["attackCooldown"] = 2;
+        pCellsHist[4]->set_int_stats(varVals, 0);
+        pCellsHist[4]->force_decision(2, 270, 0, WALK_MODE, true, false, false);
+        scenario_postcode();
+        break;
+
+        /*
+        case 31:
+        // (3g) 16x16 simulation where a size 6 plant and four adjacent size 2 plants gain energy
+        // (none of which are touching each other). But partway through, the size 2 plants clone
+        // themselves simultaneously such that the larger plant now has to compete with 4 new size 2 plants.
+        // The size 2 plants are quickly suffocated by the size 6 plant.
+        scenario_precode(5);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        varVals.clear(); varVals = gen_std_predator_stats(10, 10, 6, 4000, 40000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
+        scenario_postcode();
+        break;
+        */
+
+
+        default:
+        cout << "NOTE: Scenario " << scenarioNum << " was supposed to be played, but that scenario is not available\n";
+        // Need a new scenario to simulate 3d, 3g, 3i, 3j, 3k
         // Need new scenarios to simulate 4a (speed and direction, self-destruct)
         // Need new scenarios to simulate 4d, 4e, 4i, 6b, 6c, 6d, 6e, 6h, 7e, 7jk
         // Need text for 4a, 5a, and section 7.
@@ -246,11 +323,13 @@ void do_video1(){
     int x0 = 20, y0 = 20, textWidth = 60, textHeight = 60;
     int numFrames = 10000;
     string text = "";
-    static const int kF0 = 0; // key frames
-    static const int kF1c = kF0 + 10, kF1d = kF1c + 250, kF1e = kF1d + 70;
-    static const int kF1f = kF1e + 55;
-    static const int kF2b = kF1f + 70;
-    static const int kF2d = kF2b + 40, kF2e = kF2d + 60, kF2f = kF2e + 300;
+    static const int kF0 = 0, kF1start = 10; // key frames
+    static const int kF1c = kF1start, kF1d = kF1c + 250, kF1e = kF1d + 70;
+    static const int kF1f = kF1e + 55, kF2start = kF1f + 70;
+    static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60;
+    static const int kF3start = kF2e + 300;
+    static const int kF3d = kF3start, kF3g = kF3d + 100, kF3i = kF3g + 100;
+    static const int kF3j = kF3i + 100, kF3k = kF3j + 100, kF4start = kF3k + 100;
     frameNum %= numFrames;
     switch(frameNum){
         case kF0:
@@ -276,41 +355,60 @@ void do_video1(){
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF2b - 1;
+        //frameNum = kF3start - 1;
         break;
 
         case kF1c:
-        gen_demo_cells_video1(1);
+        gen_demo_cells_video1(10);
         SDL_draw_frame();
         break;
         case kF1d:
-        gen_demo_cells_video1(2);
+        gen_demo_cells_video1(11);
         SDL_draw_frame();
         break;
         case kF1e:
-        gen_demo_cells_video1(3);
+        gen_demo_cells_video1(12);
         SDL_draw_frame();
         break;
         case kF1f:
-        gen_demo_cells_video1(5);
+        gen_demo_cells_video1(13);
         SDL_draw_frame();
         break;
 
         case kF2b:
-        gen_demo_cells_video1(7);
+        gen_demo_cells_video1(20);
         SDL_draw_frame();
         break;
         case kF2d:
-        gen_demo_cells_video1(6);
+        gen_demo_cells_video1(21);
         SDL_draw_frame();
         break;
         case kF2e:
-        gen_demo_cells_video1(4);
+        gen_demo_cells_video1(22);
+        SDL_draw_frame();
+        break;
+
+        case kF3d:
+        gen_demo_cells_video1(30);
+        SDL_draw_frame();
+        break;
+        case kF3g:
+        gen_demo_cells_video1(31);
+        SDL_draw_frame();
+        break;
+        case kF3i:
+        gen_demo_cells_video1(32);
+        SDL_draw_frame();
+        break;
+        case kF3j:
+        gen_demo_cells_video1(33);
+        SDL_draw_frame();
+        break;
+        case kF3k:
+        gen_demo_cells_video1(34);
         SDL_draw_frame();
         break;
         
-
-
         default:
         if(kF2b <= frameNum && frameNum < kF2d){
             pCellsHist[0]->health--;
@@ -320,11 +418,11 @@ void do_video1(){
             } else {
                 pCellsHist[1]->energy += pCellsHist[1]->maxEnergy / 25;
             }
-        } else if(kF2e <= frameNum && frameNum < kF2f){
+        } else if(kF2e <= frameNum && frameNum < kF3start){
             pCellsHist[0]->age += 49;
         }
         
-        if (kF2f <= frameNum) {
+        if (kF4start <= frameNum) {
             text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
             text += " of " + conv_int_to_str(numFrames);
             draw_text(x0,y0,textWidth,textHeight,0,0,text);

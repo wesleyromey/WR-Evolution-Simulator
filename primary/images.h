@@ -2804,36 +2804,35 @@ SDL_Texture* load_texture(const char* filePath){
 
 // sdlMap contains various thresholds which, when exceeded,
 //  Returns the corresponding SDL_Texture*
-SDL_Texture* findSDLTex(int num,
-        const std::vector<std::pair<int, SDL_Texture*>>& sdlMap){
-    // Use the binary search algorithm
-    int iLb = 0, iUb = sdlMap.size()-1;
-    while(iLb < iUb){
-        int iMid = (iLb+iUb+1)/2;
-        if(num < sdlMap[iMid].first) iUb = --iMid;
-        else iLb = iMid;
-    }
-    assert(iLb == iUb);
-    return sdlMap[iLb].second;
+SDL_Texture* findSDLTex(int num, const std::vector<std::pair<int, SDL_Texture*>>& sdlMap){
+  // Use the binary search algorithm
+  int iLb = 0, iUb = sdlMap.size()-1;
+  while(iLb < iUb){
+    int iMid = (iLb+iUb+1)/2;
+    if(num < sdlMap[iMid].first) iUb = --iMid;
+    else iLb = iMid;
+  }
+  assert(iLb == iUb);
+  return sdlMap[iLb].second;
 }
 
 // Draw a texture at a particular x and y position
 void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int height){
-    // xPos = 0, yPos = 0 refers to the top left corner of the window
-    // Not sure what pSrc refers to.
-    //  pSrc may represent the original object, but I'm not sure
-    //  If pSrc == NULL, then a new texture is rendered
-    //  Otherwise, the texture may be replaced (???)
-    // pDst represents the new object
-    //  If dst == NULL, then the texture fills the entire window
-    SDL_Rect* pDst = new SDL_Rect;
-    pDst->x = xPos; pDst->y = yPos;
-    pDst->h = height; pDst->w = width;
-    //SDL_RenderCopy(pRenderer, pTexture, pSrc, pDst);
-    SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
-    //  This renders the opject according to pDst
-    //  I could replace NULL with pSrc, but I don't know what pSrc refers to
-    delete pDst;
+  // xPos = 0, yPos = 0 refers to the top left corner of the window
+  // Not sure what pSrc refers to.
+  //  pSrc may represent the original object, but I'm not sure
+  //  If pSrc == NULL, then a new texture is rendered
+  //  Otherwise, the texture may be replaced (???)
+  // pDst represents the new object
+  //  If dst == NULL, then the texture fills the entire window
+  SDL_Rect* pDst = new SDL_Rect;
+  pDst->x = xPos; pDst->y = yPos;
+  pDst->h = height; pDst->w = width;
+  //SDL_RenderCopy(pRenderer, pTexture, pSrc, pDst);
+  SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
+  //  This renders the opject according to pDst
+  //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+  delete pDst;
 }
 
 void draw_gnd(){

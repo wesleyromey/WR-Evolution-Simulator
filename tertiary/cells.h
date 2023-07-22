@@ -1019,8 +1019,8 @@ struct Cell {
     void draw_cell(){
         // TODO: After the video, draw the cells so they are centered on their center pixel
         // TODO: If part of a cell is not fully rendered, render a copy of it on the other side
-        int drawX = drawScaleFactor*posX;
-        int drawY = drawScaleFactor*posY;
+        int drawX = drawScaleFactor*(posX - dia/2);
+        int drawY = drawScaleFactor*(posY - dia/2);
         int drawSize = drawScaleFactor*dia;
         draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
@@ -1243,8 +1243,8 @@ struct DeadCell {
         delete pSelf;
     }
     void draw_cell(){
-        int drawX = drawScaleFactor*posX;
-        int drawY = drawScaleFactor*posY;
+        int drawX = drawScaleFactor*(posX - dia/2);
+        int drawY = drawScaleFactor*(posY - dia/2);
         int drawSize = drawScaleFactor*dia;
         draw_texture(pDeadCellTex, drawX, drawY, drawSize, drawSize);
     }
