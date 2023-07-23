@@ -111,7 +111,7 @@ void gen_demo_cells_video1(int scenarioNum){
     
     
     std::map<std::string, int> varVals;
-    int tmpVar;
+    int tmpVar, tmpVar2;
     switch(scenarioNum){
         case 10:
         // Plant cell gets sunlight rapidly, then dies at the end of the long night
@@ -258,7 +258,7 @@ void gen_demo_cells_video1(int scenarioNum){
             pCellsHist[cellNum]->force_decision(6, speedDir, 0, WALK_MODE, true, false, false); \
             pCellsHist[cellNum]->force_decision(100, speedDir, 0, IDLE_MODE, true, false, false); \
         }
-        varVals.clear(); varVals = gen_std_stats("predator", 10, 10, 6, 4000, 40000, 7);
+        varVals.clear(); varVals = gen_std_stats("predator", 10, 10, 6, 3000, 30000, 7);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
         init_small_predator(varVals, 1, -9,  0, 2, 0  );
@@ -320,31 +320,61 @@ void gen_demo_cells_video1(int scenarioNum){
         break;
 
         case 33:
-        // (3j) 30x20 simulation showing four size 2 predators and a size 4 predator swarm a size 6 plant,
-        // only for the size two predators to get less of the energy (ensure the max energy of each predator
-        // is proportional to their diameter)
-        //  NOTE: My prediction did NOT occur!
-        //  TODO: Figure out why my prediction did not work
+        // (3j) 30x20 simulation showing four size 2 predators and a size 4 predator swarm a size 6 plant.
+        //  Each should gain identical amounts of energy when the plant dies.
         scenario_precode(6);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 0, 1});
         varVals.clear(); varVals = gen_std_stats("plant", 15, 10, 8, 40000, 40000, 16);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY){ \
-            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000, 10000, dia*dia/2); \
+        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY, attackCooldown){ \
+            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000, 10000, dia*dia/2, 100, 1, attackCooldown); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
             preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
             pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false); \
         }
-        init_predator(1, varVals,  6,  9, 4, 16,  8);
-        init_predator(2, varVals,  3,  3, 2, 12, 10);
-        init_predator(3, varVals,  3, 17, 2, 12, 13);
-        init_predator(4, varVals, 27,  3, 2, 15, 13);
-        init_predator(5, varVals, 25, 18, 2, 18, 13);
+        init_predator(1, varVals,  6,  9, 4, 16,  8, 10);
+        init_predator(2, varVals,  3,  3, 2, 12, 10, 10);
+        init_predator(3, varVals,  3, 17, 2, 12, 13, 10);
+        init_predator(4, varVals, 27,  3, 2, 15, 13, 10);
+        init_predator(5, varVals, 25, 18, 2, 18, 13, 10);
         #undef init_predator
         scenario_postcode();
         break;
+
+        case 34:
+        // (3k) 30x20 simulation where a size 6 predator is swarmed by six size 2 predators, each attacking one after the other.
+        // The giant kills the first small predator, but the other predators get their hits in before the giant can recharge.
+        // The giant dies.
+        scenario_precode(9);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY, delay){ \
+            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000*dia, 5000*dia, dia*dia, 100, dia*dia); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+            pCellsHist[cellNum]->force_decision(delay, 0, 0, IDLE_MODE, true, false, false); \
+            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
+            preplan_shortest_path_to_point(pCellsHist[cellNum], targetX, targetY, posX, posY, true, true, false); \
+            pCellsHist[cellNum]->force_decision(10, 0, 0, IDLE_MODE, false, false, false); \
+            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
+            pCellsHist[cellNum]->force_decision(10, 0, 0, IDLE_MODE, false, false, false); \
+            preplan_shortest_path_to_point(pCellsHist[cellNum], targetX, targetY, posX, posY, false, false, false); \
+            pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false); \
+        }
+        init_predator(0, varVals, 15, 10, 8, 15, 10, 1000);
+        init_predator(1, varVals, 15,  3, 2, 15,  6, 10);
+        init_predator(2, varVals, 20,  5, 2, 17,  8, 10);
+        init_predator(3, varVals, 22, 10, 2, 19, 10, 12);
+        init_predator(4, varVals, 20, 15, 2, 17, 12, 12);
+        init_predator(5, varVals, 15, 17, 2, 15, 14, 11);
+        init_predator(6, varVals, 10, 15, 2, 13, 12, 11);
+        init_predator(7, varVals,  8, 10, 2, 11, 10, 13);
+        init_predator(8, varVals, 10,  5, 2, 13,  8, 13);
+        #undef init_predator
+        scenario_postcode();
+        break;
+
 
 
         default:
@@ -389,7 +419,7 @@ void do_video1(){
     static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60;
     static const int kF3start = kF2e + 300;
     static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180;
-    static const int kF3j = kF3i + 2000, kF3k = kF3j + 200, kF4start = kF3k + 100;
+    static const int kF3j = kF3i + 2000, kF3k = kF3j + 50, kF4start = kF3k + 100;
     frameNum %= numFrames;
     switch(frameNum){
         case kF0:
@@ -415,7 +445,7 @@ void do_video1(){
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF3j - 1;
+        frameNum = kF3k - 1;
         break;
 
         case kF1c:
@@ -451,10 +481,10 @@ void do_video1(){
         gen_demo_cells_video1(32);
         break;
         case kF3j:
-        gen_demo_cells_video1(33); // TODO
+        gen_demo_cells_video1(33);
         break;
         case kF3k:
-        gen_demo_cells_video1(34); // TODO
+        gen_demo_cells_video1(34);
         break;
         
         default:
@@ -469,15 +499,10 @@ void do_video1(){
         } else if(kF2e <= frameNum && frameNum < kF3start){
             pCellsHist[0]->age += 49;
         } else if(kF3i < frameNum && frameNum < kF3j){
-            //print_scalar_vals("frameNum", frameNum);
-            //for(auto pCell : pAlives) print_scalar_vals("  energy", pCell->energy);
-            //print_scalar_vals("frameNum", frameNum);
             for(auto pCell : pAlives){
                 if(pCell->age == 0) pCell->clear_forced_decisions();
-                //print_scalar_vals("fDQ.size()", pCell->forcedDecisionsQueue.size());
                 if(pCell->forcedDecisionsQueue.size() > 0) continue;
                 preplan_random_cell_activity(pCell, 10, 10, 100, false, true);
-                //print_scalar_vals("numPreplannedDecisions", pCell->forcedDecisionsQueue.size());
             }
         }
         

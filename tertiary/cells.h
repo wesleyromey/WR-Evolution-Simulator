@@ -91,11 +91,16 @@ struct Cell {
         std::set<int> checkedCells = {uniqueCellNum};
         for(auto reg : neighboringRegions){
             for(auto pCell : pAlivesRegions[reg]){
-                if(!checkedCells.count(pCell->uniqueCellNum) &&
-                pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
-                    ans.push_back(pCell);
-                }
+                if(checkedCells.count(pCell->uniqueCellNum)) continue;
+                if(pCell->calc_distance_from_point(posX, posY) > (float)(dia + pCell->dia + 0.1) / 2) continue;
+                ans.push_back(pCell);
                 checkedCells.insert(pCell->uniqueCellNum);
+
+                //if(!checkedCells.count(pCell->uniqueCellNum) &&
+                //pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
+                //    ans.push_back(pCell);
+                //}
+                //checkedCells.insert(pCell->uniqueCellNum);
             }
         }
         return ans;
@@ -583,7 +588,6 @@ struct Cell {
 
         // If any forced decisions exist, override the AI now
         if(forcedDecisionsQueue.size() > 0){
-            update_timers();
             #define x(i) std::get<i>(forcedDecisionsQueue[0])
             x(0)--;
             if(0 <= x(1) && x(1) < 360) _speedDir = x(1);
@@ -594,7 +598,6 @@ struct Cell {
             _doCloning = x(6);
             set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
-            //if(frameNum >= x(0)) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
             #undef x
             return;
         } else {
@@ -1196,11 +1199,13 @@ struct DeadCell {
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<Cell*> ans;
         std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
+        std::set<int> checkedCells;
         for(auto reg : neighboringRegions){
             for(auto pCell : pAlivesRegions[reg]){
-                if(pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
-                    ans.push_back(pCell);
-                }
+                if(checkedCells.count(pCell->uniqueCellNum)) continue;
+                if(pCell->calc_distance_from_point(posX, posY) > (float)(dia + pCell->dia + 0.1) / 2) continue;
+                ans.push_back(pCell);
+                checkedCells.insert(pCell->uniqueCellNum);
             }
         }
         return ans;
