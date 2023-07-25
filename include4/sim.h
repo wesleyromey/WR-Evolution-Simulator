@@ -272,6 +272,7 @@ void assign_cells_to_correct_regions(){
 int do_frame(bool doCellDecisions = true){
     frameStart = SDL_GetTicks();
     assign_cells_to_correct_regions();
+    //for(int i = 0; i < min_int(pAlives.size(), 10); i++) pAlives[i]->print_stats();
     
     if(doCellDecisions && doCellAi){
         // The cells each decide what to do (e.g. speed, direction,
