@@ -4,9 +4,9 @@
 using std::cout, std::endl, std::string;
 
 // Use the following function to print vectors and 2d vectors of integers:
-//  std::for_each(vec2d.begin(), vec2d.end(), print2dVec);
-auto printVec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
-auto print2dVec = [](const std::vector<int>& vec) {
+//  std::for_each(vec2d.begin(), vec2d.end(), print_2d_vec);
+auto print_vec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
+auto print_2d_vec = [](const std::vector<int>& vec) {
     std::cout << "  ";
     for(auto val : vec) std::cout << val << " ";
     std::cout << endl;
@@ -125,7 +125,7 @@ struct SimParamInt{
 
 
 // Global Simulation Parameters
-SimParamInt initNumCells(400, 0, 10000);
+SimParamInt initNumCells(10, 0, 10000);
 SimParamInt ubX(30, 1, 400); // 120
 SimParamInt ubY(20, 1, 400); // 80
 // NOTE: The program might not work properly if this is disabled
@@ -191,10 +191,12 @@ Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation
 
 // Manually control cell decisions, frame ticks, etc.
+static const int EVOLUTIONARY_NEURAL_NETWORK_AI_MODE = 0, RNG_BASED_AI_MODE = 1;
+int aiMode = RNG_BASED_AI_MODE;
 bool doCellAi = true;
 bool automateEnergy = true;
 bool enableAutomaticAttack = true;
-bool enableAutomaticSelfDestruct = true;
+bool enableAutomaticSelfDestruct = false;
 bool enableAutomaticCloning = true;
 
 // Simulation States: These control the GUI, simulation mode, etc.
@@ -248,8 +250,6 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
     {"attack", "20*x/size/size"},
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
-        // TODO: There may be a bug here, since overcrowdingEnergyCoef is now
-        //  a struct whose actual value is contained in overcrowdingEnergyCoef.val
 };
 
 

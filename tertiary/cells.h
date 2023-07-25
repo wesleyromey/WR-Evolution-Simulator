@@ -95,12 +95,6 @@ struct Cell {
                 if(pCell->calc_distance_from_point(posX, posY) > (float)(dia + pCell->dia + 0.1) / 2) continue;
                 ans.push_back(pCell);
                 checkedCells.insert(pCell->uniqueCellNum);
-
-                //if(!checkedCells.count(pCell->uniqueCellNum) &&
-                //pCell->calc_distance_from_point(posX, posY) <= (float)(dia + pCell->dia + 0.1) / 2){
-                //    ans.push_back(pCell);
-                //}
-                //checkedCells.insert(pCell->uniqueCellNum);
             }
         }
         return ans;
@@ -314,14 +308,14 @@ struct Cell {
         //  (a) Find out which 10 cells are closest
         //  (b) For now, we just care about their id similarity
         int maxNumCellsSeen = 10;
-        std::vector<Cell*> nearestCells = get_nearest_cells(maxNumCellsSeen, pAlivesRegions);
+        std::vector<Cell*> pNearestCells = get_nearest_cells(maxNumCellsSeen, pAlivesRegions);
         for(int i = 0; i < maxNumCellsSeen; i++){
             int relDist = 0, relDirOther = 0;
             int relSpeedRadial = 0, relSpeedTangential = 0;
             int healthOther = 0, energyOther = 0, ageOther = 0;
             int idSimilarity = 0;
-            if(i < nearestCells.size()){
-                Cell* pCell = nearestCells[i];
+            if(i < pNearestCells.size()){
+                Cell* pCell = pNearestCells[i];
                 relDist = calc_distance_from_point(pCell->posX, pCell->posY);
                 // Standard angle of linepointing from other cell to current cell
                 relDirOther = (pCell->speedDir + 180) % 360; // degrees
@@ -365,13 +359,12 @@ struct Cell {
         assert(_numAiOutputs == nodesPerLayer[nodesPerLayer.size() - 1]);
         enforce_valid_ai();
     }
-    std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> get_ai_outputs(){
+    std::tuple<std::vector<int>, std::vector<bool>> get_ai_outputs(){
         std::vector<int> intVec;
         int _numAiOutputs = 0;
         intVec.push_back(speedDir); _numAiOutputs++;
         intVec.push_back(cloningDirection); _numAiOutputs++;
-        std::vector<char> charVec;
-        charVec.push_back(speedMode); _numAiOutputs++;
+        intVec.push_back(speedMode); _numAiOutputs++;
         std::vector<bool> boolVec;
         boolVec.push_back(doAttack); _numAiOutputs++;
         boolVec.push_back(doSelfDestruct); _numAiOutputs++;
@@ -379,7 +372,7 @@ struct Cell {
         if(nodesPerLayer[nodesPerLayer.size()-1] < 0) {
             nodesPerLayer[nodesPerLayer.size()-1] = _numAiOutputs;
         }
-        return {intVec, charVec, boolVec};
+        return {intVec, boolVec};
     }
     void update_energy_costs(){
         // Cloning
@@ -527,7 +520,7 @@ struct Cell {
     void init_ai(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // NOTE: Do NOT use this function until all the inputs are initialized
         std::vector<float> aiInputs = get_ai_inputs(pAlivesRegions);
-        std::tuple<std::vector<int>, std::vector<char>, std::vector<bool>> aiOutputs = get_ai_outputs();
+        std::tuple<std::vector<int>, std::vector<bool>> aiOutputs = get_ai_outputs();
 
         // Start with the (first) hidden layer, doing more of them if needed
         for(int i = 1; i < nodesPerLayer.size(); i++){
@@ -573,37 +566,57 @@ struct Cell {
         //  i.e. the creature decides what to do based on this function
         //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
         //enforce_valid_ai();
-        std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
-        for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
-            layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
-        }
+        int _speedDir = speedDir, _cloningDir = cloningDirection, _speedMode = speedMode;
+        bool _doAttack = doAttack, _doSelfDestruct = doSelfDestruct, _doCloning = doCloning;
         update_timers();
-        // Format and set the outputs
-        int _speedDir = saturate_int((int)layerInputs[0], 0, 359);
-        int _cloningDirection = saturate_int((int)layerInputs[2], 0, 359);
-        int _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
-        bool _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
-        bool _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
-        bool _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
 
-        // If any forced decisions exist, override the AI now
+        // If a decision is forced, then follow that decision
         if(forcedDecisionsQueue.size() > 0){
             #define x(i) std::get<i>(forcedDecisionsQueue[0])
             x(0)--;
             if(0 <= x(1) && x(1) < 360) _speedDir = x(1);
-            if(0 <= x(2) && x(2) < 360) _cloningDirection = x(2);
+            if(0 <= x(2) && x(2) < 360) _cloningDir = x(2);
             if(x(3) == IDLE_MODE || x(3) == WALK_MODE || x(3) == RUN_MODE) _speedMode = x(3);
             _doAttack = x(4) && attackCooldown == 0;
             _doSelfDestruct = x(5);
             _doCloning = x(6);
-            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+            set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
             #undef x
             return;
-        } else {
-            set_ai_outputs(_speedDir, _cloningDirection, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-            enforce_valid_cell(false);
         }
+        // If the AI is free to decide, then decide what to do
+        if(aiMode == EVOLUTIONARY_NEURAL_NETWORK_AI_MODE && forcedDecisionsQueue.size() == 0){
+            std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions);
+            for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
+                layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
+            }
+            _speedDir = saturate_int((int)layerInputs[0], 0, 359);
+            _cloningDir = saturate_int((int)layerInputs[2], 0, 359);
+            _speedMode = (char)saturate_int((char)layerInputs[3], IDLE_MODE, RUN_MODE);
+            _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
+            _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
+            _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
+        } else if(aiMode == RNG_BASED_AI_MODE){
+            _cloningDir = rand() % 360;
+            _doAttack = enableAutomaticAttack && attackCooldown == 0;
+            _doSelfDestruct = enableAutomaticSelfDestruct;
+            _doCloning = enableAutomaticCloning;
+            if(EAM[EAM_SUN] == 100){
+                _speedDir = 0; _speedMode = IDLE_MODE; _doAttack = false;
+            } else if(EAM[EAM_GND] == 100){
+                preplan_random_cell_activity(5, 5, 200, false, _doCloning);
+            } else {
+                std::vector<Cell*> pNearestCells = get_nearest_cells(20, pAlivesRegions);
+                if(pNearestCells.size() == 0 || !_doAttack){
+                    preplan_random_cell_activity(5, 5, 1, _doAttack, _doCloning);
+                } else {
+                    chase_optimal_cell(pAlivesRegions, pNearestCells, _doAttack, false, _doCloning);
+                }
+            }
+        }
+        set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+        enforce_valid_cell(false);
     }
     void mutate_ai(){
         float prob = (float)mutationRate / ubMutationRate;
@@ -676,7 +689,6 @@ struct Cell {
         #ifdef PLANT_INIT
         cellType = EAM_SUN;
         #endif
-
         switch(cellType){
             case EAM_SUN:
             EAM[EAM_SUN] = 100;
@@ -687,9 +699,11 @@ struct Cell {
             case EAM_CELLS:
             EAM[EAM_CELLS] = 100;
             attack = 1;
+            visionDist = 5;
             break;
             default:
             EAM[EAM_SUN] = 33; EAM[EAM_GND] = 34; EAM[EAM_CELLS] = 33;
+            visionDist = 5;
         }
         //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
         enforce_EAM_constraints();
@@ -980,13 +994,138 @@ struct Cell {
         }
         // TODO: ensure there is surplus energy beyond energyCostToClone
         if(doCloning && energy > 1.2*energyCostToClone && pAlives.size() < cellLimit.val){
-            //cout << ".";
             Cell* pCell = clone_self(pCellsHist.size(), cloningDirection); // A perfect clone of pSelf
             pCell->mutate_stats();
             pCellsHist.push_back(pCell);
             pAlives.push_back(pCell);
         }
         enforce_valid_cell(false);
+    }
+    // Generate random-ish movement that looks reasonable for a cell to do
+    void preplan_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
+    bool _enableAttack, bool _enableCloning){
+        int newSpeedDir = pSelf->speedDir, newSpeedMode = pSelf->speedMode;
+        int numFramesSinceLastDecision = 0;
+        bool changedSpeedDir = false;
+        while(numFrames > 0){
+            //cout << "-";
+            if(rand() % 100 < pctChanceToChangeDir){
+                while(newSpeedDir == pSelf->speedDir) newSpeedDir = rand() % 360;
+                changedSpeedDir = true;
+            }
+            if(rand() % 100 < pctChanceToChangeSpeed){
+                while(newSpeedMode == pSelf->speedMode) newSpeedMode = rand() % 3;
+                changedSpeedDir = true;
+            }
+            if(changedSpeedDir || numFramesSinceLastDecision >= numFrames){
+                changedSpeedDir = false;
+                pSelf->force_decision(numFramesSinceLastDecision, newSpeedDir, rand() % 360, newSpeedMode, _enableAttack, false, _enableCloning);
+                numFrames -= numFramesSinceLastDecision;
+                numFramesSinceLastDecision = 0;
+            } else {
+                numFramesSinceLastDecision++;
+            }
+        }
+    }
+    int get_optimal_speedDir_to_point(int targetX, int targetY){
+        int dx = targetX - posX, dy = targetY - posY;
+        float distance = calc_distance_from_point(targetX, targetY);
+        if(distance == 0) return 0;
+        int ans = (int)arc_cos_deg(abs(dx), distance);
+        if(dx >= 0){
+            if(dy >= 0) ans = ans;
+            ans = 360 - ans;
+        } else {
+            if(dy >= 0) ans = 180 - ans;
+            ans = 180 + ans;
+        }
+        // If speed is low, we may only be able to travel in certain directions
+        if(speedWalk > speedRun) cout << "WARNING: Walk speed exceeds run speed!";
+        switch(speedRun){
+            case 0:
+            return 0;
+            case 1:
+            return find_closest_value(ans, {0,90,180,270,360}) % 360;
+            case 2:
+            return find_closest_value(ans, {0,30,45,60, 90,120,135,150, 180,210,225,240, 270,300,315,330,360}) % 360;
+            default:
+            return ans; // The final speedDir may always be rounded down to the nearest 15 degrees
+        }
+    }
+    void preplan_shortest_path_to_point(int x0, int y0, int targetX, int targetY, bool enableRunning,
+    bool _enableAttack, bool _enableCloning){
+        int targetDx = targetX - x0, targetDy = targetY - y0;
+        int optimalDir = 0;
+        float optimalDistance = abs(targetDx) + abs(targetDy) + 1;
+        int speed = enableRunning*pSelf->speedRun + !enableRunning*pSelf->speedWalk;
+        int nextPosX = x0, nextPosY = y0;
+        for(int testDir = 0; testDir < 360; testDir += 15){
+            int testDx = speed * cos_deg(testDir);
+            int testDy = speed * sin_deg(testDir);
+            float testDistance = calc_distance_between_points(x0 + testDx, y0 + testDy, targetX, targetY);
+            if(testDistance < optimalDistance){
+                optimalDistance = testDistance;
+                optimalDir = testDir;
+                nextPosX = x0 + testDx; nextPosY = y0 + testDy;
+            }
+        }
+        int _speedMode = (enableRunning ? RUN_MODE : WALK_MODE);
+        float targetDistance = calc_distance_between_points(x0, y0, targetX, targetY);
+        float newTargetDistance = calc_distance_between_points(nextPosX, nextPosY, targetX, targetY);
+        if(newTargetDistance >= targetDistance){
+            if(!enableRunning) return;
+            preplan_shortest_path_to_point(nextPosX, nextPosY, targetX, targetY, false, _enableAttack, _enableCloning);
+            return;
+        }
+        force_decision(1, optimalDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
+        preplan_shortest_path_to_point(nextPosX, nextPosY, targetX, targetY, enableRunning, _enableAttack, _enableCloning);
+    }
+    void chase_optimal_cell(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions, std::vector<Cell*>& pNearestCells,
+    bool _doAttack, bool _doSelfDestruct, bool _doCloning){
+        clear_forced_decisions();
+        // First, mark each cell with a number and record the smallest (best) number
+        std::vector<int> cellRanks;
+        for(auto pCell : pNearestCells){
+            int rank = 0;
+            int speedCoef = 1, dirCoef = 1, distanceCoef = 0, doAttackCoef = 0;
+            int predatorCoef = 10000, balancedCoef = 10000, gndCoef = 5000, plantCoef = 2500;
+
+            int xNext = pCell->posX + pCell->get_speed()*cos_deg(pCell->speedDir);
+            int yNext = pCell->posY + pCell->get_speed()*sin_deg(pCell->speedDir);
+            int distance = calc_distance_from_point(xNext, yNext);
+            int optimalSpeedDir = get_optimal_speedDir_to_point(xNext, yNext);
+            int speedDirDiff = min_int(abs(optimalSpeedDir - speedDir), abs(optimalSpeedDir - speedDir - 360));
+
+            // Update Rank
+            rank += speedCoef * pCell->get_speed();
+            rank += distanceCoef * distance;
+            rank += dirCoef * speedDirDiff;
+            rank += doAttackCoef * pCell->doAttack;
+            rank += predatorCoef * (pCell->EAM[EAM_CELLS] == 100);
+            rank += balancedCoef * (pCell->EAM[EAM_SUN] < 100 && pCell->EAM[EAM_GND] < 100 && pCell->EAM[EAM_CELLS] < 100);
+            rank += gndCoef * (pCell->EAM[EAM_GND] == 100);
+            rank += plantCoef * (pCell->EAM[EAM_SUN] == 100);
+            cellRanks.push_back(rank);
+        }
+        int minRank = cellRanks[0];
+        for(auto rank : cellRanks) minRank = min_int(minRank, rank);
+        for(int i = pNearestCells.size()-1; i >= 0; i--){
+            if(cellRanks[i] != minRank) pNearestCells.erase(pNearestCells.begin() + i);
+        }
+        // Get the optimal speedDir and speed for the first cell in the list
+        Cell* pCellToChase = pNearestCells[0];
+        int xNext = pCellToChase->posX + pCellToChase->get_speed()*cos_deg(pCellToChase->speedDir);
+        int yNext = pCellToChase->posY + pCellToChase->get_speed()*sin_deg(pCellToChase->speedDir);
+        int optimalSpeedDir = get_optimal_speedDir_to_point(xNext, yNext);
+        // Pursue the relevant cell for 1 more frame
+        int _speedDir = optimalSpeedDir;
+        int targetDistance = calc_distance_from_point(pNearestCells[0]->posX, pNearestCells[0]->posY);
+        int targetSpeed = find_closest_value(targetDistance, {speedIdle, speedWalk, speedRun});
+        int _speedMode;
+        if(targetSpeed == speedIdle) _speedMode = speedIdle;
+        if(targetSpeed == speedWalk) _speedMode = speedWalk;
+        if(targetSpeed == speedRun)  _speedMode = speedRun;
+        force_decision(1, _speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;

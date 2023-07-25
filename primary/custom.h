@@ -52,7 +52,13 @@ float tan_deg(int input){
 }
 float arc_tan_deg(int dy, int dx){
     //if(dx == 0) return INFINITY;
-    return atan((float)dy / (float)dx) * PI / 180;
+    return atan((double)dy / (double)dx) * PI / 180;
+}
+float arc_sin_deg(double dy, double distance){
+    return asin(dy / distance) * PI / 180;
+}
+float arc_cos_deg(double dx, double distance){
+    return acos(dx / distance) * PI / 180;
 }
 int min_int(int num1, int num2){
     return (num1 <= num2 ? num1 : num2);
@@ -166,3 +172,15 @@ std::string conv_int_to_str(int num){
     return std::to_string(num);
 }
 
+// Other calculations
+int find_closest_value(int target, std::vector<int> vec){
+    assert(vec.size() > 0);
+    int ans = vec[0], diff = abs(target - ans);
+    for(auto ele : vec){
+        if(abs(target - ele) < diff){
+            diff = abs(target - ele);
+            ans = ele;
+        }
+    }
+    return ans;
+}

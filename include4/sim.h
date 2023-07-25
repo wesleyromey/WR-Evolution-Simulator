@@ -272,16 +272,17 @@ void assign_cells_to_correct_regions(){
 int do_frame(bool doCellDecisions = true){
     frameStart = SDL_GetTicks();
     assign_cells_to_correct_regions();
-
+    
     if(doCellDecisions && doCellAi){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
         for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
     }
-    
+
     // Cells move to their target positions based on their speed
     for(auto pCell : pAlives) pCell->update_target_pos();
     assign_cells_to_correct_regions();
+
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
@@ -291,6 +292,7 @@ int do_frame(bool doCellDecisions = true){
         }
         assign_cells_to_correct_regions();
     }
+
 
     // Cells move to new positions if enough force is applied
     for(auto pCell : pAlives) pCell->update_forces(pAlives, pAlivesRegions);
@@ -305,6 +307,7 @@ int do_frame(bool doCellDecisions = true){
         for(auto pCell : pDeads) pCell->do_energy_decay(pAlives, pAlivesRegions);
         for(auto pCell : pAlives) pCell->consume_energy_per_frame();
     }
+
 
     // Kill all cells which meet at least one of the conditions for dying
     for(int i = pAlives.size() - 1; i >= 0; i--) {

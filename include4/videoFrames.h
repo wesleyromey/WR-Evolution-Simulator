@@ -35,65 +35,6 @@ int speedIdle = 0, int speedWalk = 1, int speedRun = 2, int visionDist = 0){
     return varVals;
 }
 
-// Generate random-ish movement that looks reasonable for a cell to do
-void preplan_random_cell_activity(Cell* pCell, int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
-bool _enableAttack, bool _enableCloning){
-    int newSpeedDir = pCell->speedDir, newSpeedMode = pCell->speedMode;
-    int numFramesSinceLastDecision = 0;
-    bool changedSpeedDir = false;
-    while(numFrames > 0){
-        if(rand() % 100 < pctChanceToChangeDir){
-            while(newSpeedDir == pCell->speedDir) newSpeedDir = rand() % 360;
-            changedSpeedDir = true;
-        }
-        if(rand() % 100 < pctChanceToChangeSpeed){
-            while(newSpeedMode == pCell->speedMode) newSpeedMode = rand() % 3;
-            changedSpeedDir = true;
-        }
-        if(changedSpeedDir || numFramesSinceLastDecision >= numFrames){
-            changedSpeedDir = false;
-            pCell->force_decision(numFramesSinceLastDecision, newSpeedDir, rand() % 360, newSpeedMode, _enableAttack, false, _enableCloning);
-            //print_scalar_vals("newSpeedDir", newSpeedDir, "newSpeedMode", newSpeedMode);
-            numFrames -= numFramesSinceLastDecision;
-            numFramesSinceLastDecision = 0;
-        } else {
-            numFramesSinceLastDecision++;
-        }
-    }
-}
-
-
-void preplan_shortest_path_to_point(Cell* pCell, int posX, int posY, int targetX, int targetY, bool enableRunning,
-bool _enableAttack, bool _enableCloning){
-    int targetDx = targetX - posX, targetDy = targetY - posY;
-    int optimalDir = 0;
-    float optimalDistance = abs(targetDx) + abs(targetDy) + 1;
-    int speed = enableRunning*pCell->speedRun + !enableRunning*pCell->speedWalk;
-    int nextPosX = posX, nextPosY = posY;
-    for(int testDir = 0; testDir < 360; testDir += 15){
-        int testDx = speed * cos_deg(testDir);
-        int testDy = speed * sin_deg(testDir);
-        float testDistance = calc_distance_between_points(posX + testDx, posY + testDy, targetX, targetY);
-        //cout << testDx << ", " << testDy << ", " << speed << ", " << testDistance << endl;
-        if(testDistance < optimalDistance){
-            optimalDistance = testDistance;
-            optimalDir = testDir;
-            nextPosX = posX + testDx; nextPosY = posY + testDy;
-        }
-    }
-    int _speedMode = (enableRunning ? RUN_MODE : WALK_MODE);
-    float targetDistance = calc_distance_between_points(posX, posY, targetX, targetY);
-    float newTargetDistance = calc_distance_between_points(nextPosX, nextPosY, targetX, targetY);
-    //print_scalar_vals("newTargetDistance", newTargetDistance, "targetDistance", targetDistance);
-    if(newTargetDistance >= targetDistance){
-        if(!enableRunning) return;
-        preplan_shortest_path_to_point(pCell, nextPosX, nextPosY, targetX, targetY, false, _enableAttack, _enableCloning);
-        return;
-    }
-    pCell->force_decision(1, optimalDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
-    preplan_shortest_path_to_point(pCell, nextPosX, nextPosY, targetX, targetY, enableRunning, _enableAttack, _enableCloning);
-}
-
 void gen_demo_cells_video1(int scenarioNum){
     // Shorthand functions for these scenarios
     #ifndef scenario_precode
@@ -331,7 +272,7 @@ void gen_demo_cells_video1(int scenarioNum){
         #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY, attackCooldown){ \
             varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000, 10000, dia*dia/2, 100, 1, attackCooldown); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
-            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
+            pCellsHist[cellNum]->preplan_shortest_path_to_point(posX, posY, targetX, targetY, true, true, false); \
             pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false); \
         }
         init_predator(1, varVals,  6,  9, 4, 16,  8, 10);
@@ -354,12 +295,12 @@ void gen_demo_cells_video1(int scenarioNum){
             varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000*dia, 5000*dia, dia*dia, 100, dia*dia); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
             pCellsHist[cellNum]->force_decision(delay, 0, 0, IDLE_MODE, true, false, false); \
-            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
-            preplan_shortest_path_to_point(pCellsHist[cellNum], targetX, targetY, posX, posY, true, true, false); \
+            pCellsHist[cellNum]->preplan_shortest_path_to_point(posX, posY, targetX, targetY, true, true, false); \
+            pCellsHist[cellNum]->preplan_shortest_path_to_point(targetX, targetY, posX, posY, true, true, false); \
             pCellsHist[cellNum]->force_decision(10, 0, 0, IDLE_MODE, false, false, false); \
-            preplan_shortest_path_to_point(pCellsHist[cellNum], posX, posY, targetX, targetY, true, true, false); \
+            pCellsHist[cellNum]->preplan_shortest_path_to_point(posX, posY, targetX, targetY, true, true, false); \
             pCellsHist[cellNum]->force_decision(10, 0, 0, IDLE_MODE, false, false, false); \
-            preplan_shortest_path_to_point(pCellsHist[cellNum], targetX, targetY, posX, posY, false, false, false); \
+            pCellsHist[cellNum]->preplan_shortest_path_to_point(targetX, targetY, posX, posY, false, false, false); \
             pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false); \
         }
         init_predator(0, varVals, 15, 10, 8, 15, 10, 1000);
@@ -414,12 +355,13 @@ void do_video1(){
     int numFrames = 10000;
     string text = "";
     static const int kF0 = 0, kF1start = 10; // key frames
-    static const int kF1c = kF1start, kF1d = kF1c + 250, kF1e = kF1d + 70;
+    static const int kF1c = kF1start, kF1d = kF1c + 250, kF1e = kF1d + 70; // Intro
     static const int kF1f = kF1e + 55, kF2start = kF1f + 70;
-    static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60;
+    static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60; // Energy, health, age
     static const int kF3start = kF2e + 300;
-    static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180;
-    static const int kF3j = kF3i + 2000, kF3k = kF3j + 50, kF4start = kF3k + 100;
+    static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180; // Size
+    static const int kF3j = kF3i + 1000, kF3k = kF3j + 50, kF4start = kF3k + 100;
+    
     frameNum %= numFrames;
     switch(frameNum){
         case kF0:
@@ -445,7 +387,7 @@ void do_video1(){
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF3k - 1;
+        frameNum = kF3start - 1;
         break;
 
         case kF1c:
@@ -502,7 +444,7 @@ void do_video1(){
             for(auto pCell : pAlives){
                 if(pCell->age == 0) pCell->clear_forced_decisions();
                 if(pCell->forcedDecisionsQueue.size() > 0) continue;
-                preplan_random_cell_activity(pCell, 10, 10, 100, false, true);
+                pCell->preplan_random_cell_activity(10, 10, 100, false, true);
             }
         }
         
