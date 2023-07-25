@@ -58,6 +58,7 @@ struct Cell {
     int EAM[NUM_EAM_ELE]; // Energy accumulation method
     //  There are 3 such methods, so they might as well
     //  be stored in a constant-sized array
+    int cellType = -1;
     
     // Dependent (calculated) variables (must be updated
     //  if any of their dependent variables are updated)
@@ -96,28 +97,68 @@ struct Cell {
 
 
     // Constructor
-    Cell(){
+    Cell(int _cellType){
+        cellType = _cellType;
+        #define stat_init(lb, ub) gen_uniform_int_dist(rng, lb, ub)
         // Initialize all stats
         // Notation: Pct1k == one thousandth of the entire value
         // {{"stat1", {val, lb, ub, mutationPct1kChance, mutationMaxPct1kChange}}, ...}
-        stats["attack"]         = {   -1,     0, 10000,  50, 100};
-        stats["dex"]            = {    0,     0,     0,   0,   0}; // TODD: Add this as an actual stat
-        stats["dia"]            = {   -1,     0, 10,     50, 100};
-        stats["EAM[EAM_SUN]"]   = {   -1,     0, 100,    50, 100};
-        stats["EAM[EAM_GND]"]   = {   -1,     0, 100,    50, 100};
-        stats["EAM[EAM_CELLS]"] = {   -1,     0, 100,    50, 100};
-        stats["maxAtkCooldown"] = {   10,     0,     0,   0,   0};
-        stats["maxEnergy"]      = {10000, 10000, 10000,   0,   0};
-        stats["maxHealth"]      = {   -1,     1, 10000,  50, 100};
-        stats["mutationRate"]   = {   -1,     0,  1000,  50, 100};
+        //  Whenever a mutation occurs, the stat must be able to change by at least 1 (unless lb == ub)
+        stats["attack"]         = { stat_init(1,   1),     0, 10000, 100, 100}; // (0,3)
+        stats["dex"]            = {                 0,     0,     0,   0,   0}; // TODD: Add this as an actual stat
+        stats["dia"]            = { stat_init(2,   2),     1,    10, 100, 100}; // (2,10)
+        stats["EAM_SUN"]        = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
+        stats["EAM_GND"]        = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
+        stats["EAM_CELLS"]      = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
+        stats["maxAtkCooldown"] = {                10,    10,    10,   0,   0}; // 10
+        stats["maxEnergy"]      = { 5000*stats["dia"][0],  1, 90000,   0,   0}; // 5000*stats["dia"]
+        stats["maxHealth"]      = { stat_init(1,   1),     1, 10000, 100, 100}; // (1,10)
+        stats["mutationRate"]   = { stat_init(0,   0),     0,  1000, 100, 100}; // (0,1000)
         // TODO: change speedIdle, speedWalk, and speedRun to a "maxSpeed" stat and change speed to a continuously varying decision
-        stats["speedIdle"]      = {    0,     0,     0,   0,   0};
-        stats["speedWalk"]      = {   -1,     0,   100,  50, 100};
-        stats["speedRun"]       = {   -1,     0,   100,  50, 100};
-        stats["stickiness"]     = {    0,     0,     0,   0,   0};
-        stats["visionDist"]     = {   -1,     0,  1000,  50, 100};
+        stats["speedIdle"]      = {                 0,     0,     0,   0,   0}; // 0
+        stats["speedWalk"]      = {                 1,     0,     2, 100, 100}; // (0, 1)
+        stats["speedRun"]       = {                 2,     0,   100, 100, 100}; // (0, 100)
+        stats["stickiness"]     = {                 0,     0,     0,   0,   0}; // 0
+        stats["visionDist"]     = { stat_init(5,   5),     0,  1000, 100, 100}; // (0, 10)
+        switch(cellType){
+            case CELL_TYPE_PLANT:
+            update_stat("attack"    , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_SUN"   , 0x1F, 100, 100, 100, 0, 0);
+            update_stat("EAM_GND"   , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_CELLS" , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("speedWalk" , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("speedRun"  , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("visionDist", 0x1F, 0, 0, 0, 0, 0);
+            break;
+            case CELL_TYPE_WORM:
+            update_stat("attack"    , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_SUN"   , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_GND"   , 0x1F, 100, 100, 100, 0, 0);
+            update_stat("EAM_CELLS" , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("visionDist", 0x1F, 0, 0, 0, 0, 0);
+            break;
+            case CELL_TYPE_PREDATOR:
+            update_stat("EAM_SUN"   , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_GND"   , 0x1F, 0, 0, 0, 0, 0);
+            update_stat("EAM_CELLS" , 0x1F, 100, 100, 100, 0, 0);
+            break;
+            case CELL_TYPE_MUTANT:
+            update_stat("EAM_SUN"   , 0x1F, 33, 33, 33, 0, 0);
+            update_stat("EAM_GND"   , 0x1F, 34, 34, 34, 0, 0);
+            update_stat("EAM_CELLS" , 0x1F, 33, 33, 33, 0, 0);
+            break;
+        }
+        #undef stat_init
     }
     // Struct-specific methods
+    void update_stat(std::string statName, int mask, int val, int lb, int ub, int mutationPct1kChance, int mutationMaxPct1kChange){
+        // Default: mask == 0x1F
+        if(mask & 0x01) stats[statName][0] = val;
+        if(mask & 0x02) stats[statName][1] = lb;
+        if(mask & 0x04) stats[statName][2] = ub;
+        if(mask & 0x08) stats[statName][3] = mutationPct1kChance;
+        if(mask & 0x10) stats[statName][4] = mutationMaxPct1kChange;
+    }
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
         float probDefault = (float)parent->mutationRate / (float)parent->ubMutationRate;
@@ -273,9 +314,9 @@ struct Cell {
         if(!statsToNotCopy.count("attack")) copy_stat_to_map("attack", updateMask, attack, 0, 0, 0, 0);
         //if(!statsToNotCopy.count("dex")) copy_stat_to_map("dex", updateMask, dex, 0, 0, 0, 0);
         if(!statsToNotCopy.count("dia")) copy_stat_to_map("dia", updateMask, dia, 0, 0, 0, 0);
-        if(!statsToNotCopy.count("EAM[EAM_SUN]")) copy_stat_to_map("EAM[EAM_SUN]", updateMask, EAM[EAM_SUN], 0, 0, 0, 0);
-        if(!statsToNotCopy.count("EAM[EAM_GND]")) copy_stat_to_map("EAM[EAM_GND]", updateMask, EAM[EAM_GND], 0, 0, 0, 0);
-        if(!statsToNotCopy.count("EAM[EAM_CELLS]")) copy_stat_to_map("EAM[EAM_CELLS]", updateMask, EAM[EAM_CELLS], 0, 0, 0, 0);
+        if(!statsToNotCopy.count("EAM_SUN")) copy_stat_to_map("EAM_SUN", updateMask, EAM[EAM_SUN], 0, 0, 0, 0);
+        if(!statsToNotCopy.count("EAM_GND")) copy_stat_to_map("EAM_GND", updateMask, EAM[EAM_GND], 0, 0, 0, 0);
+        if(!statsToNotCopy.count("EAM_CELLS")) copy_stat_to_map("EAM_CELLS", updateMask, EAM[EAM_CELLS], 0, 0, 0, 0);
         if(!statsToNotCopy.count("maxAtkCooldown")) copy_stat_to_map("maxAtkCooldown", updateMask, maxAttackCooldown, 0, 0, 0, 0);
         if(!statsToNotCopy.count("maxEnergy")) copy_stat_to_map("maxEnergy", updateMask, maxEnergy, 0, 0, 0, 0);
         if(!statsToNotCopy.count("maxHealth")) copy_stat_to_map("maxHealth", updateMask, maxHealth, 0, 0, 0, 0);
@@ -858,7 +899,7 @@ struct Cell {
     }
     Cell* clone_self(int cellNum, int targetCloningDir = -1, bool randomizeCloningDir = false, bool doMutation = true){
         // The clone's position will be roughly the cell's diameter plus 1 away from the cell
-        Cell* pClone = new Cell;
+        Cell* pClone = new Cell(cellType);
         *pClone = *pSelf; // Almost all quantities should be copied over perfectly
         // However, the pointers referring to the cells' identities stored within the cloned cell
         //  must be changed

@@ -228,6 +228,9 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_SUN means energy from sun (or radiation)
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
+static const int CELL_TYPE_PLANT = 0, CELL_TYPE_WORM = 1, CELL_TYPE_PREDATOR = 2, CELL_TYPE_MUTANT = 3;
+static const int CELL_TYPE_GENERIC = 4;
+std::discrete_distribution<int> availableCellTypes = {CELL_TYPE_PLANT, CELL_TYPE_WORM, CELL_TYPE_PREDATOR, CELL_TYPE_MUTANT};
 SimParamInt forceDampingFactor(1000000, 0, 1000000);
     // Default: 100
     // Applies to the repulsive force that keeps cells apart

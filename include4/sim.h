@@ -161,7 +161,7 @@ void init_sim_global_vals(){
 
 void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
     if(pParent == NULL){
-        Cell *pCell = new Cell;
+        Cell *pCell = new Cell(availableCellTypes(rng));
         pCell->gen_stats_random(pCellsHist.size(), pAlivesRegions, pCell);
         pCell->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
         pCellsHist.push_back(pCell);
