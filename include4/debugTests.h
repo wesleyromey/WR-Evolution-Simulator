@@ -17,7 +17,7 @@
 
 // Test the global energy-related parameters, such as day-night cycles
 void testGlobalEnergy(){
-    gen_cell();
+    gen_cell(CELL_TYPE_MUTANT);
     std::map<std::string, int> hardcodedVals = {
         {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 0}, {"EAM[EAM_GND]", 0}, {"EAM[EAM_SUN]", 100},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
@@ -38,7 +38,7 @@ void testGlobalEnergy(){
     std::cout << "}\n";
 
     // Test the energy from dead cells (TODO)
-    gen_cell();
+    gen_cell(CELL_TYPE_MUTANT);
     hardcodedVals = {
         {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 40}, {"EAM[EAM_GND]", 30}, {"EAM[EAM_SUN]", 30},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
@@ -64,7 +64,7 @@ void testGlobalEnergy(){
 //  (e.g. time)
 void testFrames(){
     // We will first test a single cell's ability to absorb energy
-    gen_cell();
+    gen_cell(CELL_TYPE_MUTANT);
     std::map<std::string, int> hardcodedVals = {
         {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 0}, {"EAM[EAM_GND]", 0}, {"EAM[EAM_SUN]", 100},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
@@ -78,7 +78,7 @@ void testFrames(){
 // A function devoted to testing the energy usage of the cell for cloning,
 //  surviving, and using its abilities
 void testStats(){
-    gen_cell();
+    gen_cell(CELL_TYPE_MUTANT);
     std::map<std::string, int> varVals = {
         {"age", 11}, {"aggression", 11}, {"attack", 11}, {"attackCooldown", 11},
         {"cloningDirection", 11}, 
@@ -95,11 +95,11 @@ void testStats(){
 // A function devoted to testing the cell AI
 void testAi(){
     std::cout << "Test the ai and its cloning / mutation properties:" << std::endl;
-    gen_cell();
-    gen_cell();
-    gen_cell(pAlives[1]);
-    gen_cell(pAlives[2], false, 0);
-    std::cout << "mutationRate of 1st cell: " << pAlives[1]->mutationRate << std::endl;
+    gen_cell(CELL_TYPE_MUTANT);
+    gen_cell(CELL_TYPE_MUTANT);
+    gen_cell(CELL_TYPE_MUTANT, pAlives[1]);
+    gen_cell(CELL_TYPE_MUTANT, pAlives[2], false, 0);
+    std::cout << "mutationRate of 1st cell: " << pAlives[1]->stats["mutationRate"][0] << std::endl;
     std::cout << "The 2nd cell is a perfect clone of the 1st cell\n";
     std::cout << "The 3rd cell is a mutated clone of the 2nd cell\n";
     std::cout << "The 0th cell is completely unrelated from the other cells\n";
@@ -115,11 +115,11 @@ void testForce(){
     std::cout << "forceDampingFactor.val: " << forceDampingFactor.val << "\n\n";
 
     int numCells = 2;
-    randomly_place_new_cells(numCells);
+    randomly_place_new_cells(numCells, CELL_TYPE_MUTANT);
     for (int i = 0; i < numCells; i++) {
         pAlives[i]->speedMode = IDLE_MODE;
-        pAlives[i]->stickiness = 0;
-        pAlives[i]->dia = 1;
+        pAlives[i]->stats["stickiness"][0] = 0;
+        pAlives[i]->stats["dia"][0] = 1;
         pAlives[i]->update_size();
     }
 
@@ -136,7 +136,7 @@ void testForce(){
     if(DO_DIA_10_TESTS){
         std::cout << "Testing a diameter of 10\n";
         for (int i = 0; i < numCells; i++) {
-            pAlives[i]->dia = 10;
+            pAlives[i]->stats["dia"][0] = 10;
             pAlives[i]->update_size();
         }
         pAlives[0]->update_pos(30, 30); pAlives[1]->update_pos(30, 30);
@@ -169,7 +169,7 @@ void test_SDL(){
 }
 
 void test_event_handler(){
-    randomly_place_new_cells(10);
+    randomly_place_new_cells(10, CELL_TYPE_MUTANT);
     int frameNum = 0;
     while(simState != SIM_STATE_QUIT){
         do_frame(frameNum++);
@@ -296,7 +296,7 @@ void test_cur_tex(){
 
     int row = 0, col = 0;
     simState = SIM_STATE_STEP_FRAMES;
-    randomly_place_new_cells(10);
+    randomly_place_new_cells(10, CELL_TYPE_MUTANT);
     while(simState != SIM_STATE_QUIT){
         ++row; ++col;
         row %= ubX.val; col %= ubY.val;

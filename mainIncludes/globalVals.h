@@ -3,6 +3,7 @@
 //using namespace std;
 using std::cout, std::endl, std::string;
 
+
 // Use the following function to print vectors and 2d vectors of integers:
 //  std::for_each(vec2d.begin(), vec2d.end(), print_2d_vec);
 auto print_vec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
@@ -125,7 +126,7 @@ struct SimParamInt{
 
 
 // Global Simulation Parameters
-SimParamInt initNumCells(10, 0, 10000);
+SimParamInt initNumCells(0, 0, 10000);
 SimParamInt ubX(30, 1, 400); // 120
 SimParamInt ubY(20, 1, 400); // 80
 // NOTE: The program might not work properly if this is disabled
@@ -229,7 +230,7 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_GND means energy from ground
     //  EAM_CELLS means energy from other cells
 static const int CELL_TYPE_PLANT = 0, CELL_TYPE_WORM = 1, CELL_TYPE_PREDATOR = 2, CELL_TYPE_MUTANT = 3;
-static const int CELL_TYPE_GENERIC = 4;
+static const int CELL_TYPE_GENERIC = 4, CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT = 5;
 std::discrete_distribution<int> availableCellTypes = {CELL_TYPE_PLANT, CELL_TYPE_WORM, CELL_TYPE_PREDATOR, CELL_TYPE_MUTANT};
 SimParamInt forceDampingFactor(1000000, 0, 1000000);
     // Default: 100

@@ -159,16 +159,19 @@ void init_sim_global_vals(){
     init_sim_gnd_energy(maxGndEnergy.val / 2);
 }
 
-void gen_cell(Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
+void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
+    if(cellType == CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT) cellType = availableCellTypes(rng);
     if(pParent == NULL){
-        Cell *pCell = new Cell(availableCellTypes(rng));
-        pCell->gen_stats_random(pCellsHist.size(), pAlivesRegions, pCell);
+        //Cell *pCell = new Cell(pCellsHist.size(), cellType, pAlivesRegions, NULL);
+        Cell *pCell = new Cell();
+        pCell->define_self(pCellsHist.size(), pCell, NULL);
+        pCell->gen_stats_random(cellType, pAlivesRegions);
         pCell->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
     } else {
-        Cell* pCell = pParent->clone_self(pCellsHist.size(), cloningDir, randomizeCloningDir); // A perfect clone of pParent
-        pCell->mutate_stats();
+        Cell* pCell = pParent->clone_self(pCellsHist.size(), pAlivesRegions, cloningDir, randomizeCloningDir);
+        //pCell->mutate_stats();
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
     }
@@ -178,7 +181,7 @@ void kill_cell(Cell* pAlive, int i_pAlive) {
     DeadCell* pDead = new DeadCell;
     pDead->kill_cell(pAlive, pDead, i_pAlive);
     // Remove pAlive from the list of alive cells
-    pAlives.erase(pAlives.begin() + i_pAlive);
+    pAlives.erase(pAlives.begin() + i_pAlive); // TODO
     // Add pDead to the list of dead cells
     pDeads.push_back(pDead);
 }
@@ -195,10 +198,11 @@ void gen_dead_cell(Cell* pAlive = NULL, int i_pAlive = -1) {
     }
 }
 
-void randomly_place_new_cells(int numCells){
+// cellType == -1 means select a random cell type
+void randomly_place_new_cells(int numCells, int cellType = CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT){
     // Spreads random cells equally across the simulation space
     for(int i = 0; i < numCells; i++) {
-        gen_cell(); // This function allocates memory for pCell
+        gen_cell(cellType); // This function allocates memory for pCell
         //  and appends a pointer to it for both pCellsHist and pAlives
     }
     //std::cout << "Placed " << numCells << " new cells\n";
@@ -272,43 +276,40 @@ void assign_cells_to_correct_regions(){
 int do_frame(bool doCellDecisions = true){
     frameStart = SDL_GetTicks();
     assign_cells_to_correct_regions();
-    //for(int i = 0; i < min_int(pAlives.size(), 10); i++) pAlives[i]->print_stats();
-    
+
     if(doCellDecisions && doCellAi){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
-        for(auto pCell : pAlives) pCell->decide_next_frame(pAlivesRegions);
+        for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->decide_next_frame(pAlivesRegions);
     }
 
     // Cells move to their target positions based on their speed
-    for(auto pCell : pAlives) pCell->update_target_pos();
+    for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->update_target_pos();
     assign_cells_to_correct_regions();
-
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
     if(doCellAi){
-        for(auto pCell : pAlives){
-            pCell->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
+        // Bug fix: using for(auto pCell : pAlives) is a bad idea when pAlives changes size during the algorithm
+        for(int i = pAlives.size()-1; i >= 0; i--) {
+            pAlives[i]->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
         }
         assign_cells_to_correct_regions();
     }
 
-
     // Cells move to new positions if enough force is applied
-    for(auto pCell : pAlives) pCell->update_forces(pAlives, pAlivesRegions);
-    for(auto pCell : pAlives) pCell->apply_forces();
+    for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->update_forces(pAlives, pAlivesRegions);
+    for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->apply_forces();
     assign_cells_to_correct_regions();
 
     do_day_night_cycle();
     update_dayNightCycleTime();
     
     if(automateEnergy){
-        for(auto pCell : pAlives) pCell->do_energy_transfer(pAlives, pAlivesRegions);
-        for(auto pCell : pDeads) pCell->do_energy_decay(pAlives, pAlivesRegions);
-        for(auto pCell : pAlives) pCell->consume_energy_per_frame();
+        for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->do_energy_transfer(pAlives, pAlivesRegions);
+        for(int i = pDeads.size()-1;  i >= 0; i--) pDeads[i]->do_energy_decay(pAlives, pAlivesRegions);
+        for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->consume_energy_per_frame();
     }
-
 
     // Kill all cells which meet at least one of the conditions for dying
     for(int i = pAlives.size() - 1; i >= 0; i--) {
@@ -327,11 +328,11 @@ int do_frame(bool doCellDecisions = true){
 
     // Rendering and User Interactions
     assign_cells_to_correct_regions();
-#ifdef DO_VIDEO
+    #ifdef DO_VIDEO
     do_video1();
-#else
+    #else
     SDL_draw_frame();
-#endif
+    #endif
     SDL_event_handler();
     return ++frameNum;
 }

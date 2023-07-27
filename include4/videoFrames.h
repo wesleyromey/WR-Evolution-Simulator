@@ -18,13 +18,13 @@ int speedIdle = 0, int speedWalk = 1, int speedRun = 2, int visionDist = 0){
     varVals["age"] = age; varVals["attack"] = max_int(attack, 0); varVals["attackCooldown"] = attackCooldown;
     varVals["dia"] = dia;
     if(cellType == "plant"){
-        varVals["EAM[EAM_SUN]"] = 100; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 0;
+        varVals["EAM_SUN"] = 100; varVals["EAM_GND"] = 0; varVals["EAM_CELLS"] = 0;
     } else if(cellType == "worm"){
-        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 100; varVals["EAM[EAM_CELLS]"] = 0;
+        varVals["EAM_SUN"] = 0; varVals["EAM_GND"] = 100; varVals["EAM_CELLS"] = 0;
     } else if(cellType == "predator"){
-        varVals["EAM[EAM_SUN]"] = 0; varVals["EAM[EAM_GND]"] = 0; varVals["EAM[EAM_CELLS]"] = 100;
+        varVals["EAM_SUN"] = 0; varVals["EAM_GND"] = 0; varVals["EAM_CELLS"] = 100;
     } else {
-        varVals["EAM[EAM_SUN]"] = 34; varVals["EAM[EAM_GND]"] = 33; varVals["EAM[EAM_CELLS]"] = 33;
+        varVals["EAM_SUN"] = 34; varVals["EAM_GND"] = 33; varVals["EAM_CELLS"] = 33;
     }
     varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
     varVals["maxHealth"] = maxHealth; varVals["health"] = varVals["maxHealth"] * initHealthPct / 100;
@@ -41,7 +41,7 @@ void gen_demo_cells_video1(int scenarioNum){
     #define scenario_precode(numCells) { \
         deallocate_all_cells(); \
         automateEnergy = false; \
-        randomly_place_new_cells(numCells); \
+        randomly_place_new_cells(numCells, CELL_TYPE_GENERIC); \
     }
     #endif
     #ifndef scenario_postcode
@@ -317,7 +317,6 @@ void gen_demo_cells_video1(int scenarioNum){
         break;
 
 
-
         default:
         cout << "NOTE: Scenario " << scenarioNum << " was supposed to be played, but that scenario is not available\n";
         // Need a new scenario to simulate 3d, 3g, 3i, 3j, 3k
@@ -387,7 +386,7 @@ void do_video1(){
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF3start - 1;
+        frameNum = kF3g - 1;
         break;
 
         case kF1c:
@@ -432,11 +431,11 @@ void do_video1(){
         default:
         if(kF2b <= frameNum && frameNum < kF2d){
             pCellsHist[0]->health--;
-            pCellsHist[0]->energy = pCellsHist[0]->maxEnergy / 9;
-            if(pCellsHist[1]->energy < pCellsHist[1]->maxEnergy / 10){
-                pCellsHist[1]->energy += pCellsHist[1]->maxEnergy / 100;
+            pCellsHist[0]->energy = pCellsHist[0]->stats["maxEnergy"][0] / 9;
+            if(pCellsHist[1]->energy < pCellsHist[1]->stats["maxEnergy"][0] / 10){
+                pCellsHist[1]->energy += pCellsHist[1]->stats["maxEnergy"][0] / 100;
             } else {
-                pCellsHist[1]->energy += pCellsHist[1]->maxEnergy / 25;
+                pCellsHist[1]->energy += pCellsHist[1]->stats["maxEnergy"][0] / 25;
             }
         } else if(kF2e <= frameNum && frameNum < kF3start){
             pCellsHist[0]->age += 49;
