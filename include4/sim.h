@@ -13,11 +13,9 @@
 // Create an empty vector of pointers to Cells and DeadCells as global variables
 std::vector<Cell*> pCellsHist; // A history of all cells in the order they were created
 std::vector<Cell*> pAlives; // All cells that are currently alive
-std::map<std::pair<int,int>, std::vector<Cell*>> pAlivesRegions;
-//  pAlives separated by region
+std::map<std::pair<int,int>, std::vector<Cell*>> pAlivesRegions; // pAlives separated by region
 std::vector<DeadCell*> pDeads; // All cells that are currently dead
-std::map<std::pair<int,int>, std::vector<DeadCell*>> pDeadsRegions;
-//  pDeads separated by region
+std::map<std::pair<int,int>, std::vector<DeadCell*>> pDeadsRegions; // pDeads separated by region
 
 
 void do_video1();
@@ -159,10 +157,10 @@ void init_sim_global_vals(){
     init_sim_gnd_energy(maxGndEnergy.val / 2);
 }
 
+// This function allocates memory for a new cell and saves a pointer to it in both pCellsHist and pAlives
 void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
     if(cellType == CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT) cellType = availableCellTypes(rng);
     if(pParent == NULL){
-        //Cell *pCell = new Cell(pCellsHist.size(), cellType, pAlivesRegions, NULL);
         Cell *pCell = new Cell();
         pCell->define_self(pCellsHist.size(), pCell, NULL);
         pCell->gen_stats_random(cellType, pAlivesRegions);
@@ -171,7 +169,6 @@ void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = fal
         pAlives.push_back(pCell);
     } else {
         Cell* pCell = pParent->clone_self(pCellsHist.size(), pAlivesRegions, cloningDir, randomizeCloningDir);
-        //pCell->mutate_stats();
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
     }
@@ -181,7 +178,7 @@ void kill_cell(Cell* pAlive, int i_pAlive) {
     DeadCell* pDead = new DeadCell;
     pDead->kill_cell(pAlive, pDead, i_pAlive);
     // Remove pAlive from the list of alive cells
-    pAlives.erase(pAlives.begin() + i_pAlive); // TODO
+    pAlives.erase(pAlives.begin() + i_pAlive);
     // Add pDead to the list of dead cells
     pDeads.push_back(pDead);
 }
@@ -202,10 +199,8 @@ void gen_dead_cell(Cell* pAlive = NULL, int i_pAlive = -1) {
 void randomly_place_new_cells(int numCells, int cellType = CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT){
     // Spreads random cells equally across the simulation space
     for(int i = 0; i < numCells; i++) {
-        gen_cell(cellType); // This function allocates memory for pCell
-        //  and appends a pointer to it for both pCellsHist and pAlives
+        gen_cell(cellType);
     }
-    //std::cout << "Placed " << numCells << " new cells\n";
 }
 
 void print_cell_coords(std::vector<Cell*> pCells){

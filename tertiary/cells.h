@@ -49,25 +49,6 @@ struct Cell {
     //  Needed to do various abilities or keep oneself alive.
     int energy = -1;
 
-    
-    /*
-    //int speedIdle = 0; // Keep this at 0
-    //int speedWalk = -1; // The walking speed
-    //int speedRun = -1; // The running speed
-    //int visionDist = -1; // How far out the creature can see
-    //int stickiness = -1; // The tendency to stick to other cells, especially sticky ones
-    //int mutationRate = -1; // The rate at which genes mutate
-    
-    //int maxHealth = -1;
-    //int attack = -1; // Attack power. Decreases other cells' health
-    //int dia = -1; // The organism's diameter
-    //  This is an enforced constraint
-    //int EAM[NUM_EAM_ELE]; // Energy accumulation method
-    //  There are 3 such methods, so they might as well
-    //  be stored in a constant-sized array
-    //int cellType = -1;
-    */
-    
     // Physics, position, etc.
     int posX = 0, posY = 0;
     std::pair<int, int> xyRegion = {0, 0}; // Each cell should be placed in their appropriate 'bin' of nearby cells
@@ -89,30 +70,9 @@ struct Cell {
     // Stats
     std::map<std::string, std::vector<int>> stats;
 
-    /*
-    // Bounds
-    //int maxEnergy = 10000; // = Const * size
-    //int maxAttackCooldown = 10;
-    //int lbAttack = 0, ubAttack = 10000;
-    //int lbDia = 2, ubDia = 10;
-    //int lbEAM = 0, ubEAM = 100;
-    //int lbHealth = 1, ubHealth = 10000;
-    //int lbMutationRate = 0, ubMutationRate = 0; // 10000
-    //int lbSpeed = 0, ubSpeed = 100;
-    //int lbStickiness = 0, ubStickiness = 0;
-    //int lbVisionDist = 0, ubVisionDist = 1000;
-
-
     // Constructor
-    //Cell(int cellNum, int _cellType, std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    //Cell* pParent = NULL){
-        //uniqueCellNum = cellNum;
-        //if(pParent == NULL){
-        //    gen_stats_random(cellNum, _cellType, pAlivesRegions, NULL);
-        //}
-    //}
-    */
     Cell(){}
+
     // Struct-specific methods
     void update_stat(std::string statName, int mask, int val, int lb, int ub, int mutationPct1kChance, int mutationMaxPct1kChange){
         // Default: mask == 0x1F
@@ -128,47 +88,6 @@ struct Cell {
         int maxMutationAmt = (int)((long long)stats[statName][4] * (long long)stats[statName][0] / 1000);
         stats[statName][0] = gen_uniform_int_dist(rng, mean - maxMutationAmt, mean + maxMutationAmt);
     }
-    /*
-    void copy_stats_to_integers(){
-        //attack = stats["attack"][0];
-        //dex = stats["dex"][0];
-        //dia = stats["dia"][0];
-        EAM[EAM_SUN] = stats["EAM_SUN"][0];
-        EAM[EAM_GND] = stats["EAM_GND"][0];
-        EAM[EAM_CELLS] = stats["EAM_CELLS"][0];
-        //maxAttackCooldown = stats["maxAtkCooldown"][0];
-        //maxEnergy = stats["maxEnergy"][0];
-        //maxHealth = stats["maxHealth"][0];
-        //mutationRate = stats["mutationRate"][0];
-        //speedIdle = stats["speedIdle"][0];
-        //speedWalk = stats["speedWalk"][0];
-        //speedRun = stats["speedRun"][0];
-        //stickiness = stats["stickiness"][0];
-        //visionDist = stats["visionDist"][0];
-    }
-    void enforce_property_constraints_and_derived_property_calculations(bool initializingCell,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
-        // A derived property is a property whose value depends on other cell properties, stats, etc.
-        // Also enforce the bounds of the non-stat cell properties
-        // Also enforce the constraints that each stat and property has w.r.t. each other
-        enforce_bounds(energy, 0, stats["maxEnergy"][0]);
-        enforce_bounds(stats["initEnergy"][0], 0, stats["maxEnergy"][0]);
-        enforce_bounds(health, 0, stats["maxHealth"][0]);
-        if(initializingCell){
-            // Initialize timers and cell state
-            age = 0;
-            attackCooldown = stats["maxAtkCooldown"][0];
-            energy = stats["initEnergy"][0];
-            health = stats["maxHealth"][0];
-        }
-        stats["speedWalk"][0] = max_int(stats["speedIdle"][0], stats["speedWalk"][0]);
-        stats["speedRun"][0]  = max_int(stats["speedWalk"][0], stats["speedRun"][0] );
-        update_size();
-        enforce_EAM_constraints();
-        if(initializingCell && pParent == NULL) init_ai(pAlivesRegions);
-        update_energy_costs();
-    }
-    */
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
         for(auto item : stats){
@@ -177,43 +96,10 @@ struct Cell {
             if(rand() % 1000 < pct1kChanceOfMutation) mutate_stat(statName);
         }
         enforce_valid_cell(true);
-        if(false){
-            //stats["speedWalk"][0] = max_int(stats["speedIdle"][0], stats["speedWalk"][0]);
-            //stats["speedRun"][0] = max_int(stats["speedWalk"][0], stats["speedRun"][0]);
-            //health = stats["maxHealth"][0];
-
-            float probDefault = (float)pParent->stats["mutationRate"][0] / (float)pParent->stats["mutationRate"][2];
-            //float probDefault = 0.05;
-            //speedWalk = gen_normal_int_dist_special(rng, probDefault, parent->speedWalk, 1, 0, INT_MAX); // lb used to be 1
-                // BUG FIXED: speedRun = ...; Used to have lb = parent->speedRun + 1
-            //speedRun = gen_normal_int_dist_special(rng, probDefault, parent->speedRun, 1, speedWalk, INT_MAX);
-            //if(speedRun < speedWalk) speedRun = speedWalk;
-            //visionDist = gen_normal_int_dist_special(rng, probDefault, parent->visionDist, 1 + mutationRate/50, 0, INT_MAX);
-            //stickiness = 0;
-            //mutationRate = gen_normal_int_dist_special(rng, 1, parent->mutationRate, 5 + parent->mutationRate/50, 0, ubMutationRate);
-            //maxHealth = gen_normal_int_dist_special(rng, probDefault, parent->maxHealth, 1 + parent->maxHealth/20, lbHealth, INT_MAX);
-            //health = maxHealth;
-            //attack = gen_normal_int_dist_special(rng, probDefault, parent->attack, 1 + parent->attack/20, lbAttack, INT_MAX);
-            //dia = gen_normal_int_dist_special(rng, probDefault, parent->dia, 1 + parent->dia/20, lbDia, ubDia);
-            //set_initEnergy(gen_normal_int_dist_special(rng, probDefault, parent->stats["initEnergy"][0], 10 + parent->stats["initEnergy"][0]/20, 100, stats["maxEnergy"][0]), false);
-            update_size();
-            //for(int i = 0; i < NUM_EAM_ELE; i++){
-            //    EAM[i] = gen_normal_int_dist_special(rng, probDefault, parent->EAM[i], 2 + mutationRate/100, 0, REQ_EAM_SUM);
-            //}
-            enforce_EAM_constraints();
-            update_energy_costs();
-            for(int i = 0; i < ID_LEN; i++){
-                if(std_uniform_dist(rng) < probDefault) id[i] = !id[i];
-            }
-            mutate_ai();
-        }
     }
     void gen_stats_random(int _cellType, std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Random generation from scratch
-        //pSelf = pCell;
-        //parent = NULL;
         assert(pSelf != NULL);
-        //uniqueCellNum = cellNum;
 
         #define stat_init(lb, ub) gen_uniform_int_dist(rng, lb, ub)
         // Initialize all stats
@@ -270,49 +156,7 @@ struct Cell {
         }
         initialize_cell(pAlivesRegions);
         enforce_valid_cell(true);
-        //enforce_property_constraints_and_derived_property_calculations(true, pAlivesRegions);
         #undef stat_init
-        if(false){
-        /*
-            //speedWalk = 1; //gen_uniform_int_dist(rng, 1, 3);
-            //speedRun = 2; //gen_uniform_int_dist(rng, speedWalk + 1, 3*speedWalk);
-            //visionDist = 0;
-            //stickiness = 0;
-            //mutationRate = ubMutationRate / 10;
-            //maxHealth = lbHealth; //gen_uniform_int_dist(rng, lbHealth, 10);
-            health = maxHealth;
-            //attack = lbAttack; //gen_uniform_int_dist(rng, lbAttack, 10);
-            //dia = lbDia; //gen_uniform_int_dist(rng, lbDia, ubDia);
-            //set_initEnergy(1000); //set_initEnergy(gen_uniform_int_dist(rng, 500, 2000), true);
-            //update_size();
-            //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = 33;
-            //int cellType = gen_uniform_int_dist(rng, 0, 3); // Each type corresponds to its element number in EAM. The last type is "balanced"
-            //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = 0;
-            
-            switch(cellType){
-                case EAM_SUN:
-                EAM[EAM_SUN] = 100;
-                break;
-                case EAM_GND:
-                EAM[EAM_GND] = 100;
-                break;
-                case EAM_CELLS:
-                EAM[EAM_CELLS] = 100;
-                attack = 1;
-                visionDist = 5;
-                break;
-                default:
-                EAM[EAM_SUN] = 33; EAM[EAM_GND] = 34; EAM[EAM_CELLS] = 33;
-                visionDist = 5;
-            }
-            //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = gen_uniform_int_dist(rng, 0, REQ_EAM_SUM);
-            //enforce_EAM_constraints();
-            //for(int i = 0; i < ID_LEN; i++) id[i] = std_uniform_dist(rng) < 0.5;
-            //init_ai(pAlivesRegions);
-            //update_energy_costs();
-            //enforce_valid_cell(true);
-        */
-        }
     }
     /*
     void print_main_stats(){
@@ -371,26 +215,12 @@ struct Cell {
                 }
             }
         }
-        //copy_stats_to_integers();
         if(varVals.count("age"))            {lenVarVals++; age = varVals["age"];}
-        //if(varVals.count("attack"))         {lenVarVals++; attack = varVals["attack"];}
         if(varVals.count("attackCooldown")) {lenVarVals++; attackCooldown = varVals["attackCooldown"];}
-        //if(varVals.count("dia"))            {lenVarVals++; dia = varVals["dia"];}
-        //if(varVals.count("EAM[EAM_CELLS]")) {lenVarVals++; EAM[EAM_CELLS] = varVals["EAM[EAM_CELLS]"];}
-        //if(varVals.count("EAM[EAM_GND]"))   {lenVarVals++; EAM[EAM_GND] = varVals["EAM[EAM_GND]"];}
-        //if(varVals.count("EAM[EAM_SUN]"))   {lenVarVals++; EAM[EAM_SUN] = varVals["EAM[EAM_SUN]"];}
         if(varVals.count("energy"))         {lenVarVals++; energy = varVals["energy"];}
-        //if(varVals.count("maxEnergy"))      {lenVarVals++; maxEnergy = varVals["maxEnergy"];}
         if(varVals.count("health"))         {lenVarVals++; health = varVals["health"];}
-        //if(varVals.count("maxHealth"))      {lenVarVals++; maxHealth = varVals["maxHealth"];}
-        //if(varVals.count("mutationRate"))   {lenVarVals++; mutationRate = varVals["mutationRate"];}
         if(varVals.count("posX"))           {lenVarVals++; posX = varVals["posX"];}
         if(varVals.count("posY"))           {lenVarVals++; posY = varVals["posY"];}
-        //if(varVals.count("speedRun"))       {lenVarVals++; speedRun = varVals["speedRun"];}
-        //if(varVals.count("speedWalk"))      {lenVarVals++; speedWalk = varVals["speedWalk"];}
-        //if(varVals.count("speedIdle"))      {lenVarVals++; speedIdle = varVals["speedIdle"];}
-        //if(varVals.count("stickiness"))     {lenVarVals++; stickiness = varVals["stickiness"];}
-        //if(varVals.count("visionDist"))     {lenVarVals++; visionDist = varVals["visionDist"];}
 
         // AI weights
         if(aiPreset >= 0) apply_ai_preset(aiPreset);
@@ -402,35 +232,6 @@ struct Cell {
         // Ensure we update all dependent variables
         enforce_valid_cell(true);
     }
-    /*
-    // updateMask = entries in the dictionary to update (index 0 of the map entry refers to index 0 of the entry and so on)
-    //  For example, 0x1F: Update all, 0x01: Only update val, 0x06: Only update lb and ub
-    void copy_stat_to_map(std::string statName, int updateMask, int val, int lb, int ub, int mutationPct1kChance, int mutationMaxPct1kChange){
-        if(updateMask & 0x01) stats[statName][0] = val;
-        if(updateMask & 0x02) stats[statName][1] = lb;
-        if(updateMask & 0x04) stats[statName][2] = ub;
-        if(updateMask & 0x08) stats[statName][3] = mutationPct1kChance;
-        if(updateMask & 0x10) stats[statName][4] = mutationMaxPct1kChange;
-    }
-    void copy_stats_to_map(int updateMask = 0x01, std::set<std::string> statsToNotCopy = {}){
-        updateMask &= 0x01;
-        //if(!statsToNotCopy.count("attack")) copy_stat_to_map("attack", updateMask, attack, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("dex")) copy_stat_to_map("dex", updateMask, dex, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("dia")) copy_stat_to_map("dia", updateMask, dia, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("EAM_SUN")) copy_stat_to_map("EAM_SUN", updateMask, EAM[EAM_SUN], 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("EAM_GND")) copy_stat_to_map("EAM_GND", updateMask, EAM[EAM_GND], 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("EAM_CELLS")) copy_stat_to_map("EAM_CELLS", updateMask, EAM[EAM_CELLS], 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("maxAtkCooldown")) copy_stat_to_map("maxAtkCooldown", updateMask, maxAttackCooldown, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("maxEnergy")) copy_stat_to_map("maxEnergy", updateMask, maxEnergy, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("maxHealth")) copy_stat_to_map("maxHealth", updateMask, maxHealth, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("mutationRate")) copy_stat_to_map("mutationRate", updateMask, mutationRate, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("speedIdle")) copy_stat_to_map("speedIdle", updateMask, speedIdle, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("speedWalk")) copy_stat_to_map("speedWalk", updateMask, speedWalk, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("speedRun")) copy_stat_to_map("speedRun", updateMask, speedRun, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("stickiness")) copy_stat_to_map("stickiness", updateMask, stickiness, 0, 0, 0, 0);
-        //if(!statsToNotCopy.count("visionDist")) copy_stat_to_map("visionDist", updateMask, visionDist, 0, 0, 0, 0);
-    }
-    */
     std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives,
     std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<Cell*> ans;
@@ -509,41 +310,20 @@ struct Cell {
         EAM_sum += stats["EAM_SUN"][0];
         EAM_sum += stats["EAM_GND"][0];
         EAM_sum += stats["EAM_CELLS"][0];
-        //for(int i = 0; i < NUM_EAM_ELE; i++) EAM_sum += EAM[i];
         return EAM_sum;
     }
-    /*
-    bool verify_EAM_constraints(){
-        // Constraint: 0 <= EAM[i] && EAM[i] <= 100
-        if(stats["EAM_SUN"][0] < 0 || 100 < stats["EAM_SUN"][0]) return false;
-        if(stats["EAM_GND"][0] < 0 || 100 < stats["EAM_GND"][0]) return false;
-        if(stats["EAM_CELLS"][0] < 0 || 100 < stats["EAM_CELLS"][0]) return false;
-        //for(int i = 0; i < NUM_EAM_ELE; i++){
-        //    if(EAM[i] < 0 || 100 < EAM[i]) return false;
-        //}
-        // Constraint: EAM_sum == REQ_EAM_SUM
-        if(calc_EAM_sum() != REQ_EAM_SUM) return false;
-        //for(int i = 0; i < NUM_EAM_ELE; i++) EAM_sum += EAM[i];
-        return true;
-    }
-    */
     void enforce_EAM_constraints(){
-        // Enforce the EAM constraints such that all elements are >= 0
+        // Enforce the EAM constraints such that all elements >= 0
         //  and they add to 100
-        // Ensure each element of EAM >= 0
         stats["EAM_SUN"][0] = max_int(stats["EAM_SUN"][0], 0);
         stats["EAM_GND"][0] = max_int(stats["EAM_GND"][0], 0);
         stats["EAM_CELLS"][0] = max_int(stats["EAM_CELLS"][0], 0);
-        //for(int i = 0; i < NUM_EAM_ELE; i++){
-        //    if(EAM[i] < 0) EAM[i] = 0;
-        //}
         // Ensure that EAM_sum == EAM_SUM as defined in this struct
         int EAM_sum = calc_EAM_sum();
         if(EAM_sum != REQ_EAM_SUM) {
             stats["EAM_SUN"][0] = stats["EAM_SUN"][0] * REQ_EAM_SUM / EAM_sum;
             stats["EAM_GND"][0] = stats["EAM_GND"][0] * REQ_EAM_SUM / EAM_sum;
             stats["EAM_CELLS"][0] = stats["EAM_CELLS"][0] * REQ_EAM_SUM / EAM_sum;
-            //for(int i = 0; i < NUM_EAM_ELE; i++) EAM[i] = EAM[i] * REQ_EAM_SUM / EAM_sum;
         }
         while(EAM_sum != REQ_EAM_SUM){
             int increment = sign(REQ_EAM_SUM - EAM_sum);
@@ -560,23 +340,11 @@ struct Cell {
             }
             EAM_sum += increment;
         }
-        //int remainder = REQ_EAM_SUM - calc_EAM_sum();
-        //for(int i = 0; remainder > 0; i++){
-        //    if(i >= NUM_EAM_ELE) i = 0;
-        //    EAM[i]++;
-        //    remainder--;
-        //}
-        // To ensure bugs don't occur
-        //EAM_sum = calc_EAM_sum();
-        //assert(EAM_sum == REQ_EAM_SUM);
+        assert(calc_EAM_sum() == REQ_EAM_SUM);
     }
     void enforce_bounds(int& val, int lb, int ub){
         assert(lb <= ub);
-        //cout << "      val: " << val << ", lb: " << lb << ", ub: " << ub;
         val = saturate_int(val, lb, ub);
-        //cout << ", val: " << val << endl;
-        //if(val < lb) val = lb;
-        //if(val > ub) val = ub;
     }
     // Only consider the nearest cells within the cell's field of view
     std::vector<Cell*> get_nearest_cells(int maxNumCellsToReturn,
@@ -584,8 +352,6 @@ struct Cell {
         // visionDist: The distance the cell can see
         int xReg = xyRegion.first, yReg = xyRegion.second;
         int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
-        //int _lbX = posX - visionDist, _ubX = posX + visionDist;
-        //int _lbY = posY - visionDist, _ubY = posY + visionDist;
         
         // A region counts as too far if it its nearest point is out of range
         int visionDist_NumRegX = stats["visionDist"][0] / reg_dX + 1;
@@ -644,7 +410,6 @@ struct Cell {
         while(nearestCells.size() > maxNumCellsToReturn) nearestCells.pop_back();
         return nearestCells;
     }
-    // TODO: ensure that each cell id similarity value only gets up to 3 cells each
     // NOTE: This function also determines what the AI inputs are
     std::vector<float> get_ai_inputs(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         std::vector<float> aiInputs;
@@ -654,23 +419,6 @@ struct Cell {
         // Internal Timers
         aiInputs.push_back((float)age); _numAiInputs++;
         aiInputs.push_back((float)attackCooldown); _numAiInputs++;
-        if(false){
-            // controlable stats
-            //ans.push_back((float)speedDir); _numAiInputs++;
-            //ans.push_back((float)get_speed()); _numAiInputs++;
-            //ans.push_back((float)cloningDirection); _numAiInputs++;
-            // genome
-            //ans.push_back((float)stats["visionDist"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["stickiness"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["mutationRate"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["maxHealth"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["attack"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["dia"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["EAM_SUN"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["EAM_GND"][0]); _numAiInputs++;
-            //ans.push_back((float)stats["EAM_CELLS"][0]); _numAiInputs++;
-            //for(int i = 0; i < NUM_EAM_ELE; i++){ ans.push_back((float)EAM[i]); _numAiInputs++; }
-        }
         // State and Cell Interactions
         aiInputs.push_back((float)health); _numAiInputs++;
         aiInputs.push_back((float)energy); _numAiInputs++;
@@ -889,7 +637,6 @@ struct Cell {
         }
         for(int layerNum = 1; layerNum < nodesPerLayer.size(); layerNum++){
             std::vector<aiNode> layerNodes;
-            //std::cout << layerNum << "," << nodesPerLayer[layerNum] << "|";
             for(int nodeNum = 0; nodeNum < nodesPerLayer[layerNum]; nodeNum++){
                 aiNode nextNode;
                 nextNode.init_node(1000 * layerNum + nodeNum, false, nodesPerLayer[layerNum - 1]);
@@ -897,8 +644,6 @@ struct Cell {
             }
             aiNetwork.push_back(layerNodes);
         }
-        //for(auto num : nodesPerLayer) std::cout << num << ","; std::cout << std::endl;
-        //for(auto ele : aiNetwork) std::cout << ele.size() << ","; std::cout << std::endl;
     }
     std::vector<float> do_forward_prop_1_layer(std::vector<float> layerInputs, int layerNum){
         // layerNum == 0 means the input layer
@@ -924,8 +669,6 @@ struct Cell {
     void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
-        //std::cout << aiNetwork.size() << ", " << nodesPerLayer.size() << std::endl;
-        //enforce_valid_ai();
         int _speedDir = speedDir, _cloningDir = cloningDirection, _speedMode = speedMode;
         bool _doAttack = doAttack, _doSelfDestruct = doSelfDestruct, _doCloning = doCloning;
         update_timers();
@@ -985,7 +728,6 @@ struct Cell {
                 aiNetwork[i][j].mutate_node(stats["mutationRate"][0], prob);
             }
         }
-        //enforce_valid_cell(true);
         enforce_valid_ai();
     }
     // Define the identity of the cell (in relation to the rest of the simulator)
@@ -998,9 +740,6 @@ struct Cell {
     void set_initEnergy(int val, bool setEnergy = true){
         stats["initEnergy"][0] = val;
         if(setEnergy) energy = stats["initEnergy"][0];
-        //initEnergy = stats["initEnergy"][0];
-        //initEnergy = val;
-        //if(setEnergy) energy = initEnergy;
     }
     // NOTE: The full energy accumulation can only be done after this function is applied to every cell
     //  in the local area.
@@ -1079,37 +818,12 @@ struct Cell {
         // Possible mutations
         if(doMutation) pClone->mutate_stats();
         pClone->enforce_valid_cell(true);
-        //enforce_property_constraints_and_derived_property_calculations(true, pAlivesRegions);
 
-        /*
-        // Reset internal timers
-        pClone->age = 0;
-        pClone->attackCooldown = stats["maxAtkCooldown"][0];
-
-        // Initialize state
-        pClone->health = stats["maxHealth"][0]; // When this reaches 0, the cell dies
-        // Creature dies if energy <= 0.
-        //  Needed to do various abilities or keep oneself alive.
-        pClone->energy = stats["initEnergy"][0];
-
-        // Reset all internal timers
-        pClone->age = 0;
-        pClone->attackCooldown = 0;
-        */
-        
-        //enforce_valid_cell(false);
         return pClone;
     }
     void print_id(){
         std::cout << "id: "; for(bool b : id) std::cout << b; std::cout << std::endl;
     }
-    /*
-    void print_EAM(){
-        std::cout << "  EAM: { ";
-        for(int i = 0; i < NUM_EAM_ELE; i++) std::cout << EAM[i] << " ";
-        std::cout << "}\n";
-    }
-    */
     int get_speed(){
         switch(speedMode){
             case IDLE_MODE:
@@ -1166,7 +880,6 @@ struct Cell {
         // TODO: apply an inward force for stickiness such that the force applied
         //  exactly matches the amount needed to snap the cells to the right distance from each other.
         // TODO: apply a force due to nonliving objects and walls, if applicable
-        //for(auto pCell : pAlives){
         for(auto reg : neighboringRegions){
             for(auto pCell : pAlivesRegions[reg]){
                 if(pCell == pSelf) continue;
@@ -1273,9 +986,7 @@ struct Cell {
                 for(auto pCell : pAlivesRegions[reg]){
                     if(uniqueCellNum == pCell->uniqueCellNum) continue;
                     if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(stats["dia"][0] + pCell->stats["dia"][0] + 0.1) / 2){
-                        //cout << "+";
                         attack_cell(pCell);
-                        //cout << "+";
                     }
                 }
             }
@@ -1294,7 +1005,6 @@ struct Cell {
         int numFramesSinceLastDecision = 0;
         bool changedSpeedDir = false;
         while(numFrames > 0){
-            //cout << "-";
             if(rand() % 100 < pctChanceToChangeDir){
                 while(newSpeedDir == pSelf->speedDir) newSpeedDir = rand() % 360;
                 changedSpeedDir = true;
@@ -1438,8 +1148,6 @@ struct Cell {
             remaining--;
             remainders[mostErroneousIndex] -= sum;
         }
-        //cout << "weights: "; for(auto num: weights) cout << num << ", "; cout << endl;
-        //cout << "EAM:     " << EAM[0] << ", " << EAM[1] << ", " << EAM[2] << endl;
         return weights;
     }
     std::vector<SDL_Texture*> findEAMTex(){
@@ -1451,10 +1159,6 @@ struct Cell {
         int maxEAM = stats["EAM_SUN"][0];
         maxEAM = max_int(maxEAM, stats["EAM_GND"][0]);
         maxEAM = max_int(maxEAM, stats["EAM_CELLS"][0]);
-        //for(int i = 0; i < NUM_EAM_ELE; i++){
-        //    if(EAM[i] < minEAM) minEAM = EAM[i];
-        //    if(EAM[i] > maxEAM) maxEAM = EAM[i];
-        //}
         if(maxEAM <= 2*minEAM){
             ans.push_back(P_EAM_TEX["balanced"]);
             return ans;
@@ -1477,7 +1181,6 @@ struct Cell {
         return ans;
     }
     void draw_cell(){
-        // TODO: After the video, draw the cells so they are centered on their center pixel
         // TODO: If part of a cell is not fully rendered, render a copy of it on the other side
         int drawX = drawScaleFactor*(posX - stats["dia"][0]/2);
         int drawY = drawScaleFactor*(posY - stats["dia"][0]/2);
@@ -1490,7 +1193,6 @@ struct Cell {
         draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
         if(doAttack && stats["attack"][0] > 0)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
         if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
-        //std::vector<int> EAM_weights = findWeighting(4, EAM, NUM_EAM_ELE);
         std::vector<SDL_Texture*> EAM_Tex = findEAMTex();
         for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
     }
