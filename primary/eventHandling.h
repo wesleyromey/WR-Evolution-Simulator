@@ -177,6 +177,8 @@ std::vector<std::pair<string, SimParamInt*>> decide_sim_settings_options_text(){
     //simParamsText.push_back({"Overcrowding energy coefficient", &overcrowdingEnergyCoef});
     simParamsText.push_back({"Map height", &ubY});
     simParamsText.push_back({"Map width", &ubX});
+    simParamsText.push_back({"Mutation Chance", &defaultMutationChance});
+    simParamsText.push_back({"Mutation Amount", &defaultMutationAmt});
     return simParamsText;
 }
 std::vector<int> decide_sim_settings_options_x_coords(std::vector<std::pair<string, SimParamInt*>>& simParamsText){
@@ -247,7 +249,6 @@ void SDL_event_handler(){
         switch(simState){
             case SIM_STATE_MAIN_MENU:
             run_sim_state_main_menu(windowEvent, pauseSim, simState);
-            //SDL_draw_frame();
             break;
             case SIM_STATE_STEP_FRAMES:
             run_sim_state_step_frames(windowEvent, pauseSim, autoAdvanceSim, simState);

@@ -102,28 +102,30 @@ struct Cell {
         assert(pSelf != NULL);
 
         #define stat_init(lb, ub) gen_uniform_int_dist(rng, lb, ub)
+        #define mutChance defaultMutationChance.val
+        #define mutAmt defaultMutationAmt.val
         // Initialize all stats
         // Notation: Pct1k == one thousandth of the entire value
         // {{"stat1", {val, lb, ub, mutationPct1kChance, mutationMaxPct1kChange}}, ...}
         //  Whenever a mutation occurs, the stat must be able to change by at least 1 (unless lb == ub)
-        stats["attack"]         = { stat_init(1,   1),     0, 10000, 100, 100}; // (0,3)
-        stats["dex"]            = {                 0,     0,     0,   0,   0}; // TODD: Add this as an actual stat
-        stats["dia"]            = { stat_init(2,   2),     1,    10, 100, 100}; // (2,10)
-        stats["EAM_SUN"]        = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
-        stats["EAM_GND"]        = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
-        stats["EAM_CELLS"]      = { stat_init(0, 100),     0,   100, 100, 100}; // (0,100)
-        stats["initEnergy"]     = {              1000,  1000,  1000,   0,   0}; // (0,10000) // TODO: Convert initEnergy to a mutatable stat
-        stats["maxAtkCooldown"] = {                10,    10,    10,   0,   0}; // 10
-        stats["maxEnergy"]      = { 5000*stats["dia"][0],  1, 90000,   0,   0}; // 5000*stats["dia"]
-        stats["maxHealth"]      = { stat_init(1,   1),     1, 10000, 100, 100}; // (1,10)
+        stats["attack"]         = { stat_init(1,   1),     0, 10000, mutChance, mutAmt}; // (0,3)
+        stats["dex"]            = {                 0,     0,     0,         0,      0}; // TODD: Add this as an actual stat
+        stats["dia"]            = { stat_init(2,   2),     1,    10, mutChance, mutAmt}; // (2,10)
+        stats["EAM_SUN"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
+        stats["EAM_GND"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
+        stats["EAM_CELLS"]      = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
+        stats["initEnergy"]     = {              1000,   500,  2000, mutChance, mutAmt}; // (0,10000) // TODO: Convert initEnergy to a mutatable stat
+        stats["maxAtkCooldown"] = {                10,    10,    10,         0,      0}; // 10
+        stats["maxEnergy"]      = { 5000*stats["dia"][0],  1, 90000,         0,      0}; // 5000*stats["dia"]
+        stats["maxHealth"]      = { stat_init(1,   1),     1, 10000, mutChance, mutAmt}; // (1,10)
         // TODO: Add stats for the AI and its relevant mutation rate
-        stats["mutationRate"]   = { stat_init(0,   0),     0,  1000, 100, 100}; // (0,1000)
+        stats["mutationRate"]   = { stat_init(0,   0),     0,  1000,         0,      0}; // (0,1000)
         // TODO: change speedIdle, speedWalk, and speedRun to a "maxSpeed" stat and change speed to a continuously varying decision
-        stats["speedIdle"]      = {                 0,     0,     0,   0,   0}; // 0
-        stats["speedWalk"]      = {                 1,     0,     2, 100, 100}; // (0, 1)
-        stats["speedRun"]       = {                 2,     0,   100, 100, 100}; // (0, 100)
-        stats["stickiness"]     = {                 0,     0,     0,   0,   0}; // 0
-        stats["visionDist"]     = { stat_init(5,   5),     0,  1000, 100, 100}; // (0, 10)
+        stats["speedIdle"]      = {                 0,     0,     0,         0,      0}; // 0
+        stats["speedWalk"]      = {                 1,     0,     2, mutChance, mutAmt}; // (0, 1)
+        stats["speedRun"]       = {                 2,     0,   100, mutChance, mutAmt}; // (0, 100)
+        stats["stickiness"]     = {                 0,     0,     0,         0,      0}; // 0
+        stats["visionDist"]     = { stat_init(5,   5),     0,  1000,         0,      0}; // (0, 10)
         switch(_cellType){
             case CELL_TYPE_PLANT:
             update_stat("attack"    , 0x1F, 0, 0, 0, 0, 0);
@@ -158,23 +160,6 @@ struct Cell {
         enforce_valid_cell(true);
         #undef stat_init
     }
-    /*
-    void print_main_stats(){
-        print_id();
-        print_pos_speed("  ");
-        std::cout << "  speedWalk: " << speedWalk << std::endl;
-        std::cout << "  speedRun: " << speedRun << std::endl;
-        std::cout << "  visionDist: " << visionDist << std::endl;
-        std::cout << "  stickiness: " << stickiness << std::endl;
-        std::cout << "  mutationRate: " << mutationRate << std::endl;
-        std::cout << "  health: " << health << " / " << maxHealth << std::endl;
-        std::cout << "  attack: " << attack << std::endl;
-        std::cout << "  dia: " << dia << std::endl;
-        std::cout << "  size: " << size << std::endl;
-        std::cout << "  pos: { " << posX << ", " << posY << "}\n";
-        print_EAM();
-    }
-    */
     void print_stat(std::string statName, int updateMask = 0x1F){
         cout << "  " << statName << ": ";
         for(int i = statName.size(); i < 20; i++) cout << " ";
@@ -325,20 +310,23 @@ struct Cell {
             stats["EAM_GND"][0] = stats["EAM_GND"][0] * REQ_EAM_SUM / EAM_sum;
             stats["EAM_CELLS"][0] = stats["EAM_CELLS"][0] * REQ_EAM_SUM / EAM_sum;
         }
-        while(EAM_sum != REQ_EAM_SUM){
-            int increment = sign(REQ_EAM_SUM - EAM_sum);
+        EAM_sum = calc_EAM_sum();
+        int increment = sign(REQ_EAM_SUM - calc_EAM_sum());
+        while(calc_EAM_sum() != REQ_EAM_SUM){
             switch(rand() % NUM_EAM_ELE){
                 case 0:
                 stats["EAM_SUN"][0] += increment;
+                stats["EAM_SUN"][0] = saturate_int(stats["EAM_SUN"][0], stats["EAM_SUN"][1], stats["EAM_SUN"][2]);
                 break;
                 case 1:
                 stats["EAM_GND"][0] += increment;
+                stats["EAM_GND"][0] = saturate_int(stats["EAM_GND"][0], stats["EAM_GND"][1], stats["EAM_GND"][2]);
                 break;
                 case 2:
                 stats["EAM_CELLS"][0] += increment;
+                stats["EAM_CELLS"][0] = saturate_int(stats["EAM_CELLS"][0], stats["EAM_CELLS"][1], stats["EAM_CELLS"][2]);
                 break;
             }
-            EAM_sum += increment;
         }
         assert(calc_EAM_sum() == REQ_EAM_SUM);
     }
@@ -351,33 +339,41 @@ struct Cell {
             std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // visionDist: The distance the cell can see
         int xReg = xyRegion.first, yReg = xyRegion.second;
-        int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
+        //int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
         
         // A region counts as too far if it its nearest point is out of range
-        int visionDist_NumRegX = stats["visionDist"][0] / reg_dX + 1;
-        int visionDist_NumRegY = stats["visionDist"][0] / reg_dY + 1;
+        float maxDetectableCellDistance = (float)stats["visionDist"][0] + (float)stats["dia"][2] / 2;
+        float visionDist_NumReg = maxDetectableCellDistance / CELL_REGION_SIDE_LEN;
+        //float visionDist_NumRegX = maxDetectableCellDistance / reg_dX;
+        //float visionDist_NumRegY = maxDetectableCellDistance / reg_dY;
+        //float visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX + visionDist_NumRegY*visionDist_NumRegY);
+        
         // A crude estimate so I don't need to rely on precise calculations
-        int visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX
-            + visionDist_NumRegY*visionDist_NumRegY + 1);
+        //int visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX + visionDist_NumRegY*visionDist_NumRegY + 1);
         
         // Sort every region in a copy of pAlivesRegions based on the distance
         //  from the current region
         std::vector<std::pair<int,int>> nearest_xyReg;
         // Only evaluate the regions nearest to the current cell
         for(auto pReg : pAlivesRegions){
-            int distX = (pReg.first.first - xReg);
-            int distY = (pReg.first.second - yReg);
-            int distXY = sqrt(distX*distX + distY*distY);
-            if(distXY <= visionDist_NumRegXY) nearest_xyReg.push_back(pReg.first);
+            int xRegOther = pReg.first.first, yRegOther = pReg.first.second;
+            int distX = xRegOther - xReg;
+            int distY = yRegOther - yReg;
+            float distXY = sqrt(distX*distX + distY*distY);
+            if(distXY <= visionDist_NumReg + 1) nearest_xyReg.push_back(pReg.first);
+            //if(distXY <= visionDist_NumRegXY) nearest_xyReg.push_back(pReg.first);
         }
 
         // Go through all the regions within visionDist from the current cell
         std::vector<Cell*> nearestCells;
         for(auto pReg : nearest_xyReg){
             for(auto pCell : pAlivesRegions[pReg]){
-                int distX = pCell->posX - posX;
-                int distY = pCell->posY - posY;
-                int distXY = sqrt(distX*distX + distY*distY);
+                // Effective distance between 2 cells = distance - (dia of other cell) / 2
+                float distXY = calc_distance_between_points(posX, posY, pCell->posX, pCell->posY);
+                //int distX = pCell->posX - posX;
+                //int distY = pCell->posY - posY;
+                //float distXY = sqrt(distX*distX + distY*distY);
+                distXY -= (float)pCell->stats["dia"][0] / 2;
                 if(distXY <= stats["visionDist"][0] && pCell != pSelf){
                     nearestCells.push_back(pCell);
                 }
@@ -1182,8 +1178,8 @@ struct Cell {
     }
     void draw_cell(){
         // TODO: If part of a cell is not fully rendered, render a copy of it on the other side
-        int drawX = drawScaleFactor*(posX - stats["dia"][0]/2);
-        int drawY = drawScaleFactor*(posY - stats["dia"][0]/2);
+        int drawX = drawScaleFactor*(posX + 0.5 - (float)stats["dia"][0]/2);
+        int drawY = drawScaleFactor*(posY + 0.5 - (float)stats["dia"][0]/2);
         int drawSize = drawScaleFactor*stats["dia"][0];
         draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
         // Draw the health and energy on top of this
@@ -1407,8 +1403,8 @@ struct DeadCell {
         delete pSelf;
     }
     void draw_cell(){
-        int drawX = drawScaleFactor*(posX - dia/2);
-        int drawY = drawScaleFactor*(posY - dia/2);
+        int drawX = drawScaleFactor*(posX + 0.5 - (float)dia/2);
+        int drawY = drawScaleFactor*(posY + 0.5 - (float)dia/2);
         int drawSize = drawScaleFactor*dia;
         draw_texture(pDeadCellTex, drawX, drawY, drawSize, drawSize);
     }

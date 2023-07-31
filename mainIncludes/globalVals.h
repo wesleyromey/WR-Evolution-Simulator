@@ -143,6 +143,8 @@ SimParamInt maxGndEnergy(500, 1, 1000000);
 std::vector<std::vector<int>> simGndEnergy;
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 SimParamInt gndEnergyPerIncrease(10, 0, 10000);
+SimParamInt defaultMutationChance(100, 0, 1000);
+SimParamInt defaultMutationAmt(100, 0, 1000);
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
@@ -163,7 +165,7 @@ SimParamInt dayNightMode(DAY_NIGHT_ALWAYS_DAY_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, 
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
 // A value of 175 approximates a sine wave
-SimParamInt dayNightExponentPct(150, {seqOf100(0,10), 1000}); // 0 <= EXPONENT < infinity (default = 200)
+SimParamInt dayNightExponentPct(100, {seqOf100(0,10), 1000}); // 0 <= EXPONENT < infinity (default = 200)
 // The day lasts between dayNightLb and dayNightUb
 // The night lasts from dayNightUb to 100 and 0 to dayNightLb
 SimParamInt dayNightLbPct(0,{seqOf100(0,1)});
@@ -185,7 +187,7 @@ static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 
 static const int CELL_REGION_SIDE_LEN = 10;
 
 int mousePosX = 0, mousePosY = 0;
-static const Uint32 FRAME_DELAY = 10; // ms; frame rate is (1000/FRAME_DELAY) fps
+static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation

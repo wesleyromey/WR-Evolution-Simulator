@@ -29,6 +29,8 @@ int speedIdle = 0, int speedWalk = 1, int speedRun = 2, int visionDist = 0){
     varVals["energy"] = initEnergy; varVals["maxEnergy"] = maxEnergy;
     varVals["maxHealth"] = maxHealth; varVals["health"] = varVals["maxHealth"] * initHealthPct / 100;
     varVals["mutationRate"] = mutationRate;
+    defaultMutationChance.set_val(mutationRate);
+    defaultMutationAmt.set_val(mutationRate);
     varVals["posX"] = posX; varVals["posY"] = posY;
     varVals["speedIdle"] = speedIdle; varVals["speedWalk"] = speedWalk; varVals["speedRun"] = speedRun;
     varVals["visionDist"] = visionDist;
@@ -49,17 +51,17 @@ void gen_demo_cells_video1(int scenarioNum){
         automateEnergy = true; \
     }
     #endif
-    
-    
+
     std::map<std::string, int> varVals;
     int tmpVar, tmpVar2;
     switch(scenarioNum){
         case 10:
         // Plant cell gets sunlight rapidly, then dies at the end of the long night
         scenario_precode(1);
-        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy, &dayLenSec},
-            {6, 4, DAY_NIGHT_DEFAULT_MODE, 200, 0, 100, 200});
-        varVals.clear(); varVals = gen_std_stats("plant", 2, 2, 2, 100, 600, 60);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy, &dayLenSec,
+            &dayNightExponentPct, &dayNightUbPct},
+            {7, 5, DAY_NIGHT_DEFAULT_MODE, 120, 0, 1, 200, 150, 50});
+        varVals.clear(); varVals = gen_std_stats("plant", 2, 2, 2, 500, 3000, 500);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
         scenario_postcode();
@@ -81,10 +83,10 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(3);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 10, 100});
-        varVals.clear(); varVals = gen_std_stats("plant", 3, 2, 3, 1000, 15000);
+        varVals.clear(); varVals = gen_std_stats("plant", 3, 2, 3, 3000, 15000);
         pCellsHist[0]->set_int_stats(varVals, 0);
         pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
-        varVals.clear(); varVals = gen_std_stats("worm", 7, 6, 2, 1000, 10000);
+        varVals.clear(); varVals = gen_std_stats("worm", 7, 6, 2, 2000, 10000);
         pCellsHist[1]->set_int_stats(varVals, 0);
         pCellsHist[1]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
         varVals.clear(); varVals = gen_std_stats("predator", 3, 8, 2, 1000, 10000);
@@ -118,6 +120,71 @@ void gen_demo_cells_video1(int scenarioNum){
         pCellsHist[2]->force_decision(6, 315, 270, RUN_MODE, true, false, true);
         pCellsHist[2]->force_decision(6, 0, 270, RUN_MODE, true, false, true);
         pCellsHist[2]->force_decision(100, 0, 270, IDLE_MODE, true, false, true);
+        scenario_postcode();
+        break;
+
+        case 14:
+        // 1g. Show a ground cell regenerating slowly. Then, show a diameter 1 cell consume its energy to replenish roughly 50% of its energy
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {7, 3, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1000});
+        varVals.clear(); varVals = gen_std_stats("worm", 0, 1, 1, 500, 3000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(5, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(50, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        scenario_postcode();
+        break;
+        
+        case 15:
+        // 1h. Same as 1g except with a size 2 worm
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {7, 3, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1000});
+        varVals.clear(); varVals = gen_std_stats("worm", 1, 1, 2, 600, 3000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(30, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(5, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(60, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        scenario_postcode();
+        break;
+
+        case 16:
+        // 1i. Same as 1g except with a worm of diameter 2 AND a 3x3 group of ground cells will be exposed
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {7, 3, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1000});
+        varVals.clear(); varVals = gen_std_stats("worm", 1, 1, 2, 600, 3000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(30, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, WALK_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(5, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(20, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 0, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(60, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1, 180, 0, RUN_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
         scenario_postcode();
         break;
 
@@ -176,7 +243,7 @@ void gen_demo_cells_video1(int scenarioNum){
         break;
 
         case 22:
-        // Show a worm losing energy faster and faster despite getting identical sunlight
+        // Show a worm losing energy faster and faster despite getting identical ground energy
         // We may need a smaller window size for the remaining simulations
         scenario_precode(1);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
@@ -199,9 +266,9 @@ void gen_demo_cells_video1(int scenarioNum){
             pCellsHist[cellNum]->force_decision(6, speedDir, 0, WALK_MODE, true, false, false); \
             pCellsHist[cellNum]->force_decision(100, speedDir, 0, IDLE_MODE, true, false, false); \
         }
-        varVals.clear(); varVals = gen_std_stats("predator", 10, 10, 6, 3000, 30000, 7);
+        varVals.clear(); varVals = gen_std_stats("predator", 10, 10, 6, 4000, 30000, 7);
         pCellsHist[0]->set_int_stats(varVals, 0);
-        pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
+        pCellsHist[0]->force_decision(100, 0, 0, IDLE_MODE, true, false, false);
         init_small_predator(varVals, 1, -9,  0, 2, 0  );
         init_small_predator(varVals, 2,  0, -9, 2, 90 );
         init_small_predator(varVals, 3,  9,  0, 2, 180);
@@ -209,7 +276,6 @@ void gen_demo_cells_video1(int scenarioNum){
         #undef init_small_predator
         scenario_postcode();
         break;
-
         
         case 31:
         // (3g) 30x20 simulation where a size 6 plant and four adjacent size 2 plants gain energy
@@ -355,18 +421,23 @@ void do_video1(){
     string text = "";
     static const int kF0 = 0, kF1start = 10; // key frames
     static const int kF1c = kF1start, kF1d = kF1c + 250, kF1e = kF1d + 70; // Intro
-    static const int kF1f = kF1e + 55, kF2start = kF1f + 70;
+    static const int kF1f = kF1e + 55, kF1g = kF1f + 70, kF1h = kF1g + 200;
+    static const int kF1i = kF1h + 200, kF2start = kF1i + 200;
     static const int kF2b = kF2start, kF2d = kF2b + 40, kF2e = kF2d + 60; // Energy, health, age
     static const int kF3start = kF2e + 300;
     static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180; // Size
     static const int kF3j = kF3i + 1000, kF3k = kF3j + 50, kF4start = kF3k + 100;
     
     frameNum %= numFrames;
+    int startFrame = kF3d - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
         set_vals(&doCellAi, true, &automateEnergy, true, &enableAutomaticAttack, false,
             &enableAutomaticCloning, false, &enableAutomaticSelfDestruct, false);
+        #if !defined(DO_VIDEO_TEXT) && defined(DO_VIDEO_FRAMES)
+        frameNum = startFrame;
+        #endif
         draw_text(x0,y0,textWidth,textHeight,0,0,"testing text");
         break;
         case kF0+1:
@@ -376,17 +447,19 @@ void do_video1(){
         draw_text(x0,y0,3*textWidth,3*textHeight,0,2,"Pretend\n this  \nis true");
         break;
         case kF0+3:
-        draw_text(x0,y0,4*textWidth,5*textHeight,0,3,"Energy\nHealth\nAge\nSize");
+        draw_text(x0,y0,3*textWidth,3*textHeight,0,4,"If you look closely,\nthey each attack the\ngiant cell at slightly\ndifferent times");
         break;
         case kF0+4:
-        draw_text(x0,y0,textWidth,textHeight,0,1,"idk how to represent this");
-        break;
         case kF0+5:
         case kF0+6:
         case kF0+7:
         case kF0+8:
         case kF0+9:
-        frameNum = kF3g - 1;
+        #ifdef DO_VIDEO_FRAMES
+        frameNum = startFrame;
+        #else
+        frameNum = -1;
+        #endif
         break;
 
         case kF1c:
@@ -400,6 +473,15 @@ void do_video1(){
         break;
         case kF1f:
         gen_demo_cells_video1(13);
+        break;
+        case kF1g:
+        gen_demo_cells_video1(14);
+        break;
+        case kF1h:
+        gen_demo_cells_video1(15);
+        break;
+        case kF1i:
+        gen_demo_cells_video1(16);
         break;
 
         case kF2b:
@@ -429,7 +511,25 @@ void do_video1(){
         break;
         
         default:
-        if(kF2b <= frameNum && frameNum < kF2d){
+        if(kF1g <= frameNum && frameNum < kF1h){
+            if(frameNum == kF1g + 1) init_sim_gnd_energy(0);
+            else if(frameNum % 5 == 0) simGndEnergy[1][3] += maxGndEnergy.val / 10;
+        } else if(kF1h <= frameNum && frameNum < kF1i){
+            if(frameNum == kF1h + 1) init_sim_gnd_energy(0);
+            else if(frameNum % 5 == 0) simGndEnergy[1][4] += maxGndEnergy.val / 10;
+        } else if(kF1i <= frameNum && frameNum < kF2start){
+            if(frameNum == kF1i + 1) init_sim_gnd_energy(0);
+            else if(frameNum % 5 == 0){
+                for(int i = 0; i <= 2; i++){
+                    for(int j = 3; j <= 5; j++){
+                        simGndEnergy[i][j] += maxGndEnergy.val / 10;
+                        simGndEnergy[i][j] = min_int(simGndEnergy[i][j], maxGndEnergy.val);
+                    }
+                }
+            }
+        }
+        
+        else if(kF2b <= frameNum && frameNum < kF2d){
             pCellsHist[0]->health--;
             pCellsHist[0]->energy = pCellsHist[0]->stats["maxEnergy"][0] / 9;
             if(pCellsHist[1]->energy < pCellsHist[1]->stats["maxEnergy"][0] / 10){
