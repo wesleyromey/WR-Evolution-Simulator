@@ -43,6 +43,7 @@ SDL_Renderer* init_SDL_renderer(){
         P_WINDOW, -1, SDL_RENDERER_ACCELERATED
     );
     assert(pRenderer != NULL);
+    SDL_SetRenderDrawBlendMode(pRenderer, SDL_BLENDMODE_BLEND);
     return pRenderer;
 }
 SDL_Renderer* P_RENDERER = init_SDL_renderer();

@@ -52,13 +52,13 @@ float tan_deg(int input){
 }
 float arc_tan_deg(int dy, int dx){
     //if(dx == 0) return INFINITY;
-    return atan((double)dy / (double)dx) * PI / 180;
+    return atan((double)dy / (double)dx) * 180 / PI;
 }
 float arc_sin_deg(double dy, double distance){
-    return asin(dy / distance) * PI / 180;
+    return asin(dy / distance) * 180 / PI;
 }
 float arc_cos_deg(double dx, double distance){
-    return acos(dx / distance) * PI / 180;
+    return acos(dx / distance) * 180 / PI;
 }
 int min_int(int num1, int num2){
     return (num1 <= num2 ? num1 : num2);
@@ -129,8 +129,12 @@ int linear_interp_x_int(int x, std::vector<int> xVec, std::vector<int> fcnValVec
     //cout << "  f(" << x << "): " << fLb << " + " << numerator << " / " << denominator << endl;
     return fLb + (float)numerator / denominator;
 }
+// Takes into consideration screen wrapping
 float calc_distance_between_points(int posX, int posY, int targetX, int targetY){
-    int dx = targetX - posX, dy = targetY - posY;
+    int dx = targetX - posX;
+    if(WRAP_AROUND_X) dx = min_int(dx, ubX.val - dx);
+    int dy = targetY - posY;
+    if(WRAP_AROUND_Y) dy = min_int(dy, ubY.val - dy);
     return sqrt(dx*dx + dy*dy);
 }
 

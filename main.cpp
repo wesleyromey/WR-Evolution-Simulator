@@ -32,6 +32,17 @@ int main(int argc, char* argv[]){
     while(simState != SIM_STATE_QUIT){
         do_sim_iteration();
     }
+    //int drawCenterX = 100, drawCenterY = 100, radius = 100, numVertices = 32;
+    //SDL_Color _color = {0xff, 0xff, 0xff, 0x40};
+    //draw_regular_polygon(drawCenterX, drawCenterY, radius, numVertices, _color);
+    
+    //SDL_RenderPresent(P_RENDERER);
+    //SDL_Event windowEvent;
+    //bool flag = false;
+    //while(!flag){
+    //    SDL_WaitEvent(&windowEvent);
+    //    if(windowEvent.type == SDL_QUIT) flag = true;
+    //}
 #endif
     if(simState == SIM_STATE_QUIT) exit_sim();
     return 0;

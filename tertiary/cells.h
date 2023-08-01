@@ -69,6 +69,7 @@ struct Cell {
 
     // Stats
     std::map<std::string, std::vector<int>> stats;
+    bool drawVisionRadius = false;
 
     // Constructor
     Cell(){}
@@ -122,7 +123,7 @@ struct Cell {
         stats["mutationRate"]   = { stat_init(0,   0),     0,  1000,         0,      0}; // (0,1000)
         // TODO: change speedIdle, speedWalk, and speedRun to a "maxSpeed" stat and change speed to a continuously varying decision
         stats["speedIdle"]      = {                 0,     0,     0,         0,      0}; // 0
-        stats["speedWalk"]      = {                 1,     0,     2, mutChance, mutAmt}; // (0, 1)
+        stats["speedWalk"]      = {                 1,     0,    10, mutChance, mutAmt}; // (0, 1)
         stats["speedRun"]       = {                 2,     0,   100, mutChance, mutAmt}; // (0, 100)
         stats["stickiness"]     = {                 0,     0,     0,         0,      0}; // 0
         stats["visionDist"]     = { stat_init(5,   5),     0,  1000,         0,      0}; // (0, 10)
@@ -336,20 +337,13 @@ struct Cell {
     }
     // Only consider the nearest cells within the cell's field of view
     std::vector<Cell*> get_nearest_cells(int maxNumCellsToReturn,
-            std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
         // visionDist: The distance the cell can see
         int xReg = xyRegion.first, yReg = xyRegion.second;
-        //int reg_dX = CELL_REGION_SIDE_LEN, reg_dY = CELL_REGION_SIDE_LEN;
         
         // A region counts as too far if it its nearest point is out of range
-        float maxDetectableCellDistance = (float)stats["visionDist"][0] + (float)stats["dia"][2] / 2;
+        float maxDetectableCellDistance = (float)stats["visionDist"][0] + CELL_REGION_SIDE_LEN; //(float)stats["dia"][2] / 2;
         float visionDist_NumReg = maxDetectableCellDistance / CELL_REGION_SIDE_LEN;
-        //float visionDist_NumRegX = maxDetectableCellDistance / reg_dX;
-        //float visionDist_NumRegY = maxDetectableCellDistance / reg_dY;
-        //float visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX + visionDist_NumRegY*visionDist_NumRegY);
-        
-        // A crude estimate so I don't need to rely on precise calculations
-        //int visionDist_NumRegXY = sqrt(visionDist_NumRegX*visionDist_NumRegX + visionDist_NumRegY*visionDist_NumRegY + 1);
         
         // Sort every region in a copy of pAlivesRegions based on the distance
         //  from the current region
@@ -361,21 +355,22 @@ struct Cell {
             int distY = yRegOther - yReg;
             float distXY = sqrt(distX*distX + distY*distY);
             if(distXY <= visionDist_NumReg + 1) nearest_xyReg.push_back(pReg.first);
-            //if(distXY <= visionDist_NumRegXY) nearest_xyReg.push_back(pReg.first);
         }
 
         // Go through all the regions within visionDist from the current cell
+        std::set<int> nearbyCellIds;
         std::vector<Cell*> nearestCells;
         for(auto pReg : nearest_xyReg){
             for(auto pCell : pAlivesRegions[pReg]){
+                if(nearbyCellIds.count(pCell->uniqueCellNum)) continue;
                 // Effective distance between 2 cells = distance - (dia of other cell) / 2
                 float distXY = calc_distance_between_points(posX, posY, pCell->posX, pCell->posY);
-                //int distX = pCell->posX - posX;
-                //int distY = pCell->posY - posY;
-                //float distXY = sqrt(distX*distX + distY*distY);
-                distXY -= (float)pCell->stats["dia"][0] / 2;
-                if(distXY <= stats["visionDist"][0] && pCell != pSelf){
+                //distXY -= (float)pCell->stats["dia"][0] / 2;
+                float effectiveVisionRadius = stats["visionDist"][0] + (float)pCell->stats["dia"][0]/2;
+                if(distXY <= effectiveVisionRadius && pCell != pSelf){
                     nearestCells.push_back(pCell);
+                    nearbyCellIds.insert(pCell->uniqueCellNum);
+                    //cout << ".";
                 }
             }
         }
@@ -561,7 +556,7 @@ struct Cell {
         // Cell Inputs
         assert(speedMode == IDLE_MODE || speedMode == WALK_MODE || speedMode == RUN_MODE);
         while(speedDir < 0) speedDir += 360;
-        speedDir %= 360;
+        speedDir = speedDir % 360 - speedDir % 15; // Originally: speedDir %= 360;
         while(cloningDirection < 0) cloningDirection += 360;
         cloningDirection %= 360;
         // doAttack, doSelfDestruct, doCloning
@@ -596,6 +591,20 @@ struct Cell {
         energy = stats["initEnergy"][0];
         health = stats["maxHealth"][0];
         if(pParent == NULL) init_ai(pAlivesRegions);
+        // Sort out initial decisions
+        if(aiMode == RNG_BASED_AI_MODE){
+            force_decision(1, 0, 0, IDLE_MODE, doAttack, false, doCloning);
+            speedDir = rand() % 360;
+            cloningDirection = rand() % 360;
+            int _rngPct = rand() % 100; 
+            if(_rngPct < pctChanceIdle) speedMode = IDLE_MODE;
+            else if(_rngPct < pctChanceIdle + pctChanceWalk) speedMode = WALK_MODE;
+            else speedMode = RUN_MODE;
+            doAttack = enableAutomaticAttack;
+            doSelfDestruct = false;
+            doCloning = enableAutomaticCloning;
+        }
+        drawVisionRadius = true;
     }
     // TODO: Create a function to set the weights of the AI (partially done)
     void apply_ai_preset(int aiPreset = -1){
@@ -658,6 +667,10 @@ struct Cell {
     void force_decision(int numFrames, int _speedDir, int _cloningDir, int _speedMode, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
         forcedDecisionsQueue.push_back({numFrames, _speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning});
     }
+    // i.e. force_reaction(...)
+    void force_immediate_decision(int numFrames, int _speedDir, int _cloningDir, int _speedMode, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
+        forcedDecisionsQueue.insert(forcedDecisionsQueue.begin(), {numFrames, _speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning});
+    }
     void clear_forced_decisions(){
         forcedDecisionsQueue.clear();
     }
@@ -704,13 +717,14 @@ struct Cell {
             if(stats["EAM_SUN"][0] == 100){
                 _speedDir = 0; _speedMode = IDLE_MODE; _doAttack = false;
             } else if(stats["EAM_GND"][0] == 100){
-                preplan_random_cell_activity(5, 5, 200, false, _doCloning);
+                preplan_random_cell_activity(5, 5, 200, false, _doCloning, pctChanceIdle, pctChanceWalk);
             } else {
                 std::vector<Cell*> pNearestCells = get_nearest_cells(20, pAlivesRegions);
                 if(pNearestCells.size() == 0 || !_doAttack){
-                    preplan_random_cell_activity(5, 5, 1, _doAttack, _doCloning);
+                    preplan_random_cell_activity(5, 5, 1, _doAttack, _doCloning, pctChanceIdle, pctChanceWalk);
                 } else {
-                    chase_optimal_cell(pAlivesRegions, pNearestCells, _doAttack, false, _doCloning);
+                    //cout << pNearestCells.size(); // TODO
+                    chase_optimal_cell(pNearestCells, _doAttack, false, _doCloning);
                 }
             }
         }
@@ -978,11 +992,16 @@ struct Cell {
             
             // Damage all cells that this cell touches excluding the cell itself
             // If health < 0, the cell will die when the death conditions are checked
+            std::set<int> attackedCellNums;
             for(auto reg : neighboringRegions){
                 for(auto pCell : pAlivesRegions[reg]){
                     if(uniqueCellNum == pCell->uniqueCellNum) continue;
+                    if(attackedCellNums.count(pCell->uniqueCellNum)) continue;
                     if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(stats["dia"][0] + pCell->stats["dia"][0] + 0.1) / 2){
                         attack_cell(pCell);
+                        //forcedDecisionsQueue.insert(forcedDecisionsQueue.begin(), {5, speedDir, cloningDirection, IDLE_MODE, doAttack, doSelfDestruct, doCloning});
+                        //forcedDecisionsQueue.insert(forcedDecisionsQueue.begin(), {1, speedDir, cloningDirection, speedMode, doAttack, doSelfDestruct, doCloning});
+                        attackedCellNums.insert(pCell->uniqueCellNum);
                     }
                 }
             }
@@ -996,7 +1015,7 @@ struct Cell {
     }
     // Generate random-ish movement that looks reasonable for a cell to do
     void preplan_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
-    bool _enableAttack, bool _enableCloning){
+    bool _enableAttack, bool _enableCloning, int _pctChanceIdle = 33, int _pctChanceWalk = 33){
         int newSpeedDir = pSelf->speedDir, newSpeedMode = pSelf->speedMode;
         int numFramesSinceLastDecision = 0;
         bool changedSpeedDir = false;
@@ -1006,7 +1025,12 @@ struct Cell {
                 changedSpeedDir = true;
             }
             if(rand() % 100 < pctChanceToChangeSpeed){
-                while(newSpeedMode == pSelf->speedMode) newSpeedMode = rand() % 3;
+                while(newSpeedMode == pSelf->speedMode){
+                    int _rngPct = rand() % 100;
+                    if(_rngPct < _pctChanceIdle) newSpeedMode = IDLE_MODE;
+                    else if(_rngPct < pctChanceIdle + _pctChanceWalk) newSpeedMode = WALK_MODE;
+                    else newSpeedMode = RUN_MODE;
+                }
                 changedSpeedDir = true;
             }
             if(changedSpeedDir || numFramesSinceLastDecision >= numFrames){
@@ -1024,12 +1048,15 @@ struct Cell {
         float distance = calc_distance_from_point(targetX, targetY);
         if(distance == 0) return 0;
         int ans = (int)arc_cos_deg(abs(dx), distance);
+        //print_scalar_vals("  distance", distance, "dx", dx, "dy", dy, "acos(|dx|, distance)", ans);
         if(dx >= 0){
             if(dy >= 0) ans = ans;
             ans = 360 - ans;
+            //print_scalar_vals("  (dx >= 0) ans", ans);
         } else {
             if(dy >= 0) ans = 180 - ans;
             ans = 180 + ans;
+            //print_scalar_vals("  (dx < 0) ans", ans);
         }
         // If speed is low, we may only be able to travel in certain directions
         if(stats["speedWalk"][0] > stats["speedRun"][0]) cout << "WARNING: Walk speed exceeds run speed!";
@@ -1072,8 +1099,8 @@ struct Cell {
         force_decision(1, optimalDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
         preplan_shortest_path_to_point(nextPosX, nextPosY, targetX, targetY, enableRunning, _enableAttack, _enableCloning);
     }
-    void chase_optimal_cell(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions, std::vector<Cell*>& pNearestCells,
-    bool _doAttack, bool _doSelfDestruct, bool _doCloning){
+    void chase_optimal_cell(//std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
+    std::vector<Cell*>& pNearestCells, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
         clear_forced_decisions();
         // First, mark each cell with a number and record the smallest (best) number
         std::vector<int> cellRanks;
@@ -1191,6 +1218,12 @@ struct Cell {
         if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
         std::vector<SDL_Texture*> EAM_Tex = findEAMTex();
         for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
+        if(drawVisionRadius && stats["visionDist"][0] > 0){
+            int drawCenterX = drawScaleFactor*(posX + 0.5);
+            int drawCenterY = drawScaleFactor*(posY + 0.5);
+            int drawRadius = stats["visionDist"][0]*drawScaleFactor;
+            draw_regular_polygon(drawCenterX, drawCenterY, drawRadius, 32, {0xff, 0xff, 0xff, 0x40});
+        }
     }
 };
 
@@ -1360,7 +1393,9 @@ struct DeadCell {
         }
         for(int i = 0; i < touchingCells.size(); i++) {
             Cell* pCell = touchingCells[i];
-            pCell->energy += energyWeight[i] * pCell->stats["EAM_CELLS"][0] / 100;
+            int cellEnergyGain = energyWeight[i] * pCell->stats["EAM_CELLS"][0] / 100;
+            pCell->energy += cellEnergyGain;
+            if(cellEnergyGain >= 100) pCell->force_immediate_decision(1, pCell->speedDir, pCell->cloningDirection, IDLE_MODE, pCell->doAttack, pCell->doSelfDestruct, pCell->doCloning);
         }
         energy -= rmEnergy;
 

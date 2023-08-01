@@ -2828,6 +2828,31 @@ std::vector<std::pair<int, SDL_Texture*>> P_GND_TEX = {
 
 // Drawing Various textures
 
+// Default: _color = {0xff, 0xff, 0xff, 0x30}
+void draw_filled_triangle(float x0, float y0, float x1, float y1, float x2, float y2, SDL_Color _color){
+  std::vector<SDL_Vertex> vertices = {
+    { SDL_FPoint{x0,y0}, _color, SDL_FPoint{0}, },
+    { SDL_FPoint{x1,y1}, _color, SDL_FPoint{0}, },
+    { SDL_FPoint{x2,y2}, _color, SDL_FPoint{0}, },
+  };
+  SDL_RenderGeometry(P_RENDERER, nullptr, vertices.data(), vertices.size(), nullptr, 0);
+}
+// If numVertices is large, it approximates a circle
+void draw_regular_polygon(int drawCenterX, int drawCenterY, int radius, int numVertices, SDL_Color _color){
+  if(numVertices < 3) cout << "WARNING: Cannot draw a polygon or circle with too few vertices! Drawing nothing instead!";
+  std::vector<int> xVals, yVals;
+  #define _x(angle_deg) (drawCenterX + radius*cos_deg(angle_deg))
+  #define _y(angle_deg) (drawCenterY + radius*sin_deg(angle_deg))
+  std::vector<float> angles;
+  for(int i = 0; i < numVertices; i++) angles.push_back(i * 360 / numVertices);
+  for(int i = 1; i < numVertices; i++){
+    draw_filled_triangle(drawCenterX, drawCenterY, _x(angles[i-1]), _y(angles[i-1]), _x(angles[i]), _y(angles[i]), _color);
+  }
+  draw_filled_triangle(drawCenterX, drawCenterY, _x(angles[angles.size()-1]), _y(angles[angles.size()-1]), _x(angles[0]), _y(angles[0]), _color);
+  #undef _x
+  #undef _y
+}
+
 // This function is for testing purposes only!
 SDL_Texture* load_texture(const char* filePath){
     SDL_Texture* ans = IMG_LoadTexture(P_RENDERER, filePath);
@@ -3119,8 +3144,6 @@ void draw_user_interface(int numCells = 0){
   #undef borderPx
   #undef dY
   #undef d
-
-
 }
 
 void draw_options_menu(int x0, int dx, int dy, std::vector<std::pair<int, string>>& optionText){

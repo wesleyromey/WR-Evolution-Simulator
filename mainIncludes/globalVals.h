@@ -195,6 +195,7 @@ int frameNum = 0; // The frame number of the simulation
 // Manually control cell decisions, frame ticks, etc.
 static const int EVOLUTIONARY_NEURAL_NETWORK_AI_MODE = 0, RNG_BASED_AI_MODE = 1;
 int aiMode = RNG_BASED_AI_MODE;
+int pctChanceIdle = 33, pctChanceWalk = 33, pctChanceRun = 100 - pctChanceIdle - pctChanceWalk; // for RNG_BASED_AI_MODE
 bool doCellAi = true;
 bool automateEnergy = true;
 bool enableAutomaticAttack = true;
@@ -253,7 +254,7 @@ std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
     {"stickiness", "2*x"}, {"mutationRate", "0"}, //"x/100"},
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
-    {"attack", "20*x/size/size"},
+    {"attack", "200*x/size/size"}, // (originally) attack: 20*x/size/size
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
 };
 

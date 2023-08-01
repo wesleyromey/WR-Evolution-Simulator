@@ -382,15 +382,107 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_postcode();
         break;
 
+        case 51:
+        // 5b
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {6, 3, DAY_NIGHT_ALWAYS_DAY_MODE, 100, 0, 1});
+        varVals.clear(); varVals = gen_std_stats("plant", 1, 1, 2, 2500, 5000);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, true);
+        scenario_postcode();
+        break;
+
+        case 52:
+        // 5c
+        scenario_precode(1);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {6, 3, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        varVals.clear(); varVals = gen_std_stats("plant", 1, 1, 2, 5000, 5000, 600);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(   5, 0, 0, IDLE_MODE, false, false, false);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, true);
+        scenario_postcode();
+        break;
+
+        case 53:
+        // 5d
+        scenario_precode(4);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {80, 40, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        #define gen_worm(cellNum, posX, posY, _runSpeed){ \
+            varVals.clear(); varVals = gen_std_stats("worm", posX, posY, 9, 1000, 1000, 1, 100, 1, 10, 0, 0, 0, 0, _runSpeed, 0); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+            pCellsHist[cellNum]->force_decision(1000, 0, 0, RUN_MODE, false, false, false); \
+        }
+        for(tmpVar = 0; tmpVar < pCellsHist.size(); tmpVar++){
+            gen_worm(tmpVar, 10, 10*tmpVar+5, 3*tmpVar);
+        }
+        #undef gen_worm
+        scenario_postcode();
+        break;
+
+        case 54:
+        // 5e
+        scenario_precode(2);
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {15, 10, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
+        varVals.clear(); varVals = gen_std_stats("plant", 4, 4, 6, 10000, 10000, 200);
+        pCellsHist[0]->set_int_stats(varVals, 0);
+        pCellsHist[0]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false);
+        varVals.clear(); varVals = gen_std_stats("predator", 9, 9, 2, 5000, 5000, 1, 100, 50, 0);
+        pCellsHist[1]->set_int_stats(varVals, 0);
+        pCellsHist[1]->force_decision(3, 225, 0, RUN_MODE, true, false, false);
+        pCellsHist[1]->force_decision(1000, 0, 0, IDLE_MODE, true, false, false);
+        #undef gen_cell
+        scenario_postcode();
+        break;
+
+        case 57:
+        // 5h
+        scenario_precode(3);
+        enableAutomaticCloning = false;
+        enableAutomaticAttack = false;
+        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+        }
+        gen_cell(0, "plant", 5, 5, 6, 10000, 10000);
+        gen_cell(1, "worm", 35, 15, 2, 10000, 10000);
+        gen_cell(2, "predator", 20, 10, 2, 10000, 10000);
+        #undef gen_cell
+        scenario_postcode();
+        break;
+
+        case 58:
+        // 5i
+        scenario_precode(21);
+        enableAutomaticCloning = false;
+        enableAutomaticAttack = true;
+        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2, visionDist); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+        }
+        gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5);
+        for(tmpVar = 1; tmpVar < pCellsHist.size();){
+            gen_cell(tmpVar++, "plant", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0);
+            gen_cell(tmpVar++,  "worm", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0);
+        }
+        #undef gen_cell
+        scenario_postcode();
+        break;
+
+
+
 
         default:
         cout << "NOTE: Scenario " << scenarioNum << " was supposed to be played, but that scenario is not available\n";
-        // Need a new scenario to simulate 3d, 3g, 3i, 3j, 3k
-        // Need new scenarios to simulate 4a (speed and direction, self-destruct)
-        // Need new scenarios to simulate 4d, 4e, 4i, 6b, 6c, 6d, 6e, 6h, 7e, 7jk
-        // Need text for 4a, 5a, and section 7.
-        // Can most likely use simulations or windows I already have
-        //  for the remaining animations and text.
     }
 
     dayNightCycleTime = 0;
@@ -427,9 +519,12 @@ void do_video1(){
     static const int kF3start = kF2e + 300;
     static const int kF3d = kF3start, kF3g = kF3d + 40, kF3i = kF3g + 180; // Size
     static const int kF3j = kF3i + 1000, kF3k = kF3j + 50, kF4start = kF3k + 100;
-    
+    static const int kF5start = kF4start;
+    static const int kF5b = kF5start, kF5c = kF5b + 20, kF5d = kF5c + 100;
+    static const int kF5e = kF5d + 30, kF5h = kF5e + 20;
+    static const int kF5i = kF5h + 500, kF6start = kF5i + 1000;
     frameNum %= numFrames;
-    int startFrame = kF3d - 1;
+    int startFrame = kF5start - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
@@ -509,6 +604,26 @@ void do_video1(){
         case kF3k:
         gen_demo_cells_video1(34);
         break;
+
+        case kF5b:
+        //frameNum = kF5i - 1;
+        gen_demo_cells_video1(51);
+        break;
+        case kF5c:
+        gen_demo_cells_video1(52);
+        break;
+        case kF5d:
+        gen_demo_cells_video1(53);
+        break;
+        case kF5e:
+        gen_demo_cells_video1(54);
+        break;
+        case kF5h:
+        gen_demo_cells_video1(57);
+        break;
+        case kF5i:
+        gen_demo_cells_video1(58);
+        break;
         
         default:
         if(kF1g <= frameNum && frameNum < kF1h){
@@ -543,11 +658,11 @@ void do_video1(){
             for(auto pCell : pAlives){
                 if(pCell->age == 0) pCell->clear_forced_decisions();
                 if(pCell->forcedDecisionsQueue.size() > 0) continue;
-                pCell->preplan_random_cell_activity(10, 10, 100, false, true);
+                pCell->preplan_random_cell_activity(10, 10, 100, false, true, 33, 33);
             }
         }
         
-        if (kF4start <= frameNum) {
+        if (kF6start <= frameNum) {
             text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
             text += " of " + conv_int_to_str(numFrames);
             draw_text(x0,y0,textWidth,textHeight,0,0,text);
