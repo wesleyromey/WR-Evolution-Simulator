@@ -558,7 +558,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF3k - 1;
+    int startFrame = kF1start - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
