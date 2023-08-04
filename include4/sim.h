@@ -169,13 +169,12 @@ void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = fal
     if(cellType == CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT) cellType = availableCellTypes(rng);
     if(pParent == NULL){
         Cell *pCell = new Cell();
+        pCell->define_self(pCellsHist.size(), pCell, NULL);
         
         // Moved this code up
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
 
-
-        pCell->define_self(pCellsHist.size(), pCell, NULL);
         pCell->gen_stats_random(cellType, pAlivesRegions, pCellsHist);
         pCell->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
     } else {
@@ -218,7 +217,6 @@ void gen_dead_cell(Cell* pAlive, int i_pAlive = -1) {
 // cellType == -1 means select a random cell type
 void randomly_place_new_cells(int numCells, int cellType = CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT){
     // Spreads random cells equally across the simulation space
-
     for(int i = 0; i < numCells; i++) {
         gen_cell(cellType);
     }
@@ -297,6 +295,7 @@ void assign_cells_to_correct_regions(){
 
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
+    //cout << "\nframeNum: " << frameNum << endl;
     frameStart = SDL_GetTicks();
     assign_cells_to_correct_regions();
 
@@ -369,6 +368,12 @@ int do_frame(bool doCellDecisions = true){
     #else
     SDL_draw_frame();
     #endif
+    
+
+    //for(auto pCell : pAlives){
+    //    if(pCell->isAlive) print_scalar_vals("cellId", pCell->uniqueCellNum, "posX", pCell->posX, "posY", pCell->posY);
+    //}
+    //print_scalar_vals("pCellsHist.size()", pCellsHist.size());
     SDL_event_handler();
     return ++frameNum;
 }

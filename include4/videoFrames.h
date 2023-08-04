@@ -357,8 +357,8 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(9);
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {30, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
-        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY, delay){ \
-            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000*dia, 5000*dia, dia*dia, 100, dia*dia); \
+        #define init_predator(cellNum, varVals, posX, posY, dia, targetX, targetY, delay, maxHealth){ \
+            varVals.clear(); varVals = gen_std_stats("predator", posX, posY, dia, 1000*dia, 5000*dia, maxHealth, 100, dia*dia); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
             pCellsHist[cellNum]->force_decision(delay, 0, 0, IDLE_MODE, true, false, false); \
             pCellsHist[cellNum]->preplan_shortest_path_to_point(posX, posY, targetX, targetY, true, true, false); \
@@ -369,15 +369,15 @@ void gen_demo_cells_video1(int scenarioNum){
             pCellsHist[cellNum]->preplan_shortest_path_to_point(targetX, targetY, posX, posY, false, false, false); \
             pCellsHist[cellNum]->force_decision(1000, 0, 0, IDLE_MODE, false, false, false); \
         }
-        init_predator(0, varVals, 15, 10, 8, 15, 10, 1000);
-        init_predator(1, varVals, 15,  3, 2, 15,  6, 10);
-        init_predator(2, varVals, 20,  5, 2, 17,  8, 10);
-        init_predator(3, varVals, 22, 10, 2, 19, 10, 12);
-        init_predator(4, varVals, 20, 15, 2, 17, 12, 12);
-        init_predator(5, varVals, 15, 17, 2, 15, 14, 11);
-        init_predator(6, varVals, 10, 15, 2, 13, 12, 11);
-        init_predator(7, varVals,  8, 10, 2, 11, 10, 13);
-        init_predator(8, varVals, 10,  5, 2, 13,  8, 13);
+        init_predator(0, varVals, 15, 10, 8, 15, 10, 1000, 56);
+        init_predator(1, varVals, 15,  3, 2, 15,  6, 10,    4);
+        init_predator(2, varVals, 20,  5, 2, 17,  8, 10,    4);
+        init_predator(3, varVals, 22, 10, 2, 19, 10, 12,    4);
+        init_predator(4, varVals, 20, 15, 2, 17, 12, 12,    4);
+        init_predator(5, varVals, 15, 17, 2, 15, 14, 11,    4);
+        init_predator(6, varVals, 10, 15, 2, 13, 12, 11,    4);
+        init_predator(7, varVals,  8, 10, 2, 11, 10, 13,    4);
+        init_predator(8, varVals, 10,  5, 2, 13,  8, 13,    4);
         #undef init_predator
         scenario_postcode();
         break;
@@ -558,7 +558,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF1start - 1;
+    int startFrame = kF3k - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
@@ -678,9 +678,7 @@ void do_video1(){
                     }
                 }
             }
-        }
-        
-        else if(kF2b <= frameNum && frameNum < kF2d){
+        } else if(kF2b <= frameNum && frameNum < kF2d){
             pCellsHist[0]->health--;
             pCellsHist[0]->energy = pCellsHist[0]->stats["maxEnergy"][0] / 9;
             if(pCellsHist[1]->energy < pCellsHist[1]->stats["maxEnergy"][0] / 10){

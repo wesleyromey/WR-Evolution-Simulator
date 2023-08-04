@@ -868,7 +868,7 @@ struct Cell {
     }
     // Define the identity of the cell (in relation to the rest of the simulator)
     void define_self(int _cellNum, Cell* _pSelf, Cell* _pParent){
-        // NOTE: If I push a copy of the cell into a new location, I need to update self
+        // NOTE: If I push a copy of the cell into a new location, I need to update the new cell's identity
         pSelf = _pSelf;
         pParent = _pParent;
         uniqueCellNum = _cellNum;
@@ -949,7 +949,7 @@ struct Cell {
                 pCell->energy += multiplyBy * energyWeight[i] * pCell->stats["EAM_CELLS"][0] / 100;
             }
             energy = 0;
-            cout << "  energy of dead cell is fully depleted\n";
+            //cout << "  energy of dead cell is fully depleted\n";
             return;
         }
         for(int i = 0; i < touchingCells.size(); i++) {
@@ -959,13 +959,13 @@ struct Cell {
             if(cellEnergyGain >= 100) pCell->force_immediate_decision(1, pCell->speedDir, pCell->cloningDirection, IDLE_MODE, pCell->doAttack, pCell->doSelfDestruct, pCell->doCloning);
         }
         energy -= rmEnergy;
-        print_scalar_vals("  dead cell energy consumed by predators", rmEnergy);
+        //print_scalar_vals("  dead cell energy consumed by predators", rmEnergy);
 
         // Energy to ground
         rmEnergy = 0;
         if(timeSinceDead % decayPeriod == 0) rmEnergy = decayRate * energy / 100 + 10;
         energy -= rmEnergy;
-        print_scalar_vals("  decayed energy", rmEnergy, "decayRate", decayRate, "decayPeriod", decayPeriod, "timeSinceDead", timeSinceDead, "Remaining energy", energy);
+        //print_scalar_vals("  decayed energy", rmEnergy, "decayRate", decayRate, "decayPeriod", decayPeriod, "timeSinceDead", timeSinceDead, "Remaining energy", energy);
 
         enforce_valid_cell(true);
     }
@@ -991,6 +991,7 @@ struct Cell {
         *pClone = *pSelf; // Almost all quantities should be copied over perfectly
         pClone->define_self(cellNum, pClone, pSelf);
         pClone->initialize_cell(pAlivesRegions, pCellsHist);
+        assert(uniqueCellNum != pClone->uniqueCellNum);
 
         // Update the new cell's position and determine the cloning direction
         if(targetCloningDir < 0 || 360 <= targetCloningDir) {
@@ -1179,13 +1180,17 @@ struct Cell {
                 for(auto pCell : pAlivesRegions[reg]){
                     if(uniqueCellNum == pCell->uniqueCellNum) continue;
                     if(attackedCellNums.count(pCell->uniqueCellNum)) continue;
-                    if(calc_distance_from_point(pCell->posX, pCell->posY) <= (float)(stats["dia"][0] + pCell->stats["dia"][0] + 0.1) / 2){
+                    float distXY = calc_distance_from_point(pCell->posX, pCell->posY);
+                    float distanceThreshold = (stats["dia"][0] + pCell->stats["dia"][0] + 0.1) / 2;
+                    //print_scalar_vals("distXY", distXY, "distanceThreshold", distanceThreshold);
+                    if(distXY <= distanceThreshold){
                         attack_cell(pCell);
                         //forcedDecisionsQueue.insert(forcedDecisionsQueue.begin(), {1, speedDir, cloningDirection, speedMode, doAttack, doSelfDestruct, doCloning});
                         attackedCellNums.insert(pCell->uniqueCellNum);
                     }
                 }
             }
+            //print_scalar_vals("attackedCellNums.size()", attackedCellNums.size());
         }
         if(doCloning && energy > 1.2*energyCostToClone && pAlives.size() < cellLimit.val){
             Cell* pCell = clone_self(pCellsHist.size(), pAlivesRegions, pCellsHist, pAlives, cloningDirection);
@@ -1358,12 +1363,10 @@ struct Cell {
         pAlives.erase(pAlives.begin() + i_pAlive);
         _pDeads.push_back(pSelf);
     }
-    // TODO: replace the DeadCell* type with Cell*
     void remove_this_dead_cell_if_depleted(std::vector<Cell*>& _pDeads, int iDead){
         if(isAlive || energy > 0) return;
         assert(_pDeads[iDead] == pSelf);
         _pDeads.erase(_pDeads.begin() + iDead);
-        delete pSelf;
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;

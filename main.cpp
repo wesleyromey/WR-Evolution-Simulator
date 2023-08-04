@@ -31,7 +31,6 @@ int main(int argc, char* argv[]){
 #else
     while(simState != SIM_STATE_QUIT){
         do_sim_iteration();
-        //if(pAlives.size() > 0) pAlives[0]->print_stats();
     }
 #endif
     if(simState == SIM_STATE_QUIT) exit_sim();
