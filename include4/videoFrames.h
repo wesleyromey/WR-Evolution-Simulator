@@ -411,7 +411,7 @@ void gen_demo_cells_video1(int scenarioNum){
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {80, 40, DAY_NIGHT_ALWAYS_DAY_MODE, 0, 0, 1});
         #define gen_worm(cellNum, posX, posY, _runSpeed){ \
-            varVals.clear(); varVals = gen_std_stats("worm", posX, posY, 9, 1000, 1000, 1, 100, 1, 10, 0, 0, 0, 0, _runSpeed, 0); \
+            varVals.clear(); varVals = gen_std_stats("worm", posX, posY, 9, 3000, 3000, 1, 100, 1, 10, 0, 0, 0, 0, _runSpeed, 0); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
             pCellsHist[cellNum]->force_decision(1000, 0, 0, RUN_MODE, false, false, false); \
         }
@@ -443,7 +443,7 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(3);
         enableAutomaticCloning = false;
         enableAutomaticAttack = false;
-        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
+        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45; // 10, 45, 45
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy){ \
@@ -465,18 +465,51 @@ void gen_demo_cells_video1(int scenarioNum){
         pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
-        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist){ \
-            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2, visionDist); \
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
-        gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5);
+        gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5, 1);
         for(tmpVar = 1; tmpVar < pCellsHist.size();){
-            gen_cell(tmpVar++, "plant", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0);
-            gen_cell(tmpVar++,  "worm", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0);
+            gen_cell(tmpVar++, "plant", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0, 0);
+            gen_cell(tmpVar++,  "worm", rand() % (ubX.val-2) + 1, rand() % (ubY.val-2) + 1, 2, 1000, 10000, 0, 0);
         }
         #undef gen_cell
         scenario_postcode();
         break;
+
+        case 59:
+        // 5j
+        scenario_precode(8);
+        enableAutomaticCloning = false;
+        enableAutomaticAttack = true;
+        pctChanceIdle = 10; pctChanceWalk = 30; pctChanceRun = 60; // 10, 45, 45
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+        }
+        //gen_cell(0, "worm", 20, 10, 2, 10000, 10000, 0, 0);
+        gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 5, 2);
+        pCellsHist[0]->force_decision(10, 0, 0, 0, false, false, false);
+        //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
+        //pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
+        //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
+        gen_cell(1, "plant", 5, 5, 2, 5000, 5000, 0, 0);
+        gen_cell(2, "plant", 30, 12, 8, 2000, 20000, 0, 0);
+        gen_cell(3, "plant", 20, 5, 2, 5000, 5000, 0, 0);
+        gen_cell(4, "plant", 10, 35, 2, 5000, 5000, 0, 0);
+        gen_cell(5, "plant", 25, 25, 2, 5000, 5000, 0, 0);
+        gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
+        pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
+        gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
+        pCellsHist[7]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
+
+        #undef gen_cell
+        scenario_postcode();
+        break;
+
 
 
 
@@ -521,10 +554,11 @@ void do_video1(){
     static const int kF3j = kF3i + 1000, kF3k = kF3j + 50, kF4start = kF3k + 100;
     static const int kF5start = kF4start;
     static const int kF5b = kF5start, kF5c = kF5b + 20, kF5d = kF5c + 100;
-    static const int kF5e = kF5d + 30, kF5h = kF5e + 20;
-    static const int kF5i = kF5h + 500, kF6start = kF5i + 1000;
+    static const int kF5e = kF5d + 70, kF5h = kF5e + 20;
+    static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
+    static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF5start - 1;
+    int startFrame = kF1start - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
@@ -606,7 +640,6 @@ void do_video1(){
         break;
 
         case kF5b:
-        //frameNum = kF5i - 1;
         gen_demo_cells_video1(51);
         break;
         case kF5c:
@@ -623,6 +656,9 @@ void do_video1(){
         break;
         case kF5i:
         gen_demo_cells_video1(58);
+        break;
+        case kF5j:
+        gen_demo_cells_video1(59);
         break;
         
         default:

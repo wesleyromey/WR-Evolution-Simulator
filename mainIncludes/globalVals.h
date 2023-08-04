@@ -24,6 +24,14 @@ static const std::set<char> OPERATORS = {'+','-','*','/'};
 static const int MAX_INT_DEFAULT = 2147483647; // The max value an int can have in C++
 
 
+// For functions involving these variables
+#define stdFcnCellInputs { \
+    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions, \
+    std::map<std::pair<int,int>, std::vector<DeadCell*>>& pDeadsRegions, \
+    std::vector<Cell*>& pCellsHist \
+}
+
+
 // A structure for integer simulation parameters to be held in,
 //  where each simulation parameter contains a list of possible values
 void update_global_params();
@@ -187,7 +195,7 @@ static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 
 static const int CELL_REGION_SIDE_LEN = 10;
 
 int mousePosX = 0, mousePosY = 0;
-static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps
+static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps; Default 125
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation

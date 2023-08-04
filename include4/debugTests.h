@@ -46,13 +46,22 @@ void testGlobalEnergy(){
     };
     pAlives[0]->set_int_stats(hardcodedVals);
     do_frame(0);
-    gen_dead_cell();
+    gen_dead_cell(NULL);
     gen_dead_cell(pAlives[0], 0);
+    /*
     for(int i = 1; pDeads.size() > 0; i++){
         int initSize = pDeads.size();
         do_frame(i);
         if(pDeads.size() != initSize){
             std::cout << initSize - pDeads.size() << " dead cells were removed at frame " << i << std::endl;
+        }
+    }
+    */
+    for(int i = 1; _pDeads.size() > 0; i++){
+        int initSize = _pDeads.size();
+        do_frame(i);
+        if(_pDeads.size() != initSize){
+            std::cout << initSize - _pDeads.size() << " dead cells were removed at frame " << i << std::endl;
         }
     }
     

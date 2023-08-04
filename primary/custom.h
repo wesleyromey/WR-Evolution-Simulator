@@ -60,6 +60,12 @@ float arc_sin_deg(double dy, double distance){
 float arc_cos_deg(double dx, double distance){
     return acos(dx / distance) * 180 / PI;
 }
+float min_float(float num1, float num2){
+    return (num1 <= num2 ? num1 : num2);
+}
+float max_float(float num1, float num2){
+    return (num1 >= num2 ? num1 : num2);
+}
 int min_int(int num1, int num2){
     return (num1 <= num2 ? num1 : num2);
 }
