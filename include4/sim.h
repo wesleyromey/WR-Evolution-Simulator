@@ -14,8 +14,8 @@
 std::vector<Cell*> pCellsHist; // A history of all cells in the order they were created
 std::vector<Cell*> pAlives; // All cells that are currently alive
 std::map<std::pair<int,int>, std::vector<Cell*>> pAlivesRegions; // pAlives separated by region
-std::vector<Cell*> _pDeads; // All cells that are currently dead
-std::map<std::pair<int,int>, std::vector<Cell*>> _pDeadsRegions; // _pDeads separated by region
+std::vector<Cell*> pDeads; // All cells that are currently dead
+std::map<std::pair<int,int>, std::vector<Cell*>> pDeadsRegions; // pDeads separated by region
 
 
 
@@ -79,7 +79,7 @@ void SDL_draw_frame(){
     draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pAlives) pCell->draw_cell();
-    for(auto pCell : _pDeads) pCell->draw_cell();
+    for(auto pCell : pDeads) pCell->draw_cell();
     draw_user_interface(pAlives.size());
     #endif
     enforce_frame_rate(frameStart, FRAME_DELAY);
@@ -174,14 +174,14 @@ void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = fal
 }
 
 void kill_cell(Cell* pAlive, int i_pAlive) {
-    pAlive->kill_self(pAlives, _pDeads, i_pAlive);
+    pAlive->kill_self(pAlives, pDeads, i_pAlive);
 }
 
 void gen_dead_cell(Cell* pAlive, int i_pAlive = -1) {
     // pAlive is the cell to kill, if applicable
     if(pAlive == NULL){
         gen_cell(CELL_TYPE_PLANT);
-        pAlives[pAlives.size()-1]->kill_self(pAlives, _pDeads, pAlives.size()-1);
+        pAlives[pAlives.size()-1]->kill_self(pAlives, pDeads, pAlives.size()-1);
     } else {
         kill_cell(pAlive, i_pAlive);
     }
@@ -210,8 +210,8 @@ void print_cell_forces(std::vector<Cell*> pCells){
 //  the vectors, maps, etc. that they are stored in
 void deallocate_all_cells(){
     for(auto pCell : pCellsHist) delete pCell;
-    pCellsHist.clear(); _pDeads.clear(); pAlives.clear();
-    pAlivesRegions.clear(); _pDeadsRegions.clear();
+    pCellsHist.clear(); pDeads.clear(); pAlives.clear();
+    pAlivesRegions.clear(); pDeadsRegions.clear();
 }
 // Initialize the simulation
 void init_sim(){
@@ -241,17 +241,17 @@ int exit_sim(){
 
 
 void assign_cells_to_correct_regions(){
-    // Clear pAlivesRegions and _pDeadsRegions
+    // Clear pAlivesRegions and pDeadsRegions
     for(int _x = 0; _x < cellRegionNumUbX; _x++){
         for(int _y = 0; _y < cellRegionNumUbY; _y++){
             pAlivesRegions[{_x, _y}] = {};
-            _pDeadsRegions[{_x, _y}] = {};
+            pDeadsRegions[{_x, _y}] = {};
         }
     }
 
     // Assign each dead and alive cell to the correct region
     for(auto pCell : pAlives) pAlivesRegions[pCell->xyRegion].push_back(pCell);
-    for(auto pCell : _pDeads) _pDeadsRegions[pCell->xyRegion].push_back(pCell);
+    for(auto pCell : pDeads) pDeadsRegions[pCell->xyRegion].push_back(pCell);
 }
 
 // Repeat this function each frame. Return the frame number
@@ -264,7 +264,7 @@ int do_frame(bool doCellDecisions = true){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
         for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->decide_next_frame(pAlivesRegions, pCellsHist);
-        for(int i = _pDeads.size()-1; i >= 0; i--) _pDeads[i]->decide_next_frame(pAlivesRegions, pCellsHist);
+        for(int i = pDeads.size()-1; i >= 0; i--) pDeads[i]->decide_next_frame(pAlivesRegions, pCellsHist);
     }
 
     // Cells move to their target positions based on their speed
@@ -291,7 +291,7 @@ int do_frame(bool doCellDecisions = true){
     
     if(automateEnergy){
         for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->do_energy_transfer(pAlives, pAlivesRegions);
-        for(int i = _pDeads.size()-1; i >= 0; i--) _pDeads[i]->do_energy_decay(pAlives, pAlivesRegions);
+        for(int i = pDeads.size()-1; i >= 0; i--) pDeads[i]->do_energy_decay(pAlives, pAlivesRegions);
         for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->consume_energy_per_frame();
     }
 
@@ -301,7 +301,7 @@ int do_frame(bool doCellDecisions = true){
     }
 
     // Deal with dead cells
-    for(int i = _pDeads.size() - 1; i >= 0; i--) _pDeads[i]->remove_this_dead_cell_if_depleted(_pDeads, i);
+    for(int i = pDeads.size() - 1; i >= 0; i--) pDeads[i]->remove_this_dead_cell_if_depleted(pDeads, i);
 
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
     if(automateEnergy && frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){

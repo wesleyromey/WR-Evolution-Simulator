@@ -1254,7 +1254,7 @@ struct Cell {
 
         #undef get_pCell
     }
-    void kill_self(std::vector<Cell*>& pAlives, std::vector<Cell*>& _pDeads, int i_pAlive){
+    void kill_self(std::vector<Cell*>& pAlives, std::vector<Cell*>& pDeads, int i_pAlive){
         assert(isAlive);
         decayPeriod = 1;
         decayRate = 2;
@@ -1263,12 +1263,12 @@ struct Cell {
         isAlive = false;
         speedMode = IDLE_MODE;
         pAlives.erase(pAlives.begin() + i_pAlive);
-        _pDeads.push_back(pSelf);
+        pDeads.push_back(pSelf);
     }
-    void remove_this_dead_cell_if_depleted(std::vector<Cell*>& _pDeads, int iDead){
+    void remove_this_dead_cell_if_depleted(std::vector<Cell*>& pDeads, int iDead){
         if(isAlive || energy > 0) return;
-        assert(_pDeads[iDead] == pSelf);
-        _pDeads.erase(_pDeads.begin() + iDead);
+        assert(pDeads[iDead] == pSelf);
+        pDeads.erase(pDeads.begin() + iDead);
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;
