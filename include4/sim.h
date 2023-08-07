@@ -256,13 +256,11 @@ void assign_cells_to_correct_regions(){
 
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
-    cout << "frameNum: " << frameNum << endl;
     frameStart = SDL_GetTicks();
+    
     assign_cells_to_correct_regions();
-
     if(doCellDecisions && doCellAi){
-        // The cells each decide what to do (e.g. speed, direction,
-        //  doAttack, etc.) by updating their internal state
+        // The cells each decide what to do (e.g. speed, direction, doAttack, etc.) by updating their internal state
         for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->decide_next_frame(pAlivesRegions, pDeadsRegions, pCellsHist);
         for(int i = pDeads.size()-1; i >= 0; i--) pDeads[i]->decide_next_frame(pAlivesRegions, pDeadsRegions, pCellsHist);
     }

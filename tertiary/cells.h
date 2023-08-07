@@ -352,6 +352,7 @@ struct Cell {
         val = saturate_int(val, lb, ub);
     }
     // Only consider the nearest cells within the cell's field of view
+    //  Return the cell ids starting with the cells most relevant to predators
     //  Used to return std::vector<Cell*>
     std::vector<int> get_nearest_cell_ids(int maxNumCellsToReturn,
     std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
@@ -436,11 +437,11 @@ struct Cell {
             float distXY = nearbyCellDistancesVec[i].second;
             nearestDistXY.push_back(distXY);
         }
-        if(true && nearestCellIds.size() > 0 && stats["EAM_CELLS"][0] == 100){
+        //if(true && nearestCellIds.size() > 0 && stats["EAM_CELLS"][0] == 100){
             //cout << "Nearest Cell ids and Distances:\n";
-            print_1d_vec("  nearestCellIds", nearestCellIds);
+            //print_1d_vec("  nearestCellIds", nearestCellIds);
             //print_1d_vec("  nearestDistXY" , nearestDistXY );
-        }
+        //}
         return nearestCellIds;
     }
     // NOTE: This function also determines what the AI inputs are
@@ -573,6 +574,10 @@ struct Cell {
         if(speedMode == RUN_MODE)  energy -= energyCostPerUse["speedRun"] / TICKS_PER_SEC;
     }
     void enforce_valid_ai(){
+        enforce_valid_ai_structure();
+        enforce_valid_ai_inputs();
+    }
+    void enforce_valid_ai_structure(){
         if(aiNetwork.size() != nodesPerLayer.size() - 1) print_scalar_vals("aiNetwork.size()", aiNetwork.size(), "nodesPerLayer.size()", nodesPerLayer.size());
         assert(aiNetwork.size() == nodesPerLayer.size() - 1);
         for(auto num : nodesPerLayer) assert(0 < num);
@@ -582,11 +587,7 @@ struct Cell {
             //  where layer 0 is the input layer
         }
     }
-    // If the cell isn't valid, change the variables so it is valid.
-    // Also, update the dependent variables
-    void enforce_valid_cell(bool enforceStats){
-        assert(pSelf != NULL);
-        assert(uniqueCellNum >= 0);
+    void enforce_valid_ai_inputs(){
         // Cell Inputs
         assert(speedMode == IDLE_MODE || speedMode == WALK_MODE || speedMode == RUN_MODE);
         while(speedDir < 0) speedDir += 360;
@@ -594,10 +595,18 @@ struct Cell {
         while(cloningDirection < 0) cloningDirection += 360;
         cloningDirection %= 360;
         // doAttack, doSelfDestruct, doCloning
+    }
+    // If the cell isn't valid, change the variables so it is valid.
+    // Also, update the dependent variables
+    void enforce_valid_cell(bool enforceStats){
+        assert(pSelf != NULL);
+        assert(uniqueCellNum >= 0);
 
         // Cell State
         enforce_bounds(health, 0, stats["maxHealth"][0]);
         enforce_bounds(energy, 0, stats["maxEnergy"][0]);
+
+        enforce_valid_ai_inputs();
 
         // Physics, position, etc.
         enforce_valid_xyPos();
@@ -617,6 +626,7 @@ struct Cell {
             enforce_valid_ai();
             update_energy_costs();
         }
+        
 
         // Constraints related to whether the cell is dead or alive
         if(isAlive){
@@ -641,16 +651,18 @@ struct Cell {
         if(pParent == NULL) init_ai(pAlivesRegions, pDeadsRegions, pCellsHist);
         // Sort out initial decisions
         if(aiMode == RNG_BASED_AI_MODE){
-            force_decision(1, 0, 0, IDLE_MODE, doAttack, false, doCloning);
-            speedDir = rand() % 360;
-            cloningDirection = rand() % 360;
+            //force_decision(1, 0, 0, IDLE_MODE, doAttack, false, doCloning);
+            //speedDir = rand() % 360;
+            //cloningDirection = rand() % 360;
+            int _speedMode = speedMode;
             int _rngPct = rand() % 100; 
-            if(_rngPct < pctChanceIdle) speedMode = IDLE_MODE;
-            else if(_rngPct < pctChanceIdle + pctChanceWalk) speedMode = WALK_MODE;
-            else speedMode = RUN_MODE;
-            doAttack = enableAutomaticAttack;
-            doSelfDestruct = false;
-            doCloning = enableAutomaticCloning;
+            if(_rngPct < pctChanceIdle) _speedMode = IDLE_MODE;
+            else if(_rngPct < pctChanceIdle + pctChanceWalk) _speedMode = WALK_MODE;
+            else _speedMode = RUN_MODE;
+            //doAttack = enableAutomaticAttack;
+            //doSelfDestruct = false;
+            //doCloning = enableAutomaticCloning;
+            set_ai_outputs(rand() % 360, rand() % 360, _speedMode, enableAutomaticAttack, false, enableAutomaticCloning);
         }
         drawVisionRadius = true;
     }
@@ -745,14 +757,15 @@ struct Cell {
             _doAttack = x(4) && attackCooldown == 0;
             _doSelfDestruct = x(5);
             _doCloning = x(6);
-            //set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
+            set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             //cout << "forcedDecisionsQueue[0]: " << x(0) << ", " << x(1) << ", " << x(2) << ", " << x(3) << ", " << x(4) << ", " << x(5) << ", " << x(6) << endl;
             if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
             #undef x
-            set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             enforce_valid_cell(false);
             return;
-        } else if(aiMode == EVOLUTIONARY_NEURAL_NETWORK_AI_MODE){
+        }
+
+        if(aiMode == EVOLUTIONARY_NEURAL_NETWORK_AI_MODE){
             // If the AI is free to decide, then decide what to do
             std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions, pDeadsRegions, pCellsHist);
             for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
@@ -765,32 +778,38 @@ struct Cell {
             _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
             _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
             set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-            enforce_valid_cell(false);
             return;
-        } else if(aiMode == RNG_BASED_AI_MODE){
+        }
+        
+        if(aiMode == RNG_BASED_AI_MODE){
             _cloningDir = rand() % 360;
             _doAttack = enableAutomaticAttack && attackCooldown == 0;
             _doSelfDestruct = enableAutomaticSelfDestruct;
             _doCloning = enableAutomaticCloning;
             if(stats["EAM_SUN"][0] == 100){
-                _speedDir = 0; _speedMode = IDLE_MODE; _doAttack = false;
-            } else if(stats["EAM_GND"][0] == 100){
-                preplan_random_cell_activity(5, 5, 200, false, _doCloning, pctChanceIdle, pctChanceWalk);
+                set_ai_outputs(0, rand() % 360, IDLE_MODE, false, false, _doCloning);
+                return;
+            }
+            if(stats["EAM_GND"][0] == 100){
+                do_random_cell_activity(5, 5, false, _doCloning, pctChanceIdle, pctChanceWalk);
+                return;
+            }
+            std::vector<int> nearestCellIds = get_nearest_cell_ids(100, pAlivesRegions, pDeadsRegions, pCellsHist);
+            if(nearestCellIds.size() == 0){
+                //cout << "  do_random_cell_activity()\n";
+                do_random_cell_activity(5, 5, _doAttack, _doCloning, pctChanceIdle, pctChanceWalk);
+                return;
+            }
+            Cell* pTarget = pCellsHist[nearestCellIds[0]];
+            if(pTarget->isAlive == false){
+                set_ai_outputs(0, rand() % 360, IDLE_MODE, false, false, _doCloning);
+                return;
             } else {
-                std::vector<int> nearestCellIds = get_nearest_cell_ids(100, pAlivesRegions, pDeadsRegions, pCellsHist);
-                if(nearestCellIds.size() == 0 || !_doAttack){
-                    cout << "  preplan_random_cell_activity()\n";
-                    preplan_random_cell_activity(5, 5, 1, _doAttack, _doCloning, pctChanceIdle, pctChanceWalk);
-                    
-                } else {
-                    cout << "  chase_optimal_cell()\n";
-                    chase_optimal_cell(pCellsHist, nearestCellIds, _doAttack, false, _doCloning);
-                    return;
-                }
+                //cout << "  chase_optimal_cell()\n";
+                chase_optimal_cell(pCellsHist, nearestCellIds, _doAttack, false, _doCloning);
+                return;
             }
         }
-        set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
-        enforce_valid_cell(false);
     }
     void mutate_ai(){
         float prob = (float)stats["mutationRate"][0] / stats["mutationRate"][2];
@@ -871,12 +890,14 @@ struct Cell {
             // Remove dead cells from this list, as they don't receive any of the energy
             if(touchingCells[i]->isAlive == false) touchingCells.erase(touchingCells.begin() + i);
         }
+        // Calculate the amount of energy to give to other cells
         int rmEnergy = 0; // Energy to give to other cells
         std::vector<int> energyWeight(touchingCells.size());
         for(int i = 0; i < energyWeight.size(); i++){
-            energyWeight[i] = touchingCells[i]->stats["EAM_CELLS"][0] * energy / 1000;
+            energyWeight[i] = touchingCells[i]->stats["EAM_CELLS"][0] * (energy + 200) / 1000;
             rmEnergy += energyWeight[i];
         }
+        // Ensure only the dead cell's total amount of energy can be given away at most 
         if (rmEnergy > energy) {
             float multiplyBy = (float)energy / (float)rmEnergy;
             for(int i = 0; i < touchingCells.size(); i++){
@@ -884,25 +905,29 @@ struct Cell {
                 pCell->energy += multiplyBy * energyWeight[i] * pCell->stats["EAM_CELLS"][0] / 100;
             }
             energy = 0;
+            enforce_valid_cell(false);
             //cout << "  energy of dead cell is fully depleted\n";
             return;
         }
+        // Distribute the energy to the cells eating the dead cell
         for(int i = 0; i < touchingCells.size(); i++) {
             Cell* pCell = touchingCells[i];
-            int cellEnergyGain = energyWeight[i] * pCell->stats["EAM_CELLS"][0] / 100;
+            int cellEnergyGain = energyWeight[i];// * pCell->stats["EAM_CELLS"][0] / 100;
             pCell->energy += cellEnergyGain;
-            if(cellEnergyGain >= 100) pCell->force_immediate_decision(1, pCell->speedDir, pCell->cloningDirection, IDLE_MODE, pCell->doAttack, pCell->doSelfDestruct, pCell->doCloning);
+            //if(cellEnergyGain >= 100) pCell->force_immediate_decision(1, pCell->speedDir, pCell->cloningDirection, IDLE_MODE, pCell->doAttack, pCell->doSelfDestruct, pCell->doCloning);
         }
         energy -= rmEnergy;
         //print_scalar_vals("  dead cell energy consumed by predators", rmEnergy);
 
         // Energy to ground
         rmEnergy = 0;
-        if(timeSinceDead % decayPeriod == 0) rmEnergy = decayRate * energy / 100 + 10;
+        int _efficiencyPct = 0; // TODO: Ensure this is non-zero after the first video is published
+        if(timeSinceDead % decayPeriod == 0) rmEnergy = decayRate * energy / 100 + 20;
+        simGndEnergy[posY][posX] = min_int(maxGndEnergy.val, simGndEnergy[posY][posX] + rmEnergy * _efficiencyPct / 100);
         energy -= rmEnergy;
         //print_scalar_vals("  decayed energy", rmEnergy, "decayRate", decayRate, "decayPeriod", decayPeriod, "timeSinceDead", timeSinceDead, "Remaining energy", energy);
 
-        enforce_valid_cell(true);
+        enforce_valid_cell(false);
     }
     void randomize_pos(int _lbX, int _ubX, int _lbY, int _ubY){
         // lb means lower bound, ub means upper bound,
@@ -1132,6 +1157,26 @@ struct Cell {
         }
         enforce_valid_cell(true);
     }
+    void do_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, 
+    bool _enableAttack, bool _enableCloning, int _pctChanceIdle = 33, int _pctChanceWalk = 33){
+        int _speedDir = speedDir, _speedMode = speedMode;
+        if(rand() % 100 < pctChanceToChangeDir){
+            while(_speedDir == speedDir){
+                _speedDir = rand() % 360;
+                correct_speedDir();
+            }
+        }
+        if(rand() % 100 < pctChanceToChangeSpeed){
+            while(_speedMode == speedMode){
+                int _rngPct = rand() % 100;
+                if(_rngPct < _pctChanceIdle) _speedMode = IDLE_MODE;
+                else if(_rngPct < pctChanceIdle + _pctChanceWalk) _speedMode = WALK_MODE;
+                else _speedMode = RUN_MODE;
+            }
+        }
+        set_ai_outputs(_speedDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
+        enforce_valid_cell(false);
+    }
     // Generate random-ish movement that looks reasonable for a cell to do
     void preplan_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
     bool _enableAttack, bool _enableCloning, int _pctChanceIdle = 33, int _pctChanceWalk = 33){
@@ -1229,8 +1274,7 @@ struct Cell {
     // Modify each decision
     void chase_optimal_cell(std::vector<Cell*> pCellsHist,
     std::vector<int>& nearestCellIds, bool _doAttack, bool _doSelfDestruct, bool _doCloning){
-        clear_forced_decisions();
-
+        //clear_forced_decisions();
         #define get_pCell(cellId) pCellsHist[cellId];
 
         // First, mark each cell with a number and record the largest (best) number
@@ -1271,20 +1315,19 @@ struct Cell {
         Cell* pCellToChase = get_pCell(cellIdToChase);
         int xNext = pCellToChase->posX + pCellToChase->get_speed()*cos_deg(pCellToChase->speedDir);
         int yNext = pCellToChase->posY + pCellToChase->get_speed()*sin_deg(pCellToChase->speedDir);
-        int optimalSpeedDir = get_optimal_speedDir_to_point(xNext, yNext);
+        int _speedDir = get_optimal_speedDir_to_point(xNext, yNext);
         // Pursue the relevant cell for 1 more frame
-        int _speedDir = optimalSpeedDir;
         int targetDistance = calc_distance_from_point(pCellToChase->posX, pCellToChase->posY);
         int targetSpeed = find_closest_value(targetDistance, {stats["speedIdle"][0], stats["speedWalk"][0], stats["speedRun"][0]});
-        int _speedMode;
+        int _speedMode = speedMode;
         if(targetSpeed == stats["speedIdle"][0]) _speedMode = stats["speedIdle"][0];
         if(targetSpeed == stats["speedWalk"][0]) _speedMode = stats["speedWalk"][0];
         if(targetSpeed == stats["speedRun"][0])  _speedMode = stats["speedRun"][0];
         //force_decision(1, _speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         set_ai_outputs(_speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         enforce_valid_cell(false);
-        print_scalar_vals("  cellId", uniqueCellNum, "_speedDir", _speedDir, "_speedMode", _speedMode, "xNext", xNext, "yNext", yNext,
-            "optimalSpeedDir", optimalSpeedDir, "targetDistance", targetDistance, "targetSpeed", targetSpeed);
+        //print_scalar_vals("  cellId", uniqueCellNum, "_speedDir", _speedDir, "_speedMode", _speedMode, "xNext", xNext, "yNext", yNext,
+        //    "_speedDir", _speedDir, "targetDistance", targetDistance, "targetSpeed", targetSpeed, "posX", posX, "posY", posY);
 
         #undef get_pCell
     }

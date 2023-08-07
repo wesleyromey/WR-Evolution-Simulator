@@ -35,7 +35,8 @@ eat their dead bodies. The energy that the cell had when it was alive
 plus the cost the cell must spend to clone itself can be consumed by other cells.
 If a dead cell isn't immediately consumed, its energy will
 exponentially decay until fully depleted, in which case the dead cell
-will disappear.
+will disappear. The simulation can be configured to automatically have
+the dead cells give some of their energy to the ground cell it is centered on.
 
 Overcrowding: When other cells are in the same immediate area, they must
 compete for energy from the sun, ground, and dead cells. The type of energy
