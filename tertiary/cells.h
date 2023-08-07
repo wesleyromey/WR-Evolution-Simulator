@@ -4,6 +4,7 @@
 #endif
 
 
+int count_all_alive_cells(std::vector<Cell*> pActives);
 
 // The main (possibly only) living organisms in the simulator. Their shape will be a circle
 struct Cell {
@@ -102,8 +103,7 @@ struct Cell {
         }
         enforce_valid_cell(true);
     }
-    void gen_stats_random(int _cellType, std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    void gen_stats_random(int _cellType, std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*>& pCellsHist){
         // Random generation from scratch
         assert(pSelf != NULL);
@@ -132,6 +132,10 @@ struct Cell {
         stats["speedWalk"]      = {                 1,     0,    10, mutChance, mutAmt}; // (0, 1)
         stats["speedRun"]       = {                 2,     0,   100, mutChance, mutAmt}; // (0, 100)
         stats["visionDist"]     = { stat_init(5,   5),     0,  1000,         0,      0}; // (0, 10)
+        stats["rngAi_pctChanceIdle"] = {           33,     0,   100,         0,      0};
+        stats["rngAi_pctChanceWalk"] = {           33,     0,   100,         0,      0};
+        stats["rngAi_pctChanceToChangeDir"] = {     5,     0,   100,         0,      0};
+        stats["rngAi_pctChanceToChangeSpeed"] = {   5,     0,   100,         0,      0};
         switch(_cellType){
             case CELL_TYPE_PLANT:
             update_stat("attack"    , 0x1F, 0, 0, 0, 0, 0);
@@ -162,7 +166,7 @@ struct Cell {
             case CELL_TYPE_GENERIC:
             break;
         }
-        initialize_cell(pAlivesRegions, pDeadsRegions, pCellsHist);
+        initialize_cell(pActivesRegions, pCellsHist);
         enforce_valid_cell(true);
         #undef stat_init
     }
@@ -223,13 +227,14 @@ struct Cell {
         // Ensure we update all dependent variables
         enforce_valid_cell(true);
     }
-    std::vector<Cell*> find_touching_cells(std::vector<Cell*>& pAlives,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+    // Count alive cells only!
+    std::vector<Cell*> find_touching_cells(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions){
         std::vector<Cell*> ans;
         std::vector<std::pair<int, int>> neighboringRegions = get_neighboring_xyRegions();
         std::set<int> checkedCells = {uniqueCellNum};
         for(auto reg : neighboringRegions){
-            for(auto pCell : pAlivesRegions[reg]){
+            for(auto pCell : pActivesRegions[reg]){
+                if(pCell->isAlive == false) continue;
                 if(checkedCells.count(pCell->uniqueCellNum)) continue;
                 if(pCell->calc_distance_from_point(posX, posY) > (float)(stats["dia"][0] + pCell->stats["dia"][0] + 0.1) / 2) continue;
                 ans.push_back(pCell);
@@ -355,8 +360,7 @@ struct Cell {
     //  Return the cell ids starting with the cells most relevant to predators
     //  Used to return std::vector<Cell*>
     std::vector<int> get_nearest_cell_ids(int maxNumCellsToReturn,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*> pCellsHist){
         // visionDist: The distance the cell can see
         int xReg = xyRegion.first, yReg = xyRegion.second;
@@ -405,8 +409,9 @@ struct Cell {
         while(true){
             // Search the alive and dead cells in the region and map their cell ids to their distance from the current cell
             std::pair<int, int> pReg = {iX, iY};
-            add_nearby_cells_to_distance_map(pAlivesRegions[pReg]);
-            add_nearby_cells_to_distance_map(pDeadsRegions[pReg]);
+            add_nearby_cells_to_distance_map(pActivesRegions[pReg]);
+            //add_nearby_cells_to_distance_map(pAlivesRegions[pReg]);
+            //add_nearby_cells_to_distance_map(pDeadsRegions[pReg]);
             increment_iX_or_iY(iX, iY);
         }
 
@@ -445,8 +450,7 @@ struct Cell {
         return nearestCellIds;
     }
     // NOTE: This function also determines what the AI inputs are
-    std::vector<float> get_ai_inputs(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    std::vector<float> get_ai_inputs(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*> pCellsHist){
         std::vector<float> aiInputs;
         int _numAiInputs = 0;
@@ -465,7 +469,7 @@ struct Cell {
         //  (b) For now, we just care about their id similarity
         int maxNumCellsSeen = 10;
         #define get_pCell(cellId) pCellsHist[cellId]
-        std::vector<int> nearestCellIds = get_nearest_cell_ids(maxNumCellsSeen, pAlivesRegions, pDeadsRegions, pCellsHist);
+        std::vector<int> nearestCellIds = get_nearest_cell_ids(maxNumCellsSeen, pActivesRegions, pCellsHist);
         for(int i = 0; i < maxNumCellsSeen; i++){
             float ageOther = 0, attackCooldownOther = 0;
             float healthOther = 0, energyOther = 0;
@@ -640,15 +644,14 @@ struct Cell {
             if(timeSinceDead < 0) timeSinceDead = 0;
         }
     }
-    void initialize_cell(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    void initialize_cell(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*>& pCellsHist){
         assert(pSelf != NULL);
         age = 0;
         attackCooldown = stats["maxAtkCooldown"][0];
         energy = stats["initEnergy"][0];
         health = stats["maxHealth"][0];
-        if(pParent == NULL) init_ai(pAlivesRegions, pDeadsRegions, pCellsHist);
+        if(pParent == NULL) init_ai(pActivesRegions, pCellsHist);
         // Sort out initial decisions
         if(aiMode == RNG_BASED_AI_MODE){
             //force_decision(1, 0, 0, IDLE_MODE, doAttack, false, doCloning);
@@ -656,8 +659,8 @@ struct Cell {
             //cloningDirection = rand() % 360;
             int _speedMode = speedMode;
             int _rngPct = rand() % 100; 
-            if(_rngPct < pctChanceIdle) _speedMode = IDLE_MODE;
-            else if(_rngPct < pctChanceIdle + pctChanceWalk) _speedMode = WALK_MODE;
+            if(_rngPct < stats["rngAi_pctChanceIdle"][0]) _speedMode = IDLE_MODE;
+            else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) _speedMode = WALK_MODE;
             else _speedMode = RUN_MODE;
             //doAttack = enableAutomaticAttack;
             //doSelfDestruct = false;
@@ -691,11 +694,10 @@ struct Cell {
         }
 
     }
-    void init_ai(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    void init_ai(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*>& pCellsHist){
         // NOTE: Do NOT use this function until all the inputs are initialized
-        std::vector<float> aiInputs = get_ai_inputs(pAlivesRegions, pDeadsRegions, pCellsHist);
+        std::vector<float> aiInputs = get_ai_inputs(pActivesRegions, pCellsHist);
         std::tuple<std::vector<int>, std::vector<bool>> aiOutputs = get_ai_outputs();
 
         // Start with the (first) hidden layer, doing more of them if needed
@@ -738,8 +740,7 @@ struct Cell {
         forcedDecisionsQueue.clear();
     }
     // To override the ai, append an entry to forcedDecisionsQueue
-    void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
+    void decide_next_frame(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
     std::vector<Cell*>& pCellsHist){
         // Modify the values the creature can directly control based on the ai
         //  i.e. the creature decides what to do based on this function
@@ -765,9 +766,15 @@ struct Cell {
             return;
         }
 
+        if(!isAlive){
+            set_ai_outputs(0, 0, IDLE_MODE, false, false, false);
+            enforce_valid_cell(false);
+            return;
+        }
+
         if(aiMode == EVOLUTIONARY_NEURAL_NETWORK_AI_MODE){
             // If the AI is free to decide, then decide what to do
-            std::vector<float> layerInputs = get_ai_inputs(pAlivesRegions, pDeadsRegions, pCellsHist);
+            std::vector<float> layerInputs = get_ai_inputs(pActivesRegions, pCellsHist);
             for(int layerNum = 1; layerNum < aiNetwork.size(); layerNum++){
                 layerInputs = do_forward_prop_1_layer(layerInputs, layerNum);
             }
@@ -791,13 +798,12 @@ struct Cell {
                 return;
             }
             if(stats["EAM_GND"][0] == 100){
-                do_random_cell_activity(5, 5, false, _doCloning, pctChanceIdle, pctChanceWalk);
+                do_random_cell_activity(5, 5, false, _doCloning);
                 return;
             }
-            std::vector<int> nearestCellIds = get_nearest_cell_ids(100, pAlivesRegions, pDeadsRegions, pCellsHist);
+            std::vector<int> nearestCellIds = get_nearest_cell_ids(100, pActivesRegions, pCellsHist);
             if(nearestCellIds.size() == 0){
-                //cout << "  do_random_cell_activity()\n";
-                do_random_cell_activity(5, 5, _doAttack, _doCloning, pctChanceIdle, pctChanceWalk);
+                do_random_cell_activity(5, 5, _doAttack, _doCloning);
                 return;
             }
             Cell* pTarget = pCellsHist[nearestCellIds[0]];
@@ -805,7 +811,6 @@ struct Cell {
                 set_ai_outputs(0, rand() % 360, IDLE_MODE, false, false, _doCloning);
                 return;
             } else {
-                //cout << "  chase_optimal_cell()\n";
                 chase_optimal_cell(pCellsHist, nearestCellIds, _doAttack, false, _doCloning);
                 return;
             }
@@ -835,13 +840,12 @@ struct Cell {
     //  in the local area.
     // This function causes cells to accumulate energy from the sun, ground, and dead cells.
     //  Also, energy loss due to overcrowding leads is applied by this function
-    void do_energy_transfer(std::vector<Cell*>& pAlives,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+    void do_energy_transfer(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions){
         if(!isAlive) return;
         //cout << "  energy: " << energy << " ----> ";
         // Energy from the sun
         //  First, calculate which cells are touching the current cell
-        std::vector<Cell*> touchingCells = find_touching_cells(pAlives, pAlivesRegions);
+        std::vector<Cell*> touchingCells = find_touching_cells(pActivesRegions);
         for(int i = touchingCells.size()-1; i >= 0; i--){
             // Dead cells don't affect energy transfer here
             if(touchingCells[i]->isAlive == false) touchingCells.erase(touchingCells.begin() + i);
@@ -880,12 +884,11 @@ struct Cell {
         //cout << energy << endl;
     }
     // The dead cells and ground transfer energy to the living cells and / or the environment
-    void do_energy_decay(std::vector<Cell*>& pAlives,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+    void do_energy_decay(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions){
         // Alive cells don't decay
-        if(isAlive || decayPeriod <= 0) return;
+        if(isAlive) return;
         // Energy to cells which are touching the dead cell
-        std::vector<Cell*> touchingCells = find_touching_cells(pAlives, pAlivesRegions);
+        std::vector<Cell*> touchingCells = find_touching_cells(pActivesRegions);
         for(int i = touchingCells.size()-1; i >= 0; i--){
             // Remove dead cells from this list, as they don't receive any of the energy
             if(touchingCells[i]->isAlive == false) touchingCells.erase(touchingCells.begin() + i);
@@ -919,6 +922,8 @@ struct Cell {
         energy -= rmEnergy;
         //print_scalar_vals("  dead cell energy consumed by predators", rmEnergy);
 
+        if(decayPeriod <= 0) return;
+
         // Energy to ground
         rmEnergy = 0;
         int _efficiencyPct = 0; // TODO: Ensure this is non-zero after the first video is published
@@ -936,22 +941,26 @@ struct Cell {
         posY = gen_uniform_int_dist(rng, _lbY, _ubY);
         enforce_valid_xyPos();
     }
-    Cell* clone_self(int cellNum, std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions,
-    std::vector<Cell*>& pCellsHist, std::vector<Cell*>& pAlives,
+    Cell* clone_self(int cellNum, std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions,
+    std::vector<Cell*>& pCellsHist, std::vector<Cell*>& pActives,
     int targetCloningDir = -1, bool randomizeCloningDir = false, bool doMutation = true){
         // The clone's position will be roughly the cell's diameter plus 1 away from the cell
         //Cell* pClone = new Cell(cellNum, CELL_TYPE_GENERIC, pAlivesRegions, pSelf);
         assert(pSelf != NULL);
+        if(pSelf->isAlive == false){
+            cout << "WARNING: A dead cell just tried to clone itself! This attempt failed!\n";
+            print_scalar_vals("frameNum", frameNum);
+            assert(pSelf->isAlive);
+        }
         energy -= energyCostToClone; //energy -= pSelf->energyCostToClone;
 
         // Cloning the cell
         Cell* pClone = new Cell();
         pCellsHist.push_back(pClone);
-        pAlives.push_back(pClone);
+        pActives.push_back(pClone);
         *pClone = *pSelf; // Almost all quantities should be copied over perfectly
         pClone->define_self(cellNum, pClone, pSelf);
-        pClone->initialize_cell(pAlivesRegions, pDeadsRegions, pCellsHist);
+        pClone->initialize_cell(pActivesRegions, pCellsHist);
         assert(uniqueCellNum != pClone->uniqueCellNum);
 
         // Update the new cell's position and determine the cloning direction
@@ -1020,8 +1029,7 @@ struct Cell {
         increment_pos(_speed * cos_deg(speedDir), _speed * sin_deg(speedDir));
         enforce_valid_xyPos();
     }
-    void update_forces(std::vector<Cell*>& pAlives,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions){
+    void update_forces(std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions){
         // Dead cells aren't affected by force
         if(!isAlive) return;
 
@@ -1031,7 +1039,8 @@ struct Cell {
         // Check each nearby cell for any forces
         // TODO: apply a force due to nonliving objects and walls, if applicable
         for(auto reg : neighboringRegions){
-            for(auto pCell : pAlivesRegions[reg]){
+            for(auto pCell : pActivesRegions[reg]){
+                if(pCell->isAlive == false) continue;
                 if(pCell == pSelf) continue;
                 // Calculate the other cell's distance from pSelf (account for screen wrapping)
                 int dX = pCell->posX - posX, dY = pCell->posY - posY;
@@ -1125,9 +1134,8 @@ struct Cell {
         energy -= energyCostPerUse["attack"];
         enforce_valid_cell(false);
     }
-    void apply_non_movement_decisions(std::vector<Cell*>& pAlives, std::vector<Cell*>& pCellsHist,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pAlivesRegions,
-    std::map<std::pair<int,int>, std::vector<Cell*>>& pDeadsRegions){
+    void apply_non_movement_decisions(std::vector<Cell*>& pActives, std::vector<Cell*>& pCellsHist,
+    std::map<std::pair<int,int>, std::vector<Cell*>>& pActivesRegions){
 
         if(doAttack && attackCooldown == 0 && energy > energyCostPerUse["attack"]){
             // Find out which regions neighbor the cell's region
@@ -1137,7 +1145,8 @@ struct Cell {
             // If health < 0, the cell will die when the death conditions are checked
             std::set<int> attackedCellNums;
             for(auto reg : neighboringRegions){
-                for(auto pCell : pAlivesRegions[reg]){
+                for(auto pCell : pActivesRegions[reg]){
+                    if(pCell->isAlive == false) continue;
                     if(uniqueCellNum == pCell->uniqueCellNum) continue;
                     if(attackedCellNums.count(pCell->uniqueCellNum)) continue;
                     float distXY = calc_distance_from_point(pCell->posX, pCell->posY);
@@ -1152,13 +1161,14 @@ struct Cell {
             }
             //print_scalar_vals("attackedCellNums.size()", attackedCellNums.size());
         }
-        if(doCloning && energy > 1.2*energyCostToClone && pAlives.size() < cellLimit.val){
-            Cell* pCell = clone_self(pCellsHist.size(), pAlivesRegions, pDeadsRegions, pCellsHist, pAlives, cloningDirection);
+        int numAliveCells = count_all_alive_cells(pActives);
+        if(doCloning && energy > 1.2*energyCostToClone && pActives.size() < cellLimit.val){
+            Cell* pCell = clone_self(pCellsHist.size(), pActivesRegions, pCellsHist, pActives, cloningDirection);
         }
         enforce_valid_cell(true);
     }
     void do_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, 
-    bool _enableAttack, bool _enableCloning, int _pctChanceIdle = 33, int _pctChanceWalk = 33){
+    bool _enableAttack, bool _enableCloning){
         int _speedDir = speedDir, _speedMode = speedMode;
         if(rand() % 100 < pctChanceToChangeDir){
             while(_speedDir == speedDir){
@@ -1169,8 +1179,8 @@ struct Cell {
         if(rand() % 100 < pctChanceToChangeSpeed){
             while(_speedMode == speedMode){
                 int _rngPct = rand() % 100;
-                if(_rngPct < _pctChanceIdle) _speedMode = IDLE_MODE;
-                else if(_rngPct < pctChanceIdle + _pctChanceWalk) _speedMode = WALK_MODE;
+                if(_rngPct < stats["rngAi_pctChanceIdle"][0]) _speedMode = IDLE_MODE;
+                else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) _speedMode = WALK_MODE;
                 else _speedMode = RUN_MODE;
             }
         }
@@ -1179,7 +1189,7 @@ struct Cell {
     }
     // Generate random-ish movement that looks reasonable for a cell to do
     void preplan_random_cell_activity(int pctChanceToChangeDir, int pctChanceToChangeSpeed, int numFrames,
-    bool _enableAttack, bool _enableCloning, int _pctChanceIdle = 33, int _pctChanceWalk = 33){
+    bool _enableAttack, bool _enableCloning){
         #define lastDecision(i) std::get<i>(forcedDecisionsQueue[forcedDecisionsQueue.size()-1])
         //{numFrames, _speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning})
         int newSpeedDir = speedDir, newSpeedMode = speedMode;
@@ -1195,8 +1205,8 @@ struct Cell {
             if(rngSpeed < pctChanceToChangeSpeed){
                 while(newSpeedMode == lastDecision(3)){
                     int _rngPct = rand() % 100;
-                    if(_rngPct < _pctChanceIdle) newSpeedMode = IDLE_MODE;
-                    else if(_rngPct < pctChanceIdle + _pctChanceWalk) newSpeedMode = WALK_MODE;
+                    if(_rngPct < stats["rngAi_pctChanceIdle"][0]) newSpeedMode = IDLE_MODE;
+                    else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) newSpeedMode = WALK_MODE;
                     else newSpeedMode = RUN_MODE;
                 }
                 changedMovement = true;
@@ -1331,7 +1341,7 @@ struct Cell {
 
         #undef get_pCell
     }
-    void kill_self(std::vector<Cell*>& pAlives, std::vector<Cell*>& pDeads, int i_pAlive){
+    void kill_self(){
         assert(isAlive);
         decayPeriod = 1;
         decayRate = 2;
@@ -1339,13 +1349,14 @@ struct Cell {
         timeSinceDead = 0;
         isAlive = false;
         speedMode = IDLE_MODE;
-        pAlives.erase(pAlives.begin() + i_pAlive);
-        pDeads.push_back(pSelf);
+        clear_forced_decisions();
+        //pActives.erase(pActives.begin() + i_pAlive);
+        //pActives.push_back(pSelf);
     }
-    void remove_this_dead_cell_if_depleted(std::vector<Cell*>& pDeads, int iDead){
+    void remove_this_dead_cell_if_depleted(std::vector<Cell*>& pActives, int iDead){
         if(isAlive || energy > 0) return;
-        assert(pDeads[iDead] == pSelf);
-        pDeads.erase(pDeads.begin() + iDead);
+        assert(pActives[iDead] == pSelf);
+        pActives.erase(pActives.begin() + iDead);
     }
     std::vector<int> findWeighting(int numSlots, int* arr, int arrSize){
         int sum = 0;

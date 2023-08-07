@@ -23,7 +23,7 @@ void testGlobalEnergy(){
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
-    pAlives[0]->set_int_stats(hardcodedVals);
+    pActives[0]->set_int_stats(hardcodedVals);
     init_sim_global_vals();
 
     // Test the day-night cycle, sun energy, and ground energy (Test complete!)
@@ -44,15 +44,16 @@ void testGlobalEnergy(){
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
-    pAlives[0]->set_int_stats(hardcodedVals);
+    pActives[0]->set_int_stats(hardcodedVals);
     do_frame(0);
-    gen_dead_cell(NULL);
-    gen_dead_cell(pAlives[0], 0);
-    for(int i = 1; pDeads.size() > 0; i++){
-        int initSize = pDeads.size();
+    gen_dead_cell();
+    pActives[0]->kill_self();
+    for(int i = 1; pActives.size() > 0; i++){
+        if(pActives[i]->isAlive == true) continue;
+        int initSize = pActives.size();
         do_frame(i);
-        if(pDeads.size() != initSize){
-            std::cout << initSize - pDeads.size() << " dead cells were removed at frame " << i << std::endl;
+        if(pActives.size() != initSize){
+            std::cout << initSize - pActives.size() << " alive and dead cells exist in total (some may or may not have been removed though) " << i << std::endl;
         }
     }
     
@@ -70,7 +71,7 @@ void testFrames(){
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
-    pAlives[0]->set_int_stats(hardcodedVals);
+    pActives[0]->set_int_stats(hardcodedVals);
     do_frame(0);
     exit_sim();
 }
@@ -88,7 +89,7 @@ void testStats(){
         {"speedDir", 11}, {"speedMode", RUN_MODE}, {"speedRun", 111}, {"speedWalk", 11},
         {"visionDist", 11},
     };
-    pAlives[0]->set_int_stats(varVals);
+    pActives[0]->set_int_stats(varVals);
     exit_sim();
 }
 
@@ -97,13 +98,13 @@ void testAi(){
     std::cout << "Test the ai and its cloning / mutation properties:" << std::endl;
     gen_cell(CELL_TYPE_MUTANT);
     gen_cell(CELL_TYPE_MUTANT);
-    gen_cell(CELL_TYPE_MUTANT, pAlives[1]);
-    gen_cell(CELL_TYPE_MUTANT, pAlives[2], false, 0);
-    std::cout << "mutationRate of 1st cell: " << pAlives[1]->stats["mutationRate"][0] << std::endl;
+    gen_cell(CELL_TYPE_MUTANT, pActives[1]);
+    gen_cell(CELL_TYPE_MUTANT, pActives[2], false, 0);
+    std::cout << "mutationRate of 1st cell: " << pActives[1]->stats["mutationRate"][0] << std::endl;
     std::cout << "The 2nd cell is a perfect clone of the 1st cell\n";
     std::cout << "The 3rd cell is a mutated clone of the 2nd cell\n";
     std::cout << "The 0th cell is completely unrelated from the other cells\n";
-    for(auto pCell : pAlives) pCell->print_id();
+    for(auto pCell : pActives) pCell->print_id();
     exit_sim();
 }
 
@@ -117,9 +118,10 @@ void testForce(){
     int numCells = 2;
     randomly_place_new_cells(numCells, CELL_TYPE_MUTANT);
     for (int i = 0; i < numCells; i++) {
-        pAlives[i]->speedMode = IDLE_MODE;
-        pAlives[i]->stats["dia"][0] = 1;
-        pAlives[i]->update_size();
+        if(pActives[i]->isAlive == false) continue;
+        pActives[i]->speedMode = IDLE_MODE;
+        pActives[i]->stats["dia"][0] = 1;
+        pActives[i]->update_size();
     }
 
     const bool DO_DIA_1_TESTS = true;
@@ -128,28 +130,28 @@ void testForce(){
         // Ensure all cells have a speed of 0 and a diameter of 1
         std::cout << "Testing cells with diameter 1";
         // Place the cells in various locations to test the different options
-        pAlives[0]->update_pos(30, 30); pAlives[1]->update_pos(30, 30);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
+        pActives[0]->update_pos(30, 30); pActives[1]->update_pos(30, 30);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
         std::cout << "\n";
     }
     if(DO_DIA_10_TESTS){
         std::cout << "Testing a diameter of 10\n";
         for (int i = 0; i < numCells; i++) {
-            pAlives[i]->stats["dia"][0] = 10;
-            pAlives[i]->update_size();
+            pActives[i]->stats["dia"][0] = 10;
+            pActives[i]->update_size();
         }
-        pAlives[0]->update_pos(30, 30); pAlives[1]->update_pos(30, 30);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
-        pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(51, 50);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
-        pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(50, 51);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
-        pAlives[0]->update_pos(50, 50); pAlives[1]->update_pos(51, 51);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
-        pAlives[0]->update_pos(0, 0); pAlives[1]->update_pos(99, 99);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
-        pAlives[0]->update_pos(20, 20); pAlives[1]->update_pos(22, 24);
-        print_cell_coords(pAlives); do_frame(false); print_cell_coords(pAlives);
+        pActives[0]->update_pos(30, 30); pActives[1]->update_pos(30, 30);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
+        pActives[0]->update_pos(50, 50); pActives[1]->update_pos(51, 50);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
+        pActives[0]->update_pos(50, 50); pActives[1]->update_pos(50, 51);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
+        pActives[0]->update_pos(50, 50); pActives[1]->update_pos(51, 51);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
+        pActives[0]->update_pos(0, 0); pActives[1]->update_pos(99, 99);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
+        pActives[0]->update_pos(20, 20); pActives[1]->update_pos(22, 24);
+        print_cell_coords(pActives); do_frame(false); print_cell_coords(pActives);
     }
 
     exit_sim();

@@ -3115,7 +3115,7 @@ void draw_text_box(int x0, int y0, int dx, int dy, int borderPx,
   draw_empty_textbox(x0, y0, dx, dy, borderPx, _RGBA_Bkgnd, _RGBA_Border);
   if(text.size() > 0) draw_text(x0, y0, dx, dy, borderPx, maxNumLines, text);
 }
-void draw_user_interface(int numCells = 0){
+void draw_user_interface(int numAliveCells){
   // Include a button for next frame, skip frames, and options
   #define dX(ixLb, ixUb) (X_VEC_GUI[ixUb] - X_VEC_GUI[ixLb])
   #define dY(iyLb, iyUb) (Y_VEC_GUI[iyUb] - Y_VEC_GUI[iyLb])
@@ -3130,15 +3130,9 @@ void draw_user_interface(int numCells = 0){
   draw_TB(1, " Skip Frames [A]");
   draw_TB(2, " Options");
   draw_TB(3, "");
-  //draw_text_box(0 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Next Frame  [N]");
-  //draw_text_box(1 * BOX_DX, UI_Y0, BOX_DX, BOX_DY, borderPx, 1, " Skip Frames [A]");
-  //draw_text_box(2 * BOX_DX, UI_Y0, BOX_DX / 2, BOX_DY, borderPx, 1, " Options");
-  //draw_text_box(2.5 * BOX_DX, UI_Y0, BOX_DX / 2, BOX_DY, borderPx, 1, "");
   #define draw_global_stats(iY, text, value) draw_text(X_VEC_GUI[3], Y_VEC_GUI[iY], dX(3,4), dY(iY,iY+1), borderPx / 2, 1, text + std::to_string(value))
   draw_global_stats(1, " Frame #: ", frameNum);
-  draw_global_stats(2, " # Cells: ", numCells);
-  //draw_text(X_VEC_GUI[3], Y_VEC_GUI[1], X_VEC_GUI[4]-X_VEC_GUI[3], Y_VEC_GUI[2]-Y_VEC_GUI[1], borderPx, 1, " Frame #: " + std::to_string(frameNum));
-  //draw_text(X_VEC_GUI[3], Y_VEC_GUI[2], X_VEC_GUI[4]-X_VEC_GUI[3], Y_VEC_GUI[3]-Y_VEC_GUI[2], borderPx, 1, " # Cells: " + std::to_string(numCells));
+  draw_global_stats(2, " # Cells: ", numAliveCells);
   #undef draw_global_stats
   #undef draw_TB
   #undef borderPx

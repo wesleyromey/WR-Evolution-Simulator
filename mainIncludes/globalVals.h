@@ -193,7 +193,7 @@ int frameNum = 0; // The frame number of the simulation
 // Manually control cell decisions, frame ticks, etc.
 static const int EVOLUTIONARY_NEURAL_NETWORK_AI_MODE = 0, RNG_BASED_AI_MODE = 1;
 int aiMode = RNG_BASED_AI_MODE;
-int pctChanceIdle = 33, pctChanceWalk = 33, pctChanceRun = 100 - pctChanceIdle - pctChanceWalk; // for RNG_BASED_AI_MODE
+//int pctChanceIdle = 33, pctChanceWalk = 33, pctChanceRun = 100 - pctChanceIdle - pctChanceWalk; // for RNG_BASED_AI_MODE
 bool doCellAi = true;
 bool automateEnergy = true;
 bool enableAutomaticAttack = true;

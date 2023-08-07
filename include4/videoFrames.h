@@ -439,15 +439,21 @@ void gen_demo_cells_video1(int scenarioNum){
         break;
 
         case 57:
+        //stats["rngAi_pctChanceIdle"] = {           33,     0,   100,         0,      0};
+        //stats["rngAi_pctChanceWalk"] = {           33,     0,   100,         0,      0};
+        //stats["rngAi_pctChanceToChangeDir"] = {     5,     0,   100,         0,      0};
+        //stats["rngAi_pctChanceToChangeSpeed"] = {   5,     0,   100,         0,      0};
+
         // 5h
         scenario_precode(3);
         enableAutomaticCloning = false;
         enableAutomaticAttack = false;
-        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45; // 10, 45, 45
+        //pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45; // 10, 45, 45
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2); \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 45; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         gen_cell(0, "plant", 5, 5, 6, 10000, 10000);
@@ -462,11 +468,12 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(21);
         enableAutomaticCloning = false;
         enableAutomaticAttack = true;
-        pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
+        //pctChanceIdle = 10; pctChanceWalk = 45; pctChanceRun = 45;
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 45; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5, 1);
@@ -483,11 +490,12 @@ void gen_demo_cells_video1(int scenarioNum){
         scenario_precode(6);
         enableAutomaticCloning = false;
         enableAutomaticAttack = true;
-        pctChanceIdle = 10; pctChanceWalk = 30; pctChanceRun = 60; // 10, 45, 45
+        //pctChanceIdle = 10; pctChanceWalk = 30; pctChanceRun = 60; // 10, 45, 45
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         //gen_cell(0, "worm", 20, 10, 2, 10000, 10000, 0, 0);
@@ -558,7 +566,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF5j - 1;
+    int startFrame = kF3j - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
@@ -688,13 +696,15 @@ void do_video1(){
             }
         } else if(kF2e <= frameNum && frameNum < kF3start){
             pCellsHist[0]->age += 49;
-        } else if(kF3i < frameNum && frameNum < kF3j){
-            for(auto pCell : pAlives){
-                if(pCell->age == 0) pCell->clear_forced_decisions();
-                if(pCell->forcedDecisionsQueue.size() > 0) continue;
-                pCell->preplan_random_cell_activity(10, 10, 100, false, true, 33, 33);
-            }
-        }
+        }// else if(kF3i < frameNum && frameNum < kF3j){
+            //for(auto pCell : pActives){
+                //cout << ".";
+                //if(pCell->isAlive == false) continue;
+                //if(pCell->age == 0) pCell->clear_forced_decisions();
+                //if(pCell->forcedDecisionsQueue.size() > 0) continue;
+                //pCell->preplan_random_cell_activity(10, 10, 100, false, true);
+            //}
+        //}
         
         if (kF6start <= frameNum) {
             text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
