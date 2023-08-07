@@ -480,7 +480,7 @@ void gen_demo_cells_video1(int scenarioNum){
 
         case 59:
         // 5j
-        scenario_precode(8);
+        scenario_precode(6);
         enableAutomaticCloning = false;
         enableAutomaticAttack = true;
         pctChanceIdle = 10; pctChanceWalk = 30; pctChanceRun = 60; // 10, 45, 45
@@ -492,19 +492,19 @@ void gen_demo_cells_video1(int scenarioNum){
         }
         //gen_cell(0, "worm", 20, 10, 2, 10000, 10000, 0, 0);
         gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 5, 2);
-        pCellsHist[0]->force_decision(10, 0, 0, 0, false, false, false);
+        pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, false, false, false);
         //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
         //pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
         //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
         gen_cell(1, "plant", 5, 5, 2, 5000, 5000, 0, 0);
-        gen_cell(2, "plant", 30, 12, 8, 2000, 20000, 0, 0);
+        gen_cell(2, "plant", 10, 35, 2, 5000, 5000, 0, 0);
         gen_cell(3, "plant", 20, 5, 2, 5000, 5000, 0, 0);
-        gen_cell(4, "plant", 10, 35, 2, 5000, 5000, 0, 0);
-        gen_cell(5, "plant", 25, 25, 2, 5000, 5000, 0, 0);
-        gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
-        pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
-        gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
-        pCellsHist[7]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
+        gen_cell(4, "plant", 25, 25, 2, 5000, 5000, 0, 0);
+        gen_cell(5, "plant", 30, 12, 8, 2000, 20000, 0, 0);
+        //gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
+        //pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
+        //gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
+        //pCellsHist[7]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
 
         #undef gen_cell
         scenario_postcode();
@@ -558,7 +558,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF1start - 1;
+    int startFrame = kF5j - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();

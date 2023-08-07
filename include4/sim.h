@@ -166,10 +166,10 @@ void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = fal
         pCell->define_self(pCellsHist.size(), pCell, NULL);
         pCellsHist.push_back(pCell);
         pAlives.push_back(pCell);
-        pCell->gen_stats_random(cellType, pAlivesRegions, pCellsHist);
+        pCell->gen_stats_random(cellType, pAlivesRegions, pDeadsRegions, pCellsHist);
         pCell->randomize_pos(0, ubX.val-1, 0, ubY.val-1);
     } else {
-        Cell* pCell = pParent->clone_self(pCellsHist.size(), pAlivesRegions, pCellsHist, pAlives, cloningDir, randomizeCloningDir);
+        Cell* pCell = pParent->clone_self(pCellsHist.size(), pAlivesRegions, pDeadsRegions, pCellsHist, pAlives, cloningDir, randomizeCloningDir);
     }
 }
 
@@ -256,15 +256,15 @@ void assign_cells_to_correct_regions(){
 
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
-    //cout << "\nframeNum: " << frameNum << endl;
+    cout << "frameNum: " << frameNum << endl;
     frameStart = SDL_GetTicks();
     assign_cells_to_correct_regions();
 
     if(doCellDecisions && doCellAi){
         // The cells each decide what to do (e.g. speed, direction,
         //  doAttack, etc.) by updating their internal state
-        for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->decide_next_frame(pAlivesRegions, pCellsHist);
-        for(int i = pDeads.size()-1; i >= 0; i--) pDeads[i]->decide_next_frame(pAlivesRegions, pCellsHist);
+        for(int i = pAlives.size()-1; i >= 0; i--) pAlives[i]->decide_next_frame(pAlivesRegions, pDeadsRegions, pCellsHist);
+        for(int i = pDeads.size()-1; i >= 0; i--) pDeads[i]->decide_next_frame(pAlivesRegions, pDeadsRegions, pCellsHist);
     }
 
     // Cells move to their target positions based on their speed
@@ -276,7 +276,7 @@ int do_frame(bool doCellDecisions = true){
     if(doCellAi){
         // Bug fix: using for(auto pCell : pAlives) is a bad idea when pAlives changes size during the algorithm
         for(int i = pAlives.size()-1; i >= 0; i--) {
-            pAlives[i]->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions);
+            pAlives[i]->apply_non_movement_decisions(pAlives, pCellsHist, pAlivesRegions, pDeadsRegions);
         }
         assign_cells_to_correct_regions();
     }

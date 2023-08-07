@@ -1,13 +1,15 @@
-Last Updated: 2023-06-21
+Last Updated: 2023-08-06
 
 The purpose of this file is to summarize the simulator and give
 a brief overview about its main components. This is a simplified
 documentation of the simulator.
 
 This evolution simulator simulates many single-celled organisms
-which gain energy from the sun, ground, predation, or being a scavenger.
-Cells typically get energy from a combination of these things, though
-specialization is likely.
+which gain energy using different methods, known as energy accumulation
+methods (EAM). Energy can be gained from the sun, ground, or eating dead cells.
+The main archetypes are plants (EAM = sun), worms (EAM = ground),
+predators (EAM = dead cells), and balanceddmutant (EAM is equal for sun, ground,
+and dead cells, but at a third of the efficiency).
 
 Sun: The day-night cycle is indicated by the color of the background
 (Black - Red - Yellow - White - Cyan, where black indicates night
@@ -22,63 +24,80 @@ customizeable in terms of aspects like:
         approaching its max height. Anything between these options is also
         possible.
 
-Ground: The ground stores energy, indicated by a gauge. The ground
-typically replenishes its energy reserves slowly, though it can be
-configured to replenish at any rate. Each cell in the ground
-has its own energy amount.
+Ground: The ground stores energy, indicated by a gauge for each cell.
+The ground replenishes its energy reserves at a customizeable rate.
+Each cell in the ground has its own energy amount.
 
-Predation / Scavengry: All cells have the ability to attack. They also have
+Predation / Scavengry: Many cells have the ability to attack. They also have
 a certain amount of health (huge bonuses to larger cells). When a cell's
 health or energy reach 0, the cell dies, allowing the other cells to
 eat their dead bodies. The energy that the cell had when it was alive
-can be consumed by other cells, though cells who specialize in eating
-dead cells gain a lot more of the energy than cells who do not.
-Until a dead cell is eaten, its energy decays into its surroundings
-(esp. the ground).
+plus the cost the cell must spend to clone itself can be consumed by other cells.
+If a dead cell isn't immediately consumed, its energy will
+exponentially decay until fully depleted, in which case the dead cell
+will disappear.
 
 Overcrowding: When other cells are in the same immediate area, they must
 compete for energy from the sun, ground, and dead cells. The type of energy
 they specialize in determines how well they do when competing.
-Generally, larger cells gain a size advantage over and above smaller
-cells due to their ability to block smaller cells from receiving energy.
-Also, cells must spend energy to deal with their immediate neighbors.
-Larger cells don't have to deal with overcrowding as severely because
-they take up more area, meaning they have to expend less energy on,
-overcrowding and they can gain a larger portion of the sunlight from
-their immediate neighbors. However, they tend to have more neighbors
-than their smaller counterparts. 
+    (a) When competing for sun energy, cells must share the sunlight they gain
+    with the cells they touch, even if their competitors cannot use the sunlight
+    themselves. Bigger cells gain a rediculously large advantage,
+    resulting in them easily being able to suffocate the smaller plants in their
+    area.
+    (b) Size does NOT directly influence how much energy a cell gains from the ground.
+    It is entirely based on the efficiency (EAM) at which they can gather ground energy.
+    (c) Size does NOT directly influcence how much energy a cell gains from dead cells,
+    though it certainly helps with increasing attack power and attack range (e.g. the ability
+    to deal more damage to more cells).
 
-Cell stats: Each cell has many stats or properties, each costing them
-a certain amount of energy. These include:
-    a) Size (diameter): Larger cells take up more area, so they have more
+In simulations with overcrowding enabled, each cell must spend energy
+to tolerate being around their immediate neighbors. Larger cells have to spend much less energy
+than their smaller counterparts to deal with overcrowding, even with the increased number
+of neighbors, so they may end up being selected for in crowded simulations.
+
+Cell stats: Each cell has many stats or properties, each costing energy to improve.
+All stats are customizable, but most stats cost energy to maintain or upgrade.
+These include:
+    a) Diameter (and size): Larger cells take up more area ("size"), so they have more
         health and get bonuses to various stats, but have weaknesses
-        such as being attacked by more cells.
+        such as being attacked by more cells. However, size gives huge bonuses
+        to max health, max energy, and attack power.
     b) Energy Accumulation Method (EAM): This is essentially a scale
         between 0 % and 100 % describing how efficient is is a getting energy
         from 1. Sunlight, 2. Ground, 3. Predation / Scavengery.
         This generates one scale for each of these methods.
         The sum of EAM across all the energy accumulation methods must be
         exactly equal to 100 %.
-    c) Speed: A cell can stand still, walk at some walking speed, or run
-        at a faster running speed. However, travelling fast expends
-        increasingly insane amounts of energy. The amount of energy consumed
+    c) Speed: A cell can stand still, walk at some pre-defined walking speed, or run
+        at a faster pre-defined running speed. However, travelling fast expends
+        increasingly large amounts of energy. The amount of energy consumed
         is more linear at small scales, but becomes cubic
-        at larger scales as of 2023-05-24.
+        at larger scales.
     d) Vision: This is the distance at which a cell can detect nearby
-        cells.
-    e) Mutation rate: Whenever a cell clones itself, some of its properties
-        may mutate based on this mutation rate.
-    f) Attack: The amount of damage a cell does to other cells when it
+        cells and their information. This can be used to influence a cell's decisions.
+    e) Attack: The amount of damage a cell does to other cells when it
         attacks them. Larger cells can have more attack for less energy.
         When a cell attacks, all of its immediate neighbors
         receive the same amount of damage as of 2023-05-24.
-    g) Health: A cell must expend energy keeping up its max health.
+    f) Max Health: A cell must expend energy keeping up its max health.
         Larger cells spend less energy to keep up their health.
         Cells with lower max health spend less energy, but die more easily.
-    h) Age: Each cell gets older each frame. Young cells barely have to worry
+    g) Age: Each cell gets older each frame. Young cells barely have to worry
         about this, but the amount of energy a cell must spend increases
         drastically as the cell ages, incentivizing it to self-destruct
         or otherwise become suicidal.
+    h) Max Energy: Typically proportional to diameter
+    i) Initial Energy: The amount of energy a cell starts with must be spent by the parent cell
+        to clone itself.
+    j) Max Attack Cooldown: This is the minimum number of frames a cell must wait between attacks
+        before attacking again. NOT a mutatable value as of now. Set to a constant value such as 10 frames.
+
+Each cell stat has various properties, including:
+    a) Value:           The actual value of the stat
+    b) lb, ub:          The lower and upper bounds of the property
+    c) Mutation Rate:   The probability that the stat will mutate when cloning itself
+    d) Max mutation amount: The maximum amount that a stat can mutate as a fraction of the parent's stat value.
 
 Physics: The physics for this simulator is intentionally discrete. This means
 the frame is essentially the base unit of time, so each cell teleports to
@@ -99,74 +118,82 @@ the next location each frame. The main rules include:
 
         The repulsive forces can be amplified or lightened by a 
         customizeable force damping factor.
-    b) Stickiness: TODO (not yet implemented as of 2023-06-21!!!)
-    c) Wrapping along the x and y axes: If a cell exits one side of the screen,
+    b) Wrapping along the x and y axes: If a cell exits one side of the screen,
         it enters the opposite side of the screen going in the same direction
         as before.
-        As of 2023-05-24, a cell which exists on both sides of the screen
-        is only rendered on the side that their center of mass is located,
-        but regardless, x and y wrapping allows cells on the opposite side
-        of the screen to exert forces on each other.
+        Due to screen wrapping, cells may be on both sides of the screen simultaneously.
 
 
 Decisions: Each cell must make various decisions each frame and then
-execute them. It makes these decisions using its brain, which is a 
-neural network that mutates its weights and biases genetically.
-These decisions are made based on the neural network inputs and the
-decisions themselves are the outputs of the neural network.
-The inputs include:
-    a) Internal timers (ex. age, attack cooldown)
-    b) Controllable stats (ex. speed, direction, cloning direction)
-    c) Its own genome (ex. vision, size, ...)
-    d) Status or state (ex. health, energy, and forces)
-    e) Its id
-    f) Nearby cells' relative positions and some of their stats
-        (subject to the cell's vision)
-        (this point was added on 2023-06-28)
-The outputs (decisions) include:
-    a) Speed (idle, walking, or running) and Direction
-    b) Cloning and Cloning Direction (if successful)
-    c) Attacking (if successful)
-    d) Self-destruct (the threshold is set higher so the initial cells
-        don't use this feature as often)
+execute them. It makes these decisions using its brain, which can be a 
+neural network with genetically mutateable weights and biases.
+Alternatively, the brain can simply direct the cell to remain idle
+(e.g. plants), move around randomly (e.g. worms), and/or chase and kill
+other cells (e.g. predators).
+The decisions a cell can make are:
+    a) Speed (idle, walk, or run)
+    b) Direction [degrees]
+        The direction the cell moves in
+    c) Cloning direction [degrees]
+        The direction the cell places its clones when cloning itself
+    d) Attack
+        Do a shockwave attack that damages all cells touching it
+    e) Self-destruct
+        Kills the cell
+    f) Clone
+        Clones the cell at the cost of energy. This energy cost
+        increases with improved cell stats.
 
-Self-Destruct: Cells can kill themselves, preserving their energy as they
-die. This may be useful for giving their allies energy.
-
-Cloning: When a cell wants to clone itself AND it has enough energy to do so,
-then the cell clones itself and expends significant resources in the process.
-Cloning is instantaneous and the new cell starts off with a relatively
-small amount of energy. The better the stats of the parent cell, the more
-energy the parent must spend to clone themselves.
-Cloned cells have a chance to mutate each stat based on the mutation constant
-stored in their parent's genome.
-Noteably, if mutations happen to create a high-cost build compared to the
-parent, the parent does NOT have to spend extra energy while cloning itself.
+For decision-making, the neural network inputs include:
+    a) Internal timers (e.g. age and attack cooldown)
+    b) Status or state (ex. health, energy, and forces)
+    c) The age, attack cooldown, health, energy, cell id similarity, and
+        relative distance / direction / radial speed / tangential speed
+        of up to 10 of the nearby cells it can see
+The outputs of this neural network are the decisions it can make (described above)
 
 
-------------------------------------------------------------------------------
-Added 2023-06-29:
------------------
-Simulation Controls:
-    Next Frame [N], Skip Frames [A], Options
 
-Options Menu:
-    Continue: Continue the simulation from where you left off
-    Restart: End the simulation and try a new one
-    Quit: Exit the simulation
+Simulator Screens and Buttons:
+    (a) Main Menu - Simulation Settings
+        Allows the user to change many of the simulation settings before starting the simulator.
+        Click the +/- buttons to modify the value of each setting.
+        Settings include:
+            Initial # of cells
+            Max # of cells
+            Day-night cycle mode (constant, binary, or periodic)
+                Constant means the amount of sunlight is constant (possibly a never-ending night)
+                Binary means there is a daytime sunlight intensity broken by periods of nighttime
+                Periodic involves a periodic waveform similar to a sine wave, typically broken by periods of nighttime
+                    The sun's path can be altered by changing constants within the code
+            Day length
+            Max sun energy regeneration
+                e.g. sunlight intensity
+            Percent of day with sunlight
+                It is possible to designate any fraction of the day as being "day" and the rest as being "night"
+            Max ground energy per cell
+            Ground energy regeneration
+                The rate at which each ground cell regenerates its energy
+            Map width
+            Map height
+            Mutation chance / amount
+                The probability and amount by which mutations occur.
+                NOTE: This may not be accurate as of now, so I need to double check.
+            Overcrowding energy coefficient
+                The extent by which overcrowding influences the simulation
+            Force Damping Factor
+                A smaller number means each cell pushes against each other more extremely, potentially
+                launching 2 cells away from each other great distances if this number is small enough. 
+    (b) Options
+        Resume:     Continue the simulation from where you left off
+        Restart:    End the simulation and try a new one
+        Quit:       Exit the simulation.
+    (c) Simulation Shortcuts and buttons
+        Next Frame [N] [SPACE]
+        Skip Frames [A] [S]
+        Options
 
-Main Menu: The initial window you see as of v0.1.0.
-Users can now configure many of the more important simulations settings.
-As of v0.1.0, these are:
-    Initial # of cells
-    Max # of cells
-    Day Length
-    Max Sun Energy
-    Max Ground Energy per cell: Each cell has a max capacity
-    Ground Energy Regeneration: Ground energy replenishes by this amount
-        every few frames
-    Force Damping Factor: If cells get inside of each other, they push each other
-        away. Lower values increase this effect.
-    Overcrowding Energy Coefficient: Cells are claustrophobic and must
-        spend energy just to be in physical contact with each other.
-        Larger values increase this effect.
+
+
+
+

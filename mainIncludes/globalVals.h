@@ -4,15 +4,6 @@
 using std::cout, std::endl, std::string;
 
 
-// Use the following function to print vectors and 2d vectors of integers:
-//  std::for_each(vec2d.begin(), vec2d.end(), print_2d_vec);
-auto print_vec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
-auto print_2d_vec = [](const std::vector<int>& vec) {
-    std::cout << "  ";
-    for(auto val : vec) std::cout << val << " ";
-    std::cout << endl;
-};
-
 // Universal Constants
 static const double PI = 3.141592653589793238462643;
 static const std::set<char> DIGITS = {'0','1','2','3','4','5','6','7','8','9'};
@@ -254,14 +245,13 @@ SimParamInt forceDampingFactor(1000000, 0, 1000000);
     // Another program feature is that both cells get launched the same distance away, so a large
     //  number of tiny cells can propel larger cells to "teleport" them wherever
 std::map<std::string, std::string> ENERGY_COST_TO_CLONE = {
-    {"base", "x"}, {"visionDist", "100*x"}, {"stickiness", "x*x"},
+    {"base", "x"}, {"visionDist", "100*x"},
     {"attack", "400"}, {"size", "10*size"},
 };
 std::map<std::string, std::string> ENERGY_COST_PER_USE = {
     {"base", "10*size"}, {"speed", "(x*x+20)*x"}, {"visionDist", "x*x"},
-    {"stickiness", "2*x"}, {"mutationRate", "0"}, //"x/100"},
     {"age", "x*x/2500/size"}, {"maxHealth", "5*x/size/size"},
-    {"attack", "200*x/size/size"}, // (originally) attack: 20*x/size/size
+    {"attack", "200*x/size/size"},
     {"overcrowding", "overcrowdingEnergyCoef*x/size"}
 };
 

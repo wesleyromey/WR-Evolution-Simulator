@@ -19,7 +19,7 @@
 void testGlobalEnergy(){
     gen_cell(CELL_TYPE_MUTANT);
     std::map<std::string, int> hardcodedVals = {
-        {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 0}, {"EAM[EAM_GND]", 0}, {"EAM[EAM_SUN]", 100},
+        {"attack", 1}, {"dia", 1}, {"EAM_CELLS", 0}, {"EAM_GND", 0}, {"EAM_SUN", 100},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
@@ -37,10 +37,10 @@ void testGlobalEnergy(){
     for(auto item : solarEnergyPerUnitTime) std::cout << item << " ";
     std::cout << "}\n";
 
-    // Test the energy from dead cells (TODO)
+    // Test the energy from dead cells
     gen_cell(CELL_TYPE_MUTANT);
     hardcodedVals = {
-        {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 40}, {"EAM[EAM_GND]", 30}, {"EAM[EAM_SUN]", 30},
+        {"attack", 1}, {"dia", 1}, {"EAM_CELLS", 40}, {"EAM_GND", 30}, {"EAM_SUN", 30},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
@@ -48,20 +48,11 @@ void testGlobalEnergy(){
     do_frame(0);
     gen_dead_cell(NULL);
     gen_dead_cell(pAlives[0], 0);
-    /*
     for(int i = 1; pDeads.size() > 0; i++){
         int initSize = pDeads.size();
         do_frame(i);
         if(pDeads.size() != initSize){
             std::cout << initSize - pDeads.size() << " dead cells were removed at frame " << i << std::endl;
-        }
-    }
-    */
-    for(int i = 1; _pDeads.size() > 0; i++){
-        int initSize = _pDeads.size();
-        do_frame(i);
-        if(_pDeads.size() != initSize){
-            std::cout << initSize - _pDeads.size() << " dead cells were removed at frame " << i << std::endl;
         }
     }
     
@@ -75,7 +66,7 @@ void testFrames(){
     // We will first test a single cell's ability to absorb energy
     gen_cell(CELL_TYPE_MUTANT);
     std::map<std::string, int> hardcodedVals = {
-        {"attack", 1}, {"dia", 1}, {"EAM[EAM_CELLS]", 0}, {"EAM[EAM_GND]", 0}, {"EAM[EAM_SUN]", 100},
+        {"attack", 1}, {"dia", 1}, {"EAM_CELLS", 0}, {"EAM_GND", 0}, {"EAM_SUN", 100},
         {"health", 1}, {"maxHealth", 1}, {"mutationRate", 1000}, {"speedRun", 3}, {"speedWalk", 1},
         {"visionDist", 0}
     };
@@ -92,10 +83,10 @@ void testStats(){
         {"age", 11}, {"aggression", 11}, {"attack", 11}, {"attackCooldown", 11},
         {"cloningDirection", 11}, 
         {"dia", 11}, {"doAttack", true}, {"doSelfDestruct", true},
-        {"EAM[EAM_CELLS]", 11}, {"EAM[EAM_GND]", 11}, {"EAM[EAM_SUN]", 78}, {"energy", 111},
+        {"EAM_CELLS", 11}, {"EAM_GND", 11}, {"EAM_SUN", 78}, {"energy", 111},
         {"health", 111}, {"maxHealth", 1111}, {"mutationRate", 111}, {"posX", 11}, {"posY", 11},
         {"speedDir", 11}, {"speedMode", RUN_MODE}, {"speedRun", 111}, {"speedWalk", 11},
-        {"stickiness", 11}, {"visionDist", 11},
+        {"visionDist", 11},
     };
     pAlives[0]->set_int_stats(varVals);
     exit_sim();
@@ -127,7 +118,6 @@ void testForce(){
     randomly_place_new_cells(numCells, CELL_TYPE_MUTANT);
     for (int i = 0; i < numCells; i++) {
         pAlives[i]->speedMode = IDLE_MODE;
-        pAlives[i]->stats["stickiness"][0] = 0;
         pAlives[i]->stats["dia"][0] = 1;
         pAlives[i]->update_size();
     }

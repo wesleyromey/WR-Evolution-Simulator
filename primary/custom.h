@@ -38,6 +38,25 @@ void set_sim_params(std::vector<SimParamInt*> vals, std::vector<int> newVals){
 
 
 
+// Use the following function to print vectors of integers or 2d vectors of integers:
+//  std::for_each(vec2d.begin(), vec2d.end(), print_2d_vec);
+auto print_vec = [](const int& val) { std::cout << " " << val; }; // Print a 1d vector
+auto print_2d_vec = [](const std::vector<int>& vec) {
+    std::cout << "  ";
+    for(auto val : vec) std::cout << val << " ";
+    std::cout << endl;
+};
+void print_1d_vec(std::string vecName, std::vector<int> vec){
+    cout << vecName << ": {";
+    std::for_each(vec.begin(), vec.end(), print_vec);
+    cout << " }\n";
+}
+void print_1d_vec(std::string vecName, std::vector<float> vec){
+    cout << vecName << ": {";
+    std::for_each(vec.begin(), vec.end(), print_vec);
+    cout << " }\n";
+}
+
 
 
 // Modified <cmath> functions
@@ -137,9 +156,9 @@ int linear_interp_x_int(int x, std::vector<int> xVec, std::vector<int> fcnValVec
 }
 // Takes into consideration screen wrapping
 float calc_distance_between_points(int posX, int posY, int targetX, int targetY){
-    int dx = targetX - posX;
-    if(WRAP_AROUND_X) dx = min_int(dx, ubX.val - dx);
-    int dy = targetY - posY;
+    int dx = abs(targetX - posX);
+    if(WRAP_AROUND_X) dx = min_int(dx, ubX.val - dx); // ubX.val = 40, targetX = 5, posX = 39; dx = min_int(34, 40 - 34)
+    int dy = abs(targetY - posY);
     if(WRAP_AROUND_Y) dy = min_int(dy, ubY.val - dy);
     return sqrt(dx*dx + dy*dy);
 }
@@ -186,11 +205,15 @@ std::string conv_int_to_str(int num){
 int find_closest_value(int target, std::vector<int> vec){
     assert(vec.size() > 0);
     int ans = vec[0], diff = abs(target - ans);
-    for(auto ele : vec){
-        if(abs(target - ele) < diff){
-            diff = abs(target - ele);
-            ans = ele;
+    for(auto val : vec){
+        if(abs(target - val) < diff){
+            diff = abs(target - val);
+            ans = val;
         }
     }
     return ans;
 }
+
+
+
+
