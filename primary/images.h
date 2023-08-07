@@ -2877,7 +2877,8 @@ SDL_Texture* findSDLTex(int num, const std::vector<std::pair<int, SDL_Texture*>>
 }
 
 // Draw a texture at a particular x and y position
-void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int height){
+//  multiDraw means multiple of the drawing are made at once
+void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int height, bool multiDraw = false){
   // xPos = 0, yPos = 0 refers to the top left corner of the window
   // Not sure what pSrc refers to.
   //  pSrc may represent the original object, but I'm not sure
@@ -2886,13 +2887,28 @@ void draw_texture(SDL_Texture* pTexture, int xPos, int yPos, int width, int heig
   // pDst represents the new object
   //  If dst == NULL, then the texture fills the entire window
   SDL_Rect* pDst = new SDL_Rect;
-  pDst->x = xPos; pDst->y = yPos;
   pDst->h = height; pDst->w = width;
-  //SDL_RenderCopy(pRenderer, pTexture, pSrc, pDst);
-  SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst);
-  //  This renders the opject according to pDst
-  //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+  #define draw_texture_once(_x, _y){ \
+    pDst->x = _x; \
+    pDst->y = _y; \
+    SDL_RenderCopy(P_RENDERER, pTexture, NULL, pDst); \
+  }
+  draw_texture_once(xPos, yPos);
+  if(multiDraw){
+    if(xPos < 0) draw_texture_once(xPos + ubX_px, yPos);
+    if(xPos >= ubX_px - width) draw_texture_once(xPos - ubX_px, yPos);
+    if(yPos < 0) draw_texture_once(xPos, yPos + ubY_px);
+    if(yPos >= ubY_px - height) draw_texture_once(xPos, yPos - ubY_px);
+    if(xPos < 0 && yPos < 0) draw_texture_once(xPos + ubX_px, yPos + ubY_px);
+    if(xPos >= ubX_px - width && yPos < 0) draw_texture_once(xPos - ubX_px, yPos + ubY_px);
+    if(xPos < 0 && yPos >= ubY_px - height) draw_texture_once(xPos + ubX_px, yPos - ubY_px);
+    if(xPos >= ubX_px - width && yPos >= ubY_px - height) draw_texture_once(xPos - ubX_px, yPos - ubY_px);
+    //SDL_RenderCopy(pRenderer, pTexture, pSrc, pDst);
+    //  This renders the opject according to pDst
+    //  I could replace NULL with pSrc, but I don't know what pSrc refers to
+  }
   delete pDst;
+  #undef draw_texture_once
 }
 
 void draw_gnd(){
@@ -2929,6 +2945,24 @@ void draw_bkgnd(int energyFromSunPerSec){
   SDL_Rect bkgnd = {0, 0, ubX_px, ubY_px};
   SDL_RenderDrawRect(P_RENDERER, &bkgnd);
   SDL_RenderFillRect(P_RENDERER, &bkgnd);
+}
+
+// The mask goes around the map, allowing cells to only be displayed partially on each side
+void draw_cell_mask(){
+  SDL_SetRenderDrawColor(P_RENDERER, 0x32, 0x32, 0x32, 0xff); // grey - 0x53, 0x53, 0x53, 0xff
+  SDL_Rect bkgnd = {0, 0, 0, 0};
+  int _ubX_px = drawScaleFactor * simGndEnergy[0].size(); // ubX.val;
+  int _ubY_px = drawScaleFactor * simGndEnergy.size(); // ubY.val;
+  #define mask_partial(lb_x_px, lb_y_px, ub_x_px, ub_y_px) { \
+    bkgnd = {lb_x_px, lb_y_px, ub_x_px, ub_y_px}; \
+    SDL_RenderDrawRect(P_RENDERER, &bkgnd); \
+    SDL_RenderFillRect(P_RENDERER, &bkgnd); \
+  }
+  //mask_partial(-_ubX_px, 0,         0, 2*_ubY_px);
+  mask_partial(_ubX_px, 0, 2*_ubX_px, 2*_ubY_px);
+  //mask_partial(       0, 0,   _ubX_px,         0);
+  mask_partial(0, _ubY_px, 2*_ubX_px, 2*_ubY_px);
+  #undef mask_partial
 }
 
 SDL_Texture* retrieve_symbol_texture(char symbol){

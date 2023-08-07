@@ -121,7 +121,7 @@ struct Cell {
         stats["EAM_SUN"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
         stats["EAM_GND"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
         stats["EAM_CELLS"]      = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
-        stats["initEnergy"]     = {              1000,   500,  2000, mutChance, mutAmt}; // (0,10000) // TODO: Convert initEnergy to a mutatable stat
+        stats["initEnergy"]     = {              1000,   500,  2000, mutChance, mutAmt}; // (0,10000)
         stats["maxAtkCooldown"] = {                10,    10,    10,         0,      0}; // 10
         stats["maxEnergy"]      = { 5000*stats["dia"][0],  1, 90000,         0,      0}; // 5000*stats["dia"]
         stats["maxHealth"]      = { stat_init(1,   1),     1, 10000, mutChance, mutAmt}; // (1,10)
@@ -193,7 +193,6 @@ struct Cell {
     void set_int_stats(std::map<std::string, int>& varVals, int aiPreset = -1, bool _enableMutations = false,
     bool expandBounds = false){
         // TODO: Include the ability to set the aiNetwork and nodesPerLayer
-        // TODO: Since I removed the decisions from this function, I may have to edit the unit tests
         // Only contains functionality for the more important stats
         int lenVarVals = 0;
         for(auto item : stats){
@@ -1420,22 +1419,30 @@ struct Cell {
         int drawY = drawScaleFactor*(posY + 0.5 - (float)stats["dia"][0]/2);
         int drawSize = drawScaleFactor*stats["dia"][0];
         if(!isAlive){ draw_texture(pDeadCellTex, drawX, drawY, drawSize, drawSize); return; }
-        // TODO: If part of a cell is not fully rendered, render a copy of it on the other side
-        draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize);
+        draw_texture(pCellSkeleton, drawX, drawY, drawSize, drawSize, true);
         // Draw the health and energy on top of this
         SDL_Texture* energyTex = findSDLTex(energy * 100 / stats["maxEnergy"][0], P_CELL_ENERGY_TEX);
-        draw_texture(energyTex, drawX, drawY, drawSize, drawSize);
+        draw_texture(energyTex, drawX, drawY, drawSize, drawSize, true);
         SDL_Texture* healthTex = findSDLTex(100*health/stats["maxHealth"][0], P_CELL_HEALTH_TEX);
-        draw_texture(healthTex, drawX, drawY, drawSize, drawSize);
-        if(doAttack && stats["attack"][0] > 0)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize);
-        if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize);
+        draw_texture(healthTex, drawX, drawY, drawSize, drawSize, true);
+        if(doAttack && stats["attack"][0] > 0)  draw_texture(pDoAttackTex,  drawX, drawY, drawSize, drawSize, true);
+        if(doCloning) draw_texture(pDoCloningTex, drawX, drawY, drawSize, drawSize, true);
         std::vector<SDL_Texture*> EAM_Tex = findEAMTex();
-        for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize);
+        for(auto tex : EAM_Tex) draw_texture(tex, drawX, drawY, drawSize, drawSize, true);
         if(drawVisionRadius && stats["visionDist"][0] > 0){
             int drawCenterX = drawScaleFactor*(posX + 0.5);
             int drawCenterY = drawScaleFactor*(posY + 0.5);
             int drawRadius = stats["visionDist"][0]*drawScaleFactor;
-            draw_regular_polygon(drawCenterX, drawCenterY, drawRadius, 32, {0xff, 0xff, 0xff, 0x40});
+            SDL_Color white = {0xff, 0xff, 0xff, 0x40};
+            if(drawCenterX < drawRadius && drawCenterY < drawRadius)                    draw_regular_polygon(drawCenterX + ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
+            if(drawCenterX < drawRadius && true)                                        draw_regular_polygon(drawCenterX + ubX_px, drawCenterY         , drawRadius, 32, white);
+            if(drawCenterX < drawRadius && drawCenterY > ubY_px - drawRadius)           draw_regular_polygon(drawCenterX + ubX_px, drawCenterY - ubY_px, drawRadius, 32, white);
+            if(true && drawCenterY < drawRadius)                                        draw_regular_polygon(drawCenterX         , drawCenterY + ubY_px, drawRadius, 32, white);
+            if(true && true)                                                            draw_regular_polygon(drawCenterX         , drawCenterY         , drawRadius, 32, white);
+            if(true && drawCenterY > ubY_px - drawRadius)                               draw_regular_polygon(drawCenterX         , drawCenterY - ubY_px, drawRadius, 32, white);
+            if(drawCenterX > ubX_px - drawRadius && drawCenterY < drawRadius)           draw_regular_polygon(drawCenterX - ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
+            if(drawCenterX > ubX_px - drawRadius && true)                               draw_regular_polygon(drawCenterX - ubX_px, drawCenterY         , drawRadius, 32, white);
+            if(drawCenterX > ubX_px - drawRadius && drawCenterY > ubY_px - drawRadius)  draw_regular_polygon(drawCenterX - ubX_px, drawCenterY - ubY_px, drawRadius, 32, white);
         }
     }
 };

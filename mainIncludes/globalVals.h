@@ -174,8 +174,6 @@ SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
-//static const int TARGET_SCREEN_WIDTH = 770; // Try 1540 for full screen and 770 for half screen
-//static const int TARGET_SCREEN_HEIGHT = 400; // Try 700 for full screeen, or 400 for a quarter screen
 static const int WINDOW_WIDTH  = 600;       // Try 1540 for full screen and 770 for half screen
 static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 for a quarter screen
 // I split cells into square regions so I only have to compare the positions
@@ -193,7 +191,6 @@ int frameNum = 0; // The frame number of the simulation
 // Manually control cell decisions, frame ticks, etc.
 static const int EVOLUTIONARY_NEURAL_NETWORK_AI_MODE = 0, RNG_BASED_AI_MODE = 1;
 int aiMode = RNG_BASED_AI_MODE;
-//int pctChanceIdle = 33, pctChanceWalk = 33, pctChanceRun = 100 - pctChanceIdle - pctChanceWalk; // for RNG_BASED_AI_MODE
 bool doCellAi = true;
 bool automateEnergy = true;
 bool enableAutomaticAttack = true;

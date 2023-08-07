@@ -84,6 +84,7 @@ void SDL_draw_frame(){
     draw_bkgnd(energyFromSunPerSec);
     draw_gnd();
     for(auto pCell : pActives) pCell->draw_cell();
+    draw_cell_mask();
     draw_user_interface(count_all_alive_cells(pActives));
     #endif
     enforce_frame_rate(frameStart, FRAME_DELAY);

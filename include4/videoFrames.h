@@ -473,7 +473,7 @@ void gen_demo_cells_video1(int scenarioNum){
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
-            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 45; \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5, 1);
@@ -566,7 +566,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF3j - 1;
+    int startFrame = kF5i - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
