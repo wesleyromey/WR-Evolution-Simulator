@@ -487,28 +487,29 @@ void gen_demo_cells_video1(int scenarioNum){
 
         case 59:
         // 5j
-        scenario_precode(6);
+        scenario_precode(7);
         enableAutomaticCloning = false;
         enableAutomaticAttack = true;
         //pctChanceIdle = 10; pctChanceWalk = 30; pctChanceRun = 60; // 10, 45, 45
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
-        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
-            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack, maxHealth){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, maxHealth, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
             varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         //gen_cell(0, "worm", 20, 10, 2, 10000, 10000, 0, 0);
-        gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 5, 2);
+        gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 5, 2, 2);
         pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, false, false, false);
         //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
         //pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
         //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
-        gen_cell(1, "plant", 5, 5, 2, 5000, 5000, 0, 0);
-        gen_cell(2, "plant", 10, 35, 2, 5000, 5000, 0, 0);
-        gen_cell(3, "plant", 20, 5, 2, 5000, 5000, 0, 0);
-        gen_cell(4, "plant", 25, 25, 2, 5000, 5000, 0, 0);
-        gen_cell(5, "plant", 30, 12, 8, 2000, 20000, 0, 0);
+        gen_cell(1, "plant", 5, 5, 2, 5000, 5000, 0, 0, 2);
+        gen_cell(2, "plant", 10, 35, 2, 5000, 5000, 0, 0, 2);
+        gen_cell(3, "plant", 20, 5, 2, 5000, 5000, 0, 0, 2);
+        gen_cell(4, "plant", 25, 25, 2, 5000, 5000, 0, 0, 2);
+        gen_cell(5, "plant", 30, 12, 8, 2000, 20000, 0, 0, 8);
+        gen_cell(6, "plant", 15, 5, 2, 100, 10000, 0, 0, 1000);
         //gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
         //pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
         //gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
@@ -566,7 +567,7 @@ void do_video1(){
     static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
     static const int kF6start = kF5j + 1000;
     frameNum %= numFrames;
-    int startFrame = kF5i - 1;
+    int startFrame = kF5j - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();

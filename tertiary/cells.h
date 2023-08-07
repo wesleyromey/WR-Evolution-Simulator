@@ -409,8 +409,6 @@ struct Cell {
             // Search the alive and dead cells in the region and map their cell ids to their distance from the current cell
             std::pair<int, int> pReg = {iX, iY};
             add_nearby_cells_to_distance_map(pActivesRegions[pReg]);
-            //add_nearby_cells_to_distance_map(pAlivesRegions[pReg]);
-            //add_nearby_cells_to_distance_map(pDeadsRegions[pReg]);
             increment_iX_or_iY(iX, iY);
         }
 
@@ -441,7 +439,7 @@ struct Cell {
             float distXY = nearbyCellDistancesVec[i].second;
             nearestDistXY.push_back(distXY);
         }
-        //if(true && nearestCellIds.size() > 0 && stats["EAM_CELLS"][0] == 100){
+        //if(nearestCellIds.size() > 0 && stats["EAM_CELLS"][0] == 100){
             //cout << "Nearest Cell ids and Distances:\n";
             //print_1d_vec("  nearestCellIds", nearestCellIds);
             //print_1d_vec("  nearestDistXY" , nearestDistXY );
@@ -805,14 +803,8 @@ struct Cell {
                 do_random_cell_activity(5, 5, _doAttack, _doCloning);
                 return;
             }
-            Cell* pTarget = pCellsHist[nearestCellIds[0]];
-            if(pTarget->isAlive == false){
-                set_ai_outputs(0, rand() % 360, IDLE_MODE, false, false, _doCloning);
-                return;
-            } else {
-                chase_optimal_cell(pCellsHist, nearestCellIds, _doAttack, false, _doCloning);
-                return;
-            }
+            chase_optimal_cell(pCellsHist, nearestCellIds, _doAttack, false, _doCloning);
+            return;
         }
     }
     void mutate_ai(){
@@ -1292,7 +1284,7 @@ struct Cell {
             Cell* pCell = get_pCell(cellId);
             int rank = 0;
             int deadCoef = 16000, plantCoef = 8000, gndCoef = 4000, balancedCoef = 2000, predatorCoef = 1000;
-            int speedCoef = 10, distanceCoef = 1, doAttackCoef = 0;
+            int speedCoef = 10, distanceCoef = -1, doAttackCoef = 0;
 
             // Assume the dead cell hasn't moved since dying
             if(pCell->isAlive == false) assert(pCell->speedMode == IDLE_MODE);
@@ -1314,25 +1306,31 @@ struct Cell {
             rank += doAttackCoef * pCell->doAttack;
             cellRanks.push_back(rank);
         }
-        int minRank = cellRanks[0];
-        for(auto rank : cellRanks) minRank = min_int(minRank, rank);
+        int maxRank = cellRanks[0];
+        for(auto rank : cellRanks) maxRank = max_int(maxRank, rank);
         for(int i = cellRanks.size()-1; i >= 0; i--){
-            if(cellRanks[i] != minRank) nearestCellIds.erase(nearestCellIds.begin() + i);
+            if(cellRanks[i] != maxRank) nearestCellIds.erase(nearestCellIds.begin() + i);
         }
         // Get the optimal speedDir and speed for the first cell in the list
         int cellIdToChase = nearestCellIds[0];
-        Cell* pCellToChase = get_pCell(cellIdToChase);
-        int xNext = pCellToChase->posX + pCellToChase->get_speed()*cos_deg(pCellToChase->speedDir);
-        int yNext = pCellToChase->posY + pCellToChase->get_speed()*sin_deg(pCellToChase->speedDir);
+        Cell* pTarget = get_pCell(cellIdToChase);
+        float effectiveDistFromTarget = calc_distance_from_point(pTarget->posX, pTarget->posY) - (float)(stats["dia"][0] + pTarget->stats["dia"][0]) / 2;
+        float targetDistance = calc_distance_from_point(pTarget->posX, pTarget->posY);
+        bool isTouchingTarget = ( targetDistance - (float)(stats["dia"][0] + pTarget->stats["dia"][0]) / 2 ) <= 0;
+        if(pTarget->isAlive == false && isTouchingTarget){
+            set_ai_outputs(0, rand() % 360, IDLE_MODE, false, false, _doCloning);
+            return;
+        }
+        int xNext = pTarget->posX + pTarget->get_speed()*cos_deg(pTarget->speedDir);
+        int yNext = pTarget->posY + pTarget->get_speed()*sin_deg(pTarget->speedDir);
         int _speedDir = get_optimal_speedDir_to_point(xNext, yNext);
         // Pursue the relevant cell for 1 more frame
-        int targetDistance = calc_distance_from_point(pCellToChase->posX, pCellToChase->posY);
+        //int targetDistance = calc_distance_from_point(pTarget->posX, pTarget->posY);
         int targetSpeed = find_closest_value(targetDistance, {stats["speedIdle"][0], stats["speedWalk"][0], stats["speedRun"][0]});
         int _speedMode = speedMode;
         if(targetSpeed == stats["speedIdle"][0]) _speedMode = stats["speedIdle"][0];
         if(targetSpeed == stats["speedWalk"][0]) _speedMode = stats["speedWalk"][0];
         if(targetSpeed == stats["speedRun"][0])  _speedMode = stats["speedRun"][0];
-        //force_decision(1, _speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         set_ai_outputs(_speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         enforce_valid_cell(false);
         //print_scalar_vals("  cellId", uniqueCellNum, "_speedDir", _speedDir, "_speedMode", _speedMode, "xNext", xNext, "yNext", yNext,
@@ -1434,14 +1432,15 @@ struct Cell {
             int drawCenterY = drawScaleFactor*(posY + 0.5);
             int drawRadius = stats["visionDist"][0]*drawScaleFactor;
             SDL_Color white = {0xff, 0xff, 0xff, 0x40};
-            if(drawCenterX < drawRadius && drawCenterY < drawRadius)                    draw_regular_polygon(drawCenterX + ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
+            if(drawRadius >= min_int(ubX_px, ubY_px) / 2) white = {0xff, 0xff, 0xff, 0x05};
+            draw_regular_polygon(drawCenterX, drawCenterY, drawRadius, 32, white);
+            if(drawCenterY < drawRadius)                                                draw_regular_polygon(drawCenterX         , drawCenterY + ubY_px, drawRadius, 32, white);
+            if(drawCenterY > ubY_px - drawRadius)                                       draw_regular_polygon(drawCenterX         , drawCenterY - ubY_px, drawRadius, 32, white);
             if(drawCenterX < drawRadius && true)                                        draw_regular_polygon(drawCenterX + ubX_px, drawCenterY         , drawRadius, 32, white);
+            if(drawCenterX < drawRadius && drawCenterY < drawRadius)                    draw_regular_polygon(drawCenterX + ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
             if(drawCenterX < drawRadius && drawCenterY > ubY_px - drawRadius)           draw_regular_polygon(drawCenterX + ubX_px, drawCenterY - ubY_px, drawRadius, 32, white);
-            if(true && drawCenterY < drawRadius)                                        draw_regular_polygon(drawCenterX         , drawCenterY + ubY_px, drawRadius, 32, white);
-            if(true && true)                                                            draw_regular_polygon(drawCenterX         , drawCenterY         , drawRadius, 32, white);
-            if(true && drawCenterY > ubY_px - drawRadius)                               draw_regular_polygon(drawCenterX         , drawCenterY - ubY_px, drawRadius, 32, white);
-            if(drawCenterX > ubX_px - drawRadius && drawCenterY < drawRadius)           draw_regular_polygon(drawCenterX - ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
             if(drawCenterX > ubX_px - drawRadius && true)                               draw_regular_polygon(drawCenterX - ubX_px, drawCenterY         , drawRadius, 32, white);
+            if(drawCenterX > ubX_px - drawRadius && drawCenterY < drawRadius)           draw_regular_polygon(drawCenterX - ubX_px, drawCenterY + ubY_px, drawRadius, 32, white);
             if(drawCenterX > ubX_px - drawRadius && drawCenterY > ubY_px - drawRadius)  draw_regular_polygon(drawCenterX - ubX_px, drawCenterY - ubY_px, drawRadius, 32, white);
         }
     }
