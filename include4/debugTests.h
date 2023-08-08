@@ -162,8 +162,7 @@ void test_SDL(){
         draw_bkgnd(500);
         draw_texture(pCellSkeleton, 0, frameNum, 100, 100);
         draw_texture(pEnergyGnd0pctTex, 100-frameNum, 100+frameNum, 100, 100);
-        draw_texture(pHealth70pctTex, 300, 100+2*frameNum,
-            150-frameNum/2, 150-frameNum/2);
+        draw_texture(pHealth70pctTex, 300, 100+2*frameNum, 150-frameNum/2, 150-frameNum/2);
         SDL_RenderPresent(P_RENDERER);
         //  Displays the current frame (of textures) to the user
     }

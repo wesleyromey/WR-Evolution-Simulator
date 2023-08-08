@@ -473,7 +473,7 @@ void gen_demo_cells_video1(int scenarioNum){
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
-            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 30; \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceWalk"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         gen_cell(0, "predator", ubX.val/2, ubY.val/2, 2, 1000, 10000, 5, 1);
@@ -495,29 +495,55 @@ void gen_demo_cells_video1(int scenarioNum){
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack, maxHealth){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, maxHealth, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
-            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 30; \
+            varVals["rngAi_pctChanceIdle"] = 90; varVals["rngAi_pctChanceWalk"] = 5; \
+            varVals["rngAi_pctChanceToChangeDir"] = 100; varVals["rngAi_pctChanceToChangeSpeed"] = 100; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
+        #define force_leftward_movement(cellNum, numFrames, _speedMode) pCellsHist[cellNum]->force_decision(numFrames, 180, 0, _speedMode, false, false, false)
         //gen_cell(0, "worm", 20, 10, 2, 10000, 10000, 0, 0);
-        gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 5, 2, 2);
+        gen_cell(0, "predator", 20, 10, 2, 1000, 10000, 6, 1, 2);
         pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, false, false, false);
-        //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
-        //pCellsHist[0]->force_decision(10, 0, 0, IDLE_MODE, true, false, false);
-        //pCellsHist[0]->force_decision(2, 270, 0, RUN_MODE, true, false, false);
-        gen_cell(1, "plant", 5, 5, 2, 5000, 5000, 0, 0, 2);
-        gen_cell(2, "plant", 10, 35, 2, 5000, 5000, 0, 0, 2);
-        gen_cell(3, "plant", 20, 5, 2, 5000, 5000, 0, 0, 2);
-        gen_cell(4, "plant", 25, 25, 2, 5000, 5000, 0, 0, 2);
-        gen_cell(5, "plant", 30, 12, 8, 2000, 20000, 0, 0, 8);
-        gen_cell(6, "plant", 15, 5, 2, 100, 10000, 0, 0, 1000);
+        gen_cell(1,  "worm", 17, 10, 2, 500, 5000, 0, 0, 2000);
+        pCellsHist[1]->force_decision(10, 0, 0, IDLE_MODE, false, false, false);
+        gen_cell(2, "worm", 23, 10, 2, 500, 5000, 0, 0, 2);
+        pCellsHist[2]->force_decision(100, 0, 0, IDLE_MODE, false, false, false);
+        gen_cell(3, "plant", 20,  7, 2, 500, 5000, 0, 0, 2);
+        gen_cell(4, "predator", 20, 13, 2, 500, 5000, 0, 0, 2);
+        pCellsHist[4]->force_decision(100, 0, 0, IDLE_MODE, false, false, false);
+        gen_cell(5, "worm", 35, 10, 2, 500, 5000, 0, 0, 20);
+        force_leftward_movement(5, 100, IDLE_MODE);
+        force_leftward_movement(5,  50, WALK_MODE);
+        force_leftward_movement(5,  10, RUN_MODE);
+        force_leftward_movement(5,  10, WALK_MODE);
+        force_leftward_movement(5,  50, WALK_MODE); //
+        force_leftward_movement(5,  10, WALK_MODE);
+        force_leftward_movement(5,  10, RUN_MODE);
+        force_leftward_movement(5,  50, WALK_MODE); //
+        force_leftward_movement(5,   5, RUN_MODE);
+        force_leftward_movement(5,   5, WALK_MODE);
+        force_leftward_movement(5, 300, WALK_MODE);
+        gen_cell(6, "worm", 35, 16, 2, 2000, 20000, 0, 0, 20);
+        force_leftward_movement(6, 100, IDLE_MODE);
+        force_leftward_movement(6,  50, WALK_MODE);
+        force_leftward_movement(6,  10, WALK_MODE);
+        force_leftward_movement(6,  10, RUN_MODE);
+        force_leftward_movement(6,  50, WALK_MODE); //
+        force_leftward_movement(6,  10, RUN_MODE);
+        force_leftward_movement(6,  10, WALK_MODE);
+        force_leftward_movement(6,  50, WALK_MODE); //
+        force_leftward_movement(6,   5, WALK_MODE);
+        force_leftward_movement(6,   5, RUN_MODE);
+        force_leftward_movement(6, 300, WALK_MODE);
         //gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
         //pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
         //gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
         //pCellsHist[7]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
 
         #undef gen_cell
+        #undef force_leftward_movement
         scenario_postcode();
         break;
+        
 
 
 

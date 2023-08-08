@@ -265,10 +265,14 @@ int do_frame(bool doCellDecisions = true){
         for(int i = pActives.size()-1; i >= 0; i--) pActives[i]->decide_next_frame(pActivesRegions, pCellsHist);
     }
 
+    //cout << "a";
+
 
     // Cells move to their target positions based on their speed
     for(int i = pActives.size()-1; i >= 0; i--) pActives[i]->update_target_pos();
     assign_cells_to_correct_regions();
+
+    //cout << "b";
 
     // Cells apply all their non-movement decisions this frame
     //  such as attacking and cloning. Deaths are dealt with after
@@ -280,6 +284,7 @@ int do_frame(bool doCellDecisions = true){
         assign_cells_to_correct_regions();
     }
 
+    //cout << "c";
 
     // Cells move to new positions if enough force is applied
     for(int i = pActives.size()-1; i >= 0; i--) pActives[i]->update_forces(pActivesRegions);
@@ -306,6 +311,7 @@ int do_frame(bool doCellDecisions = true){
     // Deal with dead cells
     for(int i = pActives.size() - 1; i >= 0; i--) pActives[i]->remove_this_dead_cell_if_depleted(pActives, i);
 
+    //cout << "d";
 
     // Every certain number of frames, the energy levels within the ground should be increased for all ground pixels
     if(automateEnergy && frameNum % FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION == 0){

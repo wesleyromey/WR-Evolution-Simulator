@@ -404,6 +404,7 @@ struct Cell {
         }
         std::map<int, float> nearbyCellDistances;
         //xRegLb = 0; yRegLb = 0; xRegUb = cellRegionNumUbX - 1; yRegUb = cellRegionNumUbY - 1; // DEBUG: Just to get all the regions
+        //print_scalar_vals("xRegLb", xRegLb, "yRegLb", yRegLb, "xRegUb", xRegUb, "yRegUb", yRegUb);
         int iX = xRegLb, iY = yRegLb;
         while(true){
             // Search the alive and dead cells in the region and map their cell ids to their distance from the current cell
@@ -440,9 +441,8 @@ struct Cell {
             nearestDistXY.push_back(distXY);
         }
         //if(nearestCellIds.size() > 0 && stats["EAM_CELLS"][0] == 100){
-            //cout << "Nearest Cell ids and Distances:\n";
-            //print_1d_vec("  nearestCellIds", nearestCellIds);
-            //print_1d_vec("  nearestDistXY" , nearestDistXY );
+        //    print_1d_vec("  nearestCellIds", nearestCellIds);
+        //    print_1d_vec("  nearestDistXY" , nearestDistXY );
         //}
         return nearestCellIds;
     }
@@ -1106,16 +1106,34 @@ struct Cell {
         int dy = targetSpeed * sin_deg(targetDirectionDeg);
         return {dx, dy};
     }
+    int calc_distX_from_point(int xCoord){
+        // Assume -ubX.val < posX && posx < 2*ubX.val
+        if(!WRAP_AROUND_X) return xCoord - posX;
+        // The shortest path may involve warping between x = 0 and x = ubX.val-1
+        std::vector<int> dxPossibilities = {xCoord - posX, xCoord - posX + ubX.val, xCoord - posX - ubX.val};
+        int dx = xCoord - posX;
+        for(auto val : dxPossibilities){
+            if(abs(dx) > abs(val)) dx = val;
+        }
+        //if(uniqueCellNum == 0) cout << "dx: " << dx << endl;
+        return dx;
+    }
+    int calc_distY_from_point(int yCoord){
+        // Assume -ubY.val < posY && posY < 2*ubY.val
+        if(!WRAP_AROUND_Y) return yCoord - posY;
+        // The shortest path may involve warping between y = 0 and y = ubY.val-1
+        std::vector<int> dyPossibilities = {yCoord - posY, yCoord - posY + ubY.val, yCoord - posY - ubY.val};
+        int dy = yCoord - posY;
+        for(auto val : dyPossibilities){
+            if(abs(dy) > abs(val)) dy = val;
+        }
+        //if(uniqueCellNum == 0) cout << "dy: " << dy << endl;
+        return dy;
+    }
     float calc_distance_from_point(int xCoord, int yCoord){
-        // Assume -ubX.val < posX and -ubY.val < posY
-        int xDist = xCoord - posX;
-        if(WRAP_AROUND_X && abs(xDist) > abs(xCoord + ubX.val - posX)){
-            xDist = xCoord + ubX.val - posX;
-        }
-        int yDist = yCoord - posY;
-        if(WRAP_AROUND_Y && abs(yDist) > abs(yCoord + ubY.val - posY)){
-            yDist = yCoord + ubY.val - posY;
-        }
+        // Screen wrapping applies, if set that way in the simulation
+        int xDist = calc_distX_from_point(xCoord);
+        int yDist = calc_distY_from_point(yCoord);
         float ans = std::sqrt(xDist * xDist + yDist * yDist);
         return ans;
     }
@@ -1217,8 +1235,12 @@ struct Cell {
         #undef lastDecision
     }
     int get_optimal_speedDir_to_point(int targetX, int targetY){
-        int dx = targetX - posX, dy = targetY - posY;
+        int dx = calc_distX_from_point(targetX);
+        int dy = calc_distY_from_point(targetY);
+        //int dx = targetX - posX, dy = targetY - posY;
         float distance = calc_distance_from_point(targetX, targetY);
+        //print_scalar_vals("posX", posX, "posY", posY, "targetX", targetX, "targetY", targetY, "dx", dx, "dy", dy, "distance", distance);
+
         if(distance == 0) return 0;
         int ans = (int)arc_cos_deg(abs(dx), distance);
         //print_scalar_vals("  distance", distance, "dx", dx, "dy", dy, "acos(|dx|, distance)", ans);
@@ -1281,10 +1303,11 @@ struct Cell {
         // First, mark each cell with a number and record the largest (best) number
         std::vector<int> cellRanks;
         for(auto cellId : nearestCellIds){
+            if(cellId == 0) cout << "abcdefg\n";
             Cell* pCell = get_pCell(cellId);
             int rank = 0;
             int deadCoef = 16000, plantCoef = 8000, gndCoef = 4000, balancedCoef = 2000, predatorCoef = 1000;
-            int speedCoef = 10, distanceCoef = -1, doAttackCoef = 0;
+            int speedCoef = -10, distanceCoef = -1, doAttackCoef = 0;
 
             // Assume the dead cell hasn't moved since dying
             if(pCell->isAlive == false) assert(pCell->speedMode == IDLE_MODE);
