@@ -124,25 +124,25 @@ struct SimParamInt{
 
 
 // Global Simulation Parameters
-SimParamInt initNumCells(0, 0, 10000);
-SimParamInt ubX(30, 1, 400); // 120
-SimParamInt ubY(20, 1, 400); // 80
+SimParamInt initNumCells(300, 0, 10000);
+SimParamInt ubX(80, 1, 400); // 120
+SimParamInt ubY(40, 1, 400); // 80
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < ubX.val
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_Y = true; // Enforce the constraint 0 <= y < ubY.val
 static const int TICKS_PER_SEC = 10;    // Each tick, the new positions are calculated - This may be obsolete or confusing
-SimParamInt cellLimit(400, 0, 1000);
+SimParamInt cellLimit(1000, 0, 10000);
 // Each cell in the simulator must spend this amount of energy per cell it touches.
 //  Increasing this value increases the amount of energy spent due to overcrowding. 
 SimParamInt overcrowdingEnergyCoef(0, 0, 1000); // 1
 // Energy accumulation for all ground spaces
-SimParamInt maxGndEnergy(500, 1, 1000000);
+SimParamInt maxGndEnergy(100, 1, 1000000);
 std::vector<std::vector<int>> simGndEnergy;
 static const int FRAMES_BETWEEN_GND_ENERGY_ACCUMULATION = 10;
 SimParamInt gndEnergyPerIncrease(10, 0, 10000);
-SimParamInt defaultMutationChance(100, 0, 1000);
-SimParamInt defaultMutationAmt(100, 0, 1000);
+SimParamInt defaultMutationChance(100, 0, 1000);    // 1000 = 100%
+SimParamInt defaultMutationAmt(500, 0, 1000);       // 1000 = 100%
 
 // Day-Night Cycle
 int energyFromSunPerSec = 0; // This value is automatically updated each frame
@@ -163,7 +163,7 @@ SimParamInt dayNightMode(DAY_NIGHT_ALWAYS_DAY_MODE, {DAY_NIGHT_ALWAYS_DAY_MODE, 
 // Smaller values (closer to 0) mean the sun remains lower in the sky.
 // Larger values (to +inf) mean the sun is near its max height for longer
 // A value of 175 approximates a sine wave
-SimParamInt dayNightExponentPct(100, {seqOf100(0,10), 1000}); // 0 <= EXPONENT < infinity (default = 200)
+SimParamInt dayNightExponentPct(175, {seqOf100(0,10), 1000}); // 0 <= EXPONENT < infinity (default = 200)
 // The day lasts between dayNightLb and dayNightUb
 // The night lasts from dayNightUb to 100 and 0 to dayNightLb
 SimParamInt dayNightLbPct(0,{seqOf100(0,1)});
@@ -174,8 +174,8 @@ SimParamInt dayNightUbPct(50,{seqOf100(0,1)});
 
 // Initialize SDL
 static const char* WINDOW_TITLE = "Evolution Simulator";
-static const int WINDOW_WIDTH  = 600;       // Try 1540 for full screen and 770 for half screen
-static const int WINDOW_HEIGHT = 450;       // Try 700 for full screeen, or 450 for a quarter screen
+static const int WINDOW_WIDTH  = 800;       // Try 1540 for full screen and 770 for half screen         // 600; 800;
+static const int WINDOW_HEIGHT = 445;       // Try 700 for full screeen, or 450 for a quarter screen    // 450; 445;
 // I split cells into square regions so I only have to compare the positions
 //  of nearby cells to calculate forces, crowding, interactions, vision, etc.
 // If a region near the bottom or the right side is smaller, then it is absorbed
@@ -228,7 +228,9 @@ static const int EAM_SUN = 0, EAM_GND = 1, EAM_CELLS = 2;
     //  EAM_CELLS means energy from other cells
 static const int CELL_TYPE_PLANT = 0, CELL_TYPE_WORM = 1, CELL_TYPE_PREDATOR = 2, CELL_TYPE_MUTANT = 3;
 static const int CELL_TYPE_GENERIC = 4, CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT = 5;
-std::discrete_distribution<int> availableCellTypes = {CELL_TYPE_PLANT, CELL_TYPE_WORM, CELL_TYPE_PREDATOR, CELL_TYPE_MUTANT};
+std::discrete_distribution<int> availableCellTypes = {1, 1, 1, 0}; // TODO: Add back in the mutant cell type when appropriate
+    // Corresponds to {CELL_TYPE_PLANT, CELL_TYPE_WORM, CELL_TYPE_PREDATOR, CELL_TYPE_MUTANT};
+    // This variable is where the cell types ratio goes
 SimParamInt forceDampingFactor(1000000, 0, 1000000);
     // Default: 100
     // Applies to the repulsive force that keeps cells apart

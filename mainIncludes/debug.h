@@ -12,8 +12,8 @@
 
 
 // Draw video frames, text, etc.
-#define DO_VIDEO_FRAMES
-#define DO_VIDEO_TEXT
+//#define DO_VIDEO_FRAMES
+//#define DO_VIDEO_TEXT
 //#define DO_WHITE_TEXT
 
 #if defined(DO_VIDEO_FRAMES) || defined(DO_VIDEO_TEXT)

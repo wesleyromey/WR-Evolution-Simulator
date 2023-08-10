@@ -92,14 +92,18 @@ struct Cell {
         int mean = stats[statName][0];
         int lb = stats[statName][1], ub = stats[statName][2];
         int maxMutationAmt = (int)((long long)stats[statName][4] * (long long)stats[statName][0] / 1000);
-        stats[statName][0] = gen_uniform_int_dist(rng, mean - maxMutationAmt, mean + maxMutationAmt);
+        if(maxMutationAmt < 1) maxMutationAmt = 1;
+        stats[statName][0] = gen_uniform_int_dist(rng, max_int(lb, mean - maxMutationAmt), min_int(ub, mean + maxMutationAmt));
     }
     void mutate_stats(){
         // Random mutation based on parent's mutation rate
         for(auto item : stats){
             std::string statName = item.first;
             int pct1kChanceOfMutation = stats[statName][3]; // Probability of mutation
-            if(rand() % 1000 < pct1kChanceOfMutation) mutate_stat(statName);
+            if(rand() % 1000 < pct1kChanceOfMutation){
+                mutate_stat(statName);
+                //cout << statName << ": " stats[statName][0];
+            }
         }
         enforce_valid_cell(true);
     }
@@ -111,29 +115,30 @@ struct Cell {
         #define stat_init(lb, ub) gen_uniform_int_dist(rng, lb, ub)
         #define mutChance defaultMutationChance.val
         #define mutAmt defaultMutationAmt.val
+        assert(mutChance != 0 && mutAmt != 0);
         // Initialize all stats
         // Notation: Pct1k == one thousandth of the entire value
         // {{"stat1", {val, lb, ub, mutationPct1kChance, mutationMaxPct1kChange}}, ...}
         //  Whenever a mutation occurs, the stat must be able to change by at least 1 (unless lb == ub)
         stats["attack"]         = { stat_init(1,   1),     0, 10000, mutChance, mutAmt}; // (0,3)
         stats["dex"]            = {                 0,     0,     0,         0,      0}; // TODD: Add this as an actual stat
-        stats["dia"]            = { stat_init(2,   2),     1,    10, mutChance, mutAmt}; // (2,10)
+        stats["dia"]            = { stat_init(2,   2),     2,    10, mutChance, mutAmt}; // (2,10)
         stats["EAM_SUN"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
         stats["EAM_GND"]        = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
         stats["EAM_CELLS"]      = { stat_init(0, 100),     0,   100,         0,      0}; // (0,100)
-        stats["initEnergy"]     = {              1000,   500,  2000, mutChance, mutAmt}; // (0,10000)
+        stats["initEnergy"]     = {              1000,   500,  5000, mutChance, mutAmt}; // (0,10000)
         stats["maxAtkCooldown"] = {                10,    10,    10,         0,      0}; // 10
         stats["maxEnergy"]      = { 5000*stats["dia"][0],  1, 90000,         0,      0}; // 5000*stats["dia"]
-        stats["maxHealth"]      = { stat_init(1,   1),     1, 10000, mutChance, mutAmt}; // (1,10)
+        stats["maxHealth"]      = { stat_init(5,   5),     1, 10000, mutChance, mutAmt}; // (1,10)
         // TODO: Add stats for the AI and its relevant mutation rate
         stats["mutationRate"]   = { stat_init(0,   0),     0,  1000,         0,      0}; // (0,1000)
         // TODO: change speedIdle, speedWalk, and speedRun to a "maxSpeed" stat and change speed to a continuously varying decision
         stats["speedIdle"]      = {                 0,     0,     0,         0,      0}; // 0
         stats["speedWalk"]      = {                 1,     0,    10, mutChance, mutAmt}; // (0, 1)
         stats["speedRun"]       = {                 2,     0,   100, mutChance, mutAmt}; // (0, 100)
-        stats["visionDist"]     = { stat_init(5,   5),     0,  1000,         0,      0}; // (0, 10)
-        stats["rngAi_pctChanceIdle"] = {           33,     0,   100,         0,      0};
-        stats["rngAi_pctChanceWalk"] = {           33,     0,   100,         0,      0};
+        stats["visionDist"]     = { stat_init(5,   5),     0,   100, mutChance, mutAmt}; // (0, 10)
+        stats["rngAi_pctChanceIdle"] = {           10,     0,   100,         0,      0};
+        stats["rngAi_pctChanceWalk"] = {           30,     0,   100,         0,      0};
         stats["rngAi_pctChanceToChangeDir"] = {     5,     0,   100,         0,      0};
         stats["rngAi_pctChanceToChangeSpeed"] = {   5,     0,   100,         0,      0};
         switch(_cellType){
@@ -305,7 +310,8 @@ struct Cell {
         assign_self_to_xyRegion();
     }
     void update_max_energy(){
-        stats["maxEnergy"][0] = 5000*size;
+        //stats["maxEnergy"][0] = 5000*size;
+        stats["maxEnergy"][0] = 1.5*energyCostToClone; // TODO: remove this setting I actually want to keep this setting after the video is published
     }
     void update_size(){
         size = PI*stats["dia"][0]*stats["dia"][0]/4 + 0.5; // size is an int
@@ -550,6 +556,7 @@ struct Cell {
         else energyCostToCloneMap["attack"] = 0;
         energyCostToCloneMap["size"] = StrExprInt::solve(ENERGY_COST_TO_CLONE["size"], {{"x", size}, {"size", size}});
         for(auto item : energyCostToCloneMap) energyCostToClone += item.second;
+        stats["maxEnergy"][0] = 1.5 * energyCostToClone; // TODO: remove this line I actually want to keep this setting after the video is published
 
         // Surviving (per second)
         energyCostPerFrame = 0;
@@ -662,6 +669,7 @@ struct Cell {
             //doAttack = enableAutomaticAttack;
             //doSelfDestruct = false;
             //doCloning = enableAutomaticCloning;
+            //print_scalar_vals("1 _speedMode", _speedMode);
             set_ai_outputs(rand() % 360, rand() % 360, _speedMode, enableAutomaticAttack, false, enableAutomaticCloning);
         }
         drawVisionRadius = true;
@@ -755,6 +763,7 @@ struct Cell {
             _doAttack = x(4) && attackCooldown == 0;
             _doSelfDestruct = x(5);
             _doCloning = x(6);
+            //print_scalar_vals("2 _speedMode", _speedMode);
             set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             //cout << "forcedDecisionsQueue[0]: " << x(0) << ", " << x(1) << ", " << x(2) << ", " << x(3) << ", " << x(4) << ", " << x(5) << ", " << x(6) << endl;
             if(x(0) <= 0) forcedDecisionsQueue.erase(forcedDecisionsQueue.begin());
@@ -781,6 +790,7 @@ struct Cell {
             _doAttack = (layerInputs[4] >= 0 && enableAutomaticAttack && attackCooldown == 0);
             _doSelfDestruct = (layerInputs[5] >= 1 && enableAutomaticSelfDestruct); // If this condition is too easy to trigger, then cells die too easily
             _doCloning = (layerInputs[6] >= 0 && enableAutomaticCloning);
+            //print_scalar_vals("3 _speedMode", _speedMode);
             set_ai_outputs(_speedDir, _cloningDir, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
             return;
         }
@@ -966,6 +976,8 @@ struct Cell {
 
         // Possible mutations
         if(doMutation) pClone->mutate_stats();
+        pClone->health = stats["maxHealth"][0];
+        pClone->energy = stats["initEnergy"][0];
         pClone->enforce_valid_cell(true);
 
         return pClone;
@@ -1180,19 +1192,20 @@ struct Cell {
     bool _enableAttack, bool _enableCloning){
         int _speedDir = speedDir, _speedMode = speedMode;
         if(rand() % 100 < pctChanceToChangeDir){
-            while(_speedDir == speedDir){
-                _speedDir = rand() % 360;
-                correct_speedDir();
-            }
+            //while(_speedDir == speedDir){
+            _speedDir = rand() % 360;
+            correct_speedDir();
+            //}
         }
         if(rand() % 100 < pctChanceToChangeSpeed){
-            while(_speedMode == speedMode){
-                int _rngPct = rand() % 100;
-                if(_rngPct < stats["rngAi_pctChanceIdle"][0]) _speedMode = IDLE_MODE;
-                else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) _speedMode = WALK_MODE;
-                else _speedMode = RUN_MODE;
-            }
+            //while(_speedMode == speedMode){
+            int _rngPct = rand() % 100;
+            if(_rngPct < stats["rngAi_pctChanceIdle"][0]) _speedMode = IDLE_MODE;
+            else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) _speedMode = WALK_MODE;
+            else _speedMode = RUN_MODE;
+            //}
         }
+        //print_scalar_vals("4 _speedMode", _speedMode);
         set_ai_outputs(_speedDir, rand() % 360, _speedMode, _enableAttack, false, _enableCloning);
         enforce_valid_cell(false);
     }
@@ -1212,12 +1225,12 @@ struct Cell {
                 changedMovement = true;
             }
             if(rngSpeed < pctChanceToChangeSpeed){
-                while(newSpeedMode == lastDecision(3)){
-                    int _rngPct = rand() % 100;
-                    if(_rngPct < stats["rngAi_pctChanceIdle"][0]) newSpeedMode = IDLE_MODE;
-                    else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) newSpeedMode = WALK_MODE;
-                    else newSpeedMode = RUN_MODE;
-                }
+                //while(newSpeedMode == lastDecision(3)){
+                int _rngPct = rand() % 100;
+                if(_rngPct < stats["rngAi_pctChanceIdle"][0]) newSpeedMode = IDLE_MODE;
+                else if(_rngPct < stats["rngAi_pctChanceIdle"][0] + stats["rngAi_pctChanceWalk"][0]) newSpeedMode = WALK_MODE;
+                else newSpeedMode = RUN_MODE;
+                //}
                 changedMovement = true;
             }
             //print_scalar_vals("  rngDir", rngDir, "rngSpeed", rngSpeed);
@@ -1303,7 +1316,6 @@ struct Cell {
         // First, mark each cell with a number and record the largest (best) number
         std::vector<int> cellRanks;
         for(auto cellId : nearestCellIds){
-            if(cellId == 0) cout << "abcdefg\n";
             Cell* pCell = get_pCell(cellId);
             int rank = 0;
             int deadCoef = 16000, plantCoef = 8000, gndCoef = 4000, balancedCoef = 2000, predatorCoef = 1000;
@@ -1351,9 +1363,10 @@ struct Cell {
         //int targetDistance = calc_distance_from_point(pTarget->posX, pTarget->posY);
         int targetSpeed = find_closest_value(targetDistance, {stats["speedIdle"][0], stats["speedWalk"][0], stats["speedRun"][0]});
         int _speedMode = speedMode;
-        if(targetSpeed == stats["speedIdle"][0]) _speedMode = stats["speedIdle"][0];
-        if(targetSpeed == stats["speedWalk"][0]) _speedMode = stats["speedWalk"][0];
-        if(targetSpeed == stats["speedRun"][0])  _speedMode = stats["speedRun"][0];
+        if(targetSpeed == stats["speedIdle"][0]) _speedMode = IDLE_MODE;
+        if(targetSpeed == stats["speedWalk"][0]) _speedMode = WALK_MODE;
+        if(targetSpeed == stats["speedRun"][0])  _speedMode = RUN_MODE;
+        //print_scalar_vals("5 _speedMode", _speedMode);
         set_ai_outputs(_speedDir, rand() % 360, _speedMode, _doAttack, _doSelfDestruct, _doCloning);
         enforce_valid_cell(false);
         //print_scalar_vals("  cellId", uniqueCellNum, "_speedDir", _speedDir, "_speedMode", _speedMode, "xNext", xNext, "yNext", yNext,
@@ -1454,7 +1467,7 @@ struct Cell {
             int drawCenterX = drawScaleFactor*(posX + 0.5);
             int drawCenterY = drawScaleFactor*(posY + 0.5);
             int drawRadius = stats["visionDist"][0]*drawScaleFactor;
-            SDL_Color white = {0xff, 0xff, 0xff, 0x40};
+            SDL_Color white = {0xff, 0xff, 0xff, 0x20};
             if(drawRadius >= min_int(ubX_px, ubY_px) / 2) white = {0xff, 0xff, 0xff, 0x05};
             draw_regular_polygon(drawCenterX, drawCenterY, drawRadius, 32, white);
             if(drawCenterY < drawRadius)                                                draw_regular_polygon(drawCenterX         , drawCenterY + ubY_px, drawRadius, 32, white);

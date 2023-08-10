@@ -166,6 +166,7 @@ void init_sim_global_vals(){
 // This function allocates memory for a new cell and saves a pointer to it in both pCellsHist and pActives
 void gen_cell(int cellType, Cell* pParent = NULL, bool randomizeCloningDir = false, int cloningDir = -1){
     if(cellType == CELL_TYPE_PLANT_WORM_PREDATOR_OR_MUTANT) cellType = availableCellTypes(rng);
+    //cout << "cellType: " << cellType << endl;
     if(pParent == NULL){
         Cell *pCell = new Cell();
         pCell->define_self(pCellsHist.size(), pCell, NULL);
@@ -253,6 +254,48 @@ void assign_cells_to_correct_regions(){
     for(auto pCell : pActives) pActivesRegions[pCell->xyRegion].push_back(pCell);
 }
 
+// Display the percentiles of certain cell stats
+//  statRestrictions is a map of values which each counted cell must contain
+void disp_cell_statistics(std::map<std::string, int> statRestrictions, std::string label){
+    std::map<std::string, float> avgStats;
+    int numRelevantCells = 0;
+    for(auto pCell : pActives){
+        if(statRestrictions.count("cellType")){
+            if(statRestrictions["cellType"] == CELL_TYPE_PLANT && pCell->stats["EAM_SUN"][0] != 100) continue;
+            if(statRestrictions["cellType"] == CELL_TYPE_WORM  && pCell->stats["EAM_GND"][0] != 100) continue;
+            if(statRestrictions["cellType"] == CELL_TYPE_PREDATOR && pCell->stats["EAM_CELLS"][0] != 100) continue;
+            if(statRestrictions["cellType"] == CELL_TYPE_MUTANT && (pCell->stats["EAM_SUN"][0] < 30
+                || pCell->stats["EAM_GND"][0] < 30 || pCell->stats["EAM_CELLS"][0] < 30)) continue;
+        }
+        bool includeCell = true;
+        for(auto stat : statRestrictions){
+            std::string statName = stat.first;
+            if(pCell->stats.count(statName) == 0) continue;
+            if(pCell->stats[statName][0] != statRestrictions[statName]){
+                includeCell = false;
+                break;
+            }
+        }
+        if(!includeCell) continue;
+        numRelevantCells++;
+        for(auto stat : pCell->stats){
+            std::string statName = stat.first;
+            int statVal = stat.second[0];
+            avgStats[statName] += statVal;
+        }
+    }
+    if(numRelevantCells == 0) return;
+    cout << label << ": frameNum = " << frameNum << ", numRelevantCells = " << numRelevantCells << endl;
+    for(auto stat : avgStats){
+        std::string statName = stat.first;
+        avgStats[statName] /= numRelevantCells;
+        if(statName == "rngAi_pctChanceIdle") cout << endl;
+        cout << "  (" << statName << ", " << avgStats[statName] << ") ";
+        //print_scalar_vals(statName, avgStats[statName]);
+    }
+    cout << endl;
+}
+
 // Repeat this function each frame. Return the frame number
 int do_frame(bool doCellDecisions = true){
     frameStart = SDL_GetTicks();
@@ -326,6 +369,13 @@ int do_frame(bool doCellDecisions = true){
     SDL_draw_frame();
     #endif
     //cout << "\nFrame end\n";
+    if(frameNum % 200 == 0 && (frameNum <= 2000 || frameNum % 1000 == 0) && (frameNum <= 10000 || frameNum % 2000 == 0)){
+        cout << endl;
+        disp_cell_statistics({{"cellType", CELL_TYPE_PLANT}},       "Plant Statistics"      );
+        disp_cell_statistics({{"cellType", CELL_TYPE_WORM}},        "Worm Statistics"       );
+        disp_cell_statistics({{"cellType", CELL_TYPE_PREDATOR}},    "Predator Statistics"   );
+        disp_cell_statistics({{"cellType", CELL_TYPE_MUTANT}},      "Mutant Statistics"     );
+    }
     SDL_event_handler();
     return ++frameNum;
 }

@@ -439,11 +439,6 @@ void gen_demo_cells_video1(int scenarioNum){
         break;
 
         case 57:
-        //stats["rngAi_pctChanceIdle"] = {           33,     0,   100,         0,      0};
-        //stats["rngAi_pctChanceWalk"] = {           33,     0,   100,         0,      0};
-        //stats["rngAi_pctChanceToChangeDir"] = {     5,     0,   100,         0,      0};
-        //stats["rngAi_pctChanceToChangeSpeed"] = {   5,     0,   100,         0,      0};
-
         // 5h
         scenario_precode(3);
         enableAutomaticCloning = false;
@@ -452,8 +447,8 @@ void gen_demo_cells_video1(int scenarioNum){
         set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy){ \
-            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2); \
-            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceIdle"] = 45; \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, dia, 100, dia, 10, 0, 0, 0, 1, 2, 0); \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceWalk"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         gen_cell(0, "plant", 5, 5, 6, 10000, 10000);
@@ -495,8 +490,7 @@ void gen_demo_cells_video1(int scenarioNum){
             {40, 20, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 20, 200});
         #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack, maxHealth){ \
             varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, maxHealth, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
-            varVals["rngAi_pctChanceIdle"] = 90; varVals["rngAi_pctChanceWalk"] = 5; \
-            varVals["rngAi_pctChanceToChangeDir"] = 100; varVals["rngAi_pctChanceToChangeSpeed"] = 100; \
+            varVals["rngAi_pctChanceIdle"] = 10; varVals["rngAi_pctChanceWalk"] = 30; \
             pCellsHist[cellNum]->set_int_stats(varVals, 0); \
         }
         #define force_leftward_movement(cellNum, numFrames, _speedMode) pCellsHist[cellNum]->force_decision(numFrames, 180, 0, _speedMode, false, false, false)
@@ -515,35 +509,59 @@ void gen_demo_cells_video1(int scenarioNum){
         force_leftward_movement(5,  50, WALK_MODE);
         force_leftward_movement(5,  10, RUN_MODE);
         force_leftward_movement(5,  10, WALK_MODE);
-        force_leftward_movement(5,  50, WALK_MODE); //
+        force_leftward_movement(5,  50, WALK_MODE);
         force_leftward_movement(5,  10, WALK_MODE);
         force_leftward_movement(5,  10, RUN_MODE);
-        force_leftward_movement(5,  50, WALK_MODE); //
+        force_leftward_movement(5,  50, WALK_MODE);
         force_leftward_movement(5,   5, RUN_MODE);
         force_leftward_movement(5,   5, WALK_MODE);
         force_leftward_movement(5, 300, WALK_MODE);
-        gen_cell(6, "worm", 35, 16, 2, 2000, 20000, 0, 0, 20);
+        gen_cell(6, "worm", 35, 16, 2, 500, 5000, 0, 0, 20);
         force_leftward_movement(6, 100, IDLE_MODE);
         force_leftward_movement(6,  50, WALK_MODE);
         force_leftward_movement(6,  10, WALK_MODE);
         force_leftward_movement(6,  10, RUN_MODE);
-        force_leftward_movement(6,  50, WALK_MODE); //
+        force_leftward_movement(6,  50, WALK_MODE);
         force_leftward_movement(6,  10, RUN_MODE);
         force_leftward_movement(6,  10, WALK_MODE);
-        force_leftward_movement(6,  50, WALK_MODE); //
+        force_leftward_movement(6,  50, WALK_MODE);
         force_leftward_movement(6,   5, WALK_MODE);
         force_leftward_movement(6,   5, RUN_MODE);
         force_leftward_movement(6, 300, WALK_MODE);
-        //gen_cell(6,  "worm", 1, 1, 2, 500, 5000, 0, 0);
-        //pCellsHist[6]->force_decision(1000, 45, 0, RUN_MODE, false, false, false);
-        //gen_cell(7,  "worm", 18, 24, 6, 1500, 15000, 0, 0);
-        //pCellsHist[7]->force_decision(1000, 0, 0, WALK_MODE, false, false, false);
-
         #undef gen_cell
         #undef force_leftward_movement
         scenario_postcode();
         break;
         
+
+        case 60:
+        // 5k
+        scenario_precode(9);
+        enableAutomaticCloning = false;
+        enableAutomaticAttack = true;
+        set_sim_params({&ubX, &ubY, &dayNightMode, &maxSunEnergyPerSec, &gndEnergyPerIncrease, &maxGndEnergy},
+            {80, 40, DAY_NIGHT_ALWAYS_DAY_MODE, 50, 0, 1});
+        #define gen_cell(cellNum, cellType, posX, posY, dia, initEnergy, maxEnergy, visionDist, attack, maxHealth){ \
+            varVals.clear(); varVals = gen_std_stats(cellType, posX, posY, dia, initEnergy, maxEnergy, maxHealth, 100, attack, 10, 0, 0, 0, 1, 2, visionDist); \
+            varVals["rngAi_pctChanceIdle"] = 0; varVals["rngAi_pctChanceWalk"] = 50; \
+            varVals["rngAi_pctChanceToChangeDir"] = 5; varVals["rngAi_pctChanceToChangeSpeed"] = 50; \
+            pCellsHist[cellNum]->set_int_stats(varVals, 0); \
+        }
+        gen_cell(0, "predator", 40, 20, 2, 5000, 10000, 8, 1, 1);
+        gen_cell(1, "plant",  4, 12, 2, 500, 5000, 0, 0, 1);
+        gen_cell(2, "plant", 34,  7, 2, 500, 5000, 0, 0, 1);
+        gen_cell(3, "plant", 64,  2, 2, 500, 5000, 0, 0, 1);
+        gen_cell(4, "plant", 10, 25, 2, 500, 5000, 0, 0, 1);
+        //gen_cell(5, "worm",  40, 20, 2, 500, 5000, 0, 0, 1);
+        //pCellsHist[5]->force_decision(10, 305, 0, RUN_MODE, false, false, false);
+        gen_cell(5, "plant", 70, 15, 2, 500, 5000, 0, 0, 1);
+        gen_cell(6, "plant", 15, 38, 2, 500, 5000, 0, 0, 1);
+        gen_cell(7, "plant", 45, 33, 2, 500, 5000, 0, 0, 1);
+        gen_cell(8, "plant", 75, 28, 2, 500, 5000, 0, 0, 1);
+        scenario_postcode();
+        #undef gen_cell
+        break;
+
 
 
 
@@ -577,7 +595,7 @@ void do_video1(){
     clear_frame();
 
     int x0 = 20, y0 = 20, textWidth = 60, textHeight = 60;
-    int numFrames = 10000;
+    int numFrames = 20000;
     string text = "";
     static const int kF0 = 0, kF1start = 10; // key frames
     static const int kF1c = kF1start, kF1d = kF1c + 250, kF1e = kF1d + 70; // Intro
@@ -590,10 +608,10 @@ void do_video1(){
     static const int kF5start = kF4start;
     static const int kF5b = kF5start, kF5c = kF5b + 20, kF5d = kF5c + 100;
     static const int kF5e = kF5d + 70, kF5h = kF5e + 20;
-    static const int kF5i = kF5h + 500, kF5j = kF5i + 1000;
-    static const int kF6start = kF5j + 1000;
+    static const int kF5i = kF5h + 500, kF5j = kF5i + 1000, kF5k = kF5j + 1000;
+    static const int kF6start = kF5k + 1000;
     frameNum %= numFrames;
-    int startFrame = kF5j - 1;
+    int startFrame = kF5k - 1;
     switch(frameNum){
         case kF0:
         deallocate_all_cells();
@@ -684,6 +702,7 @@ void do_video1(){
         gen_demo_cells_video1(53);
         break;
         case kF5e:
+        frameNum = kF5d - 1;
         gen_demo_cells_video1(54);
         break;
         case kF5h:
@@ -695,6 +714,10 @@ void do_video1(){
         case kF5j:
         gen_demo_cells_video1(59);
         break;
+        case kF5k:
+        gen_demo_cells_video1(60);
+        break;
+
         
         default:
         if(kF1g <= frameNum && frameNum < kF1h){
@@ -723,15 +746,7 @@ void do_video1(){
             }
         } else if(kF2e <= frameNum && frameNum < kF3start){
             pCellsHist[0]->age += 49;
-        }// else if(kF3i < frameNum && frameNum < kF3j){
-            //for(auto pCell : pActives){
-                //cout << ".";
-                //if(pCell->isAlive == false) continue;
-                //if(pCell->age == 0) pCell->clear_forced_decisions();
-                //if(pCell->forcedDecisionsQueue.size() > 0) continue;
-                //pCell->preplan_random_cell_activity(10, 10, 100, false, true);
-            //}
-        //}
+        }
         
         if (kF6start <= frameNum) {
             text = "end of animations lol\nFrame " + conv_int_to_str(frameNum);
