@@ -125,8 +125,8 @@ struct SimParamInt{
 
 // Global Simulation Parameters
 SimParamInt initNumCells(300, 0, 10000);
-SimParamInt ubX(80, 1, 400); // 120
-SimParamInt ubY(40, 1, 400); // 80
+SimParamInt ubX(80, 1, 1000); // 120
+SimParamInt ubY(40, 1, 1000); // 80
 // NOTE: The program might not work properly if this is disabled
 static const bool WRAP_AROUND_X = true; // Enforce the constraint 0 <= x < ubX.val
 // NOTE: The program might not work properly if this is disabled
@@ -183,7 +183,7 @@ static const int WINDOW_HEIGHT = 445;       // Try 700 for full screeen, or 450 
 static const int CELL_REGION_SIDE_LEN = 10;
 
 int mousePosX = 0, mousePosY = 0;
-static const Uint32 FRAME_DELAY = 10; // ms; frame rate is (1000/FRAME_DELAY) fps; Default 125
+static const Uint32 FRAME_DELAY = 20; // ms; frame rate is (1000/FRAME_DELAY) fps; Default 125
 Uint32 frameStart = 0; // The time in ms since the start of the simulation
 Uint32 frameTime = 0; // The amount of time the frame lasted for
 int frameNum = 0; // The frame number of the simulation

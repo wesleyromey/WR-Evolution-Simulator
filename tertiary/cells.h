@@ -136,7 +136,7 @@ struct Cell {
         stats["speedIdle"]      = {                 0,     0,     0,         0,      0}; // 0
         stats["speedWalk"]      = {                 1,     0,    10, mutChance, mutAmt}; // (0, 1)
         stats["speedRun"]       = {                 2,     0,   100, mutChance, mutAmt}; // (0, 100)
-        stats["visionDist"]     = { stat_init(5,   5),     0,   100, mutChance, mutAmt}; // (0, 10)
+        stats["visionDist"]     = { stat_init(2,   2),     0,   100, mutChance, mutAmt}; // (0, 10)
         stats["rngAi_pctChanceIdle"] = {           10,     0,   100,         0,      0};
         stats["rngAi_pctChanceWalk"] = {           30,     0,   100,         0,      0};
         stats["rngAi_pctChanceToChangeDir"] = {     5,     0,   100,         0,      0};

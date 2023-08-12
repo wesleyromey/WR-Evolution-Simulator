@@ -278,7 +278,7 @@ void test_new_tex(){
         draw_texture(pBlackTex3, drawX, drawY, drawSize, drawSize);
         draw_texture(pWhiteTex4, drawX, drawY, drawSize, drawSize);
         SDL_RenderPresent(P_RENDERER);
-        SDL_event_handler();
+        SDL_event_handler(0);
     }
 }
 
@@ -305,7 +305,7 @@ void test_cur_tex(){
         int drawSize = drawScaleFactor*2;
         energyFromSunPerSec = 1000;
         SDL_draw_frame();
-        SDL_event_handler();
+        SDL_event_handler(0);
     }
 }
 

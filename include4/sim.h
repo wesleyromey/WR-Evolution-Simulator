@@ -369,14 +369,14 @@ int do_frame(bool doCellDecisions = true){
     SDL_draw_frame();
     #endif
     //cout << "\nFrame end\n";
-    if(frameNum % 200 == 0 && (frameNum <= 2000 || frameNum % 1000 == 0) && (frameNum <= 10000 || frameNum % 2000 == 0)){
+    if(frameNum == 0 || (frameNum <= 2000 && frameNum % 50 == 0) || (frameNum <= 10000 && frameNum % 200 == 0) || frameNum % 500 == 0){
         cout << endl;
         disp_cell_statistics({{"cellType", CELL_TYPE_PLANT}},       "Plant Statistics"      );
         disp_cell_statistics({{"cellType", CELL_TYPE_WORM}},        "Worm Statistics"       );
         disp_cell_statistics({{"cellType", CELL_TYPE_PREDATOR}},    "Predator Statistics"   );
         disp_cell_statistics({{"cellType", CELL_TYPE_MUTANT}},      "Mutant Statistics"     );
     }
-    SDL_event_handler();
+    SDL_event_handler(pActives.size());
     return ++frameNum;
 }
 
@@ -389,7 +389,7 @@ void do_sim_iteration(bool doCellDecisions = true){
         #ifdef DO_VIDEO
         simState = SIM_STATE_INIT;
         #else
-        SDL_event_handler();
+        SDL_event_handler(pActives.size());
         #endif
         break;
         case SIM_STATE_INIT:

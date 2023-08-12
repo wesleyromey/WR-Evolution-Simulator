@@ -25,10 +25,10 @@ void run_step_frames_press_n(bool& pauseSim, unsigned int& autoAdvanceSim){
     autoAdvanceSim = 0;
 }
 
-void run_skip_frames(int& simState, unsigned int& autoAdvanceSim, int numFramesToSkip = AUTO_ADVANCE_DEFAULT){
+void run_skip_frames(int& simState, unsigned int& autoAdvanceSim, char buttonPressed, int numFramesToSkip = AUTO_ADVANCE_DEFAULT){
     simState = SIM_STATE_SKIP_FRAMES;
     autoAdvanceSim = numFramesToSkip;
-    std::cout << "a is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
+    std::cout << buttonPressed << " is pressed! Simulation is speeding up for " << autoAdvanceSim << " frames" << endl;
 }
 
 void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned int& autoAdvanceSim, int& simState){
@@ -44,10 +44,14 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
             run_step_frames_press_n(pauseSim, autoAdvanceSim);
             break;
             case SDLK_a:
-            run_skip_frames(simState, autoAdvanceSim, AUTO_ADVANCE_DEFAULT);
+            run_skip_frames(simState, autoAdvanceSim, 'a', AUTO_ADVANCE_DEFAULT);
             break;
             case SDLK_s:
-            run_skip_frames(simState, autoAdvanceSim, 10*AUTO_ADVANCE_DEFAULT);
+            run_skip_frames(simState, autoAdvanceSim, 's', 10*AUTO_ADVANCE_DEFAULT);
+            break;
+            case SDLK_d:
+            run_skip_frames(simState, autoAdvanceSim, 'd', 20*AUTO_ADVANCE_DEFAULT);
+            break;
         }
         break;
         case SDL_MOUSEBUTTONDOWN:
@@ -60,7 +64,7 @@ void run_sim_state_step_frames(SDL_Event& windowEvent, bool& pauseSim, unsigned 
                 if(mousePosX < X_VEC_GUI[1]){
                     run_step_frames_press_n(pauseSim, autoAdvanceSim);
                 } else if(mousePosX < X_VEC_GUI[2]){
-                    run_skip_frames(simState, autoAdvanceSim, AUTO_ADVANCE_DEFAULT);
+                    run_skip_frames(simState, autoAdvanceSim, 'a', AUTO_ADVANCE_DEFAULT);
                 } else if(mousePosX < X_VEC_GUI[3]){
                     simState = SIM_STATE_OPTIONS;
                 }
@@ -86,27 +90,6 @@ bool change_simState_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, i
     simState = newSimStateIfClicked;
     return true;
 }
-// Return true if the box was clicked
-/*
-//bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb, int* pVarToChange, bool doIncrease){
-void increment_var(int* pVarToChange, bool doIncrease){
-    // lb = lower bound, ub = upper bound, x and y are coordinates
-    //cout << "xLb: " << xLb << ", xUb: " << xUb << ", yLb: " << yLb << ", yUb: " << yUb << endl;
-    //if(!check_if_mouse_clicked_on_box(mousePosX, mousePosY, xLb, yLb, xUb, yUb)) return false;
-    if(doIncrease && *pVarToChange < pow_int(10,9)){
-        int incrementExponent = (int)(log10(max_int(1, *pVarToChange / 2)));
-        int varIncrement = pow_int(10, incrementExponent);
-        *pVarToChange += varIncrement;
-    }
-    if(!doIncrease && *pVarToChange > 0){
-        int incrementExponent = (int)(log10(max_int(1, *pVarToChange / 2.01)));
-        int varIncrement = pow_int(10, incrementExponent);
-        *pVarToChange -= varIncrement;
-    }
-    //enforce_global_param_bounds();
-    //return true;
-}
-*/
 // Return true if the box was clicked
 //  This function only works for vars whose possible values include only the values between 0 and endVal
 bool increment_var_on_box_click(Uint32 mousePosX, Uint32 mousePosY, int xLb, int yLb, int xUb, int yUb,
@@ -241,8 +224,9 @@ void run_sim_state_main_menu(SDL_Event& windowEvent, bool& pauseSim, int& simSta
 //  e.g. Allow the user to decide when to advance to the next frame
 //bool KEYS[322] = {0}; // 322 is the number of SDLK_DOWN events
 //SDL_EnableKeyRepeat(0,0); // ???
+// numActiveCells: Includes both alive cells and dead cells
 unsigned int autoAdvanceSim = 0;
-void SDL_event_handler(){
+void SDL_event_handler(int numActiveCells){
     bool pauseSim = true;
     SDL_Event windowEvent;
     while(pauseSim){
@@ -256,6 +240,7 @@ void SDL_event_handler(){
             case SIM_STATE_SKIP_FRAMES:
             if(autoAdvanceSim){
                 autoAdvanceSim--;
+                if(numActiveCells == 0) autoAdvanceSim = 0;
                 pauseSim = false;
             } else simState = SIM_STATE_STEP_FRAMES;
             break;
